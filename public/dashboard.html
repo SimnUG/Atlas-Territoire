@@ -127,6 +127,7 @@ function draw(id){
  const chosen = id==='population'?official.categories.population:
    id==='revenus'?official.categories.revenus:
    id==='finances'?official.categories.finances:
+   id==='logements'?official.categories.logements:
    id==='dpe'?[]:
    id==='toutes'||id==='programmation'||id==='commercialisation'||id==='logements'?official.indicateurs:[];
  const all=Array.isArray(chosen)?chosen:[];
