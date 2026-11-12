@@ -1,7 +1,7 @@
 'use strict';
 const $ = id=>document.getElementById(id);
 const requested=new URLSearchParams(location.search).get('adresse')||'';
-const state={loc:null,analysis:null,housing:null,rent:null,planning:null,risk:null,tab:'fiche'};
+const state={loc:null,analysis:null,housing:null,rent:null,planning:null,risk:null,tab:'programmation'};
 const fmt=new Intl.NumberFormat('fr-FR',{maximumFractionDigits:1});
 const elem=(tag,cls,value)=>{const a=document.createElement(tag);if(cls)a.className=cls;if(value!==undefined&&value!==null)a.textContent=String(value);return a};
 const append=(parent,...children)=>(parent.append(...children.filter(Boolean)),parent);
@@ -196,48 +196,147 @@ function provenance(root){
   const a=elem('a','source','Source officielle');a.href=s.url;a.target='_blank';a.rel='noopener noreferrer';row.append(a);x.append(row);
  });root.append(x);
 }
+
+/*
+ * MENU HISTORIQUE — ordre fixe de la capture Terre de Données.
+ * Ne pas masquer, renommer ou supprimer les onglets selon les réponses API :
+ * seules les données au sein de la page sont conditionnelles.
+ */
+function globalData(root){
+ const all=arr(state.analysis?.indicateurs).filter(good);
+ metrics(root,all);
+ if(ages().length)chart(root,'Répartition des âges',ages().map(x=>({label:x.libelle,valeur:x.valeur,unit:'habitants',millesime:x.millesime})),state.analysis?.demographie_detail?.source);
+ if(homes().length)chart(root,'Composition du parc de logements',homes().map(x=>({label:x.label,valeur:x.valeur,unit:'logements'})),state.housing?.source);
+ if(rents().length)loyers(root);
+ if(sales().length)dvf(root);
+ if(dpes().length)energie(root);
+ if(zones().length)urbanisme(root);
+ if(risks().length)risques(root);
+}
+function missingDataContext(root,tab){
+ if(!state.loc)return;
+ const c=card('Périmètre de l’analyse','Repères géographiques vérifiés pour l’adresse étudiée.');
+ const rows=elem('div','statusGrid');
+ const known=[
+  ['Commune',state.loc.commune],
+  ['Code INSEE',state.loc.code_insee],
+  ['Adresse recherchée',state.loc.adresse]
+ ];
+ for(const [label,v] of known){
+  if(!v)continue;
+  const x=elem('div','statusItem');
+  append(x,elem('small',null,label),elem('strong',null,v));
+  rows.append(x);
+ }
+ if(rows.childElementCount)c.append(rows);
+ c.append(elem('p','source','Aucun indicateur chiffré vérifié n’est encore disponible dans cette rubrique pour la commune sélectionnée. Les autres rubriques conservent les données déjà reçues.'));
+ const references={
+  familles:{name:'INSEE — Recensement de la population',url:'https://www.insee.fr/'},
+  salaires:{name:'INSEE — Statistiques sur les salaires',url:'https://www.insee.fr/'},
+  migrations:{name:'INSEE — Migrations résidentielles',url:'https://www.insee.fr/'},
+  elections:{name:'Ministère de l’Intérieur — Résultats électoraux',url:'https://www.interieur.gouv.fr/'},
+  equipements:{name:'INSEE — Base permanente des équipements',url:'https://www.insee.fr/'},
+  social:{name:'Ministère chargé du Logement — Parc locatif social',url:'https://www.statistiques.developpement-durable.gouv.fr/'},
+  sru:{name:'Ministère chargé du Logement — Inventaires SRU',url:'https://www.ecologie.gouv.fr/'},
+  zonage:{name:'Ministère chargé du Logement — Zonage ABC',url:'https://www.ecologie.gouv.fr/'},
+  batiments:{name:'BDNB — Base nationale des bâtiments',url:'https://bdnb.io/'},
+  eau:{name:'Ministère de la Transition écologique — Services d’eau',url:'https://www.services.eaufrance.fr/'},
+  chaleur:{name:'ADEME — Transition énergétique',url:'https://data.ademe.fr/'},
+  artificialisation:{name:'Ministère chargé de l’Aménagement — Artificialisation',url:'https://artificialisation.developpement-durable.gouv.fr/'}
+ };
+ const reference=references[tab.id];
+ if(reference){
+  const link=elem('a','source','Consulter : '+reference.name);
+  link.href=reference.url;link.target='_blank';link.rel='noopener noreferrer';c.append(link);
+ }
+ root.append(c);
+}
+// Le menu ne dépend plus des statistiques disponibles dans la commune.
 const tabs=[
- {id:'fiche',label:'Fiche de l’adresse',group:'Étude foncière',has:()=>!!state.loc,render:fiche},
- {id:'urbanisme',label:'Urbanisme',group:'Étude foncière',has:()=>zones().length>0,render:urbanisme},
- {id:'risques',label:'Risques territoriaux',group:'Étude foncière',has:()=>risks().length>0,render:risques},
- {id:'programmation',label:'Programmation',group:'Programmation',has:()=>cat('population').length+cat('logements').length+cat('permis').length+cat('prix').length>=2,render:programmation},
- {id:'commercial',label:'Commercialisation',group:'Programmation',has:()=>cat('prix').length+rents().length>0,render:commercial},
- {id:'population',label:'Population',group:'Socio / Démo',has:()=>cat('population').length+ages().length+arr(state.analysis?.categories?.population_historique).length>0,render:population},
- {id:'emploi',label:'Emploi et activité',group:'Socio / Démo',has:()=>cat('emploi').length>0,render:r=>metrics(r,cat('emploi'))},
- {id:'revenus',label:'Revenus disponibles',group:'Socio / Démo',has:()=>cat('revenus').length>0,render:r=>metrics(r,cat('revenus'))},
- {id:'logements',label:'Logements',group:'Immo',has:()=>cat('logements').length+homes().length+rooms().length>0,render:logements},
- {id:'prix',label:'Prix immobiliers — DVF',group:'Immo',has:()=>cat('prix').length+sales().length>0,render:dvf},
- {id:'loyers',label:'Loyers du parc privé',group:'Immo',has:()=>rents().length>0,render:loyers},
- {id:'permis',label:'Permis de construire',group:'Immo',has:()=>cat('permis').length>0,render:r=>metrics(r,cat('permis'))},
- {id:'dpe',label:'DPE et audits',group:'Énergie et territoire',has:()=>dpes().length>0,render:energie},
- {id:'finances',label:'Finances locales',group:'Énergie et territoire',has:()=>cat('finances').length>0,render:r=>metrics(r,cat('finances'))},
- {id:'sources',label:'Provenance des données',group:'Données',has:()=>arr(state.analysis?.indicateurs).filter(good).length+homes().length+rents().length+zones().length+risks().length+dpes().length>0,render:provenance}
+ {id:'programmation',label:'Programmation théorique',group:'Programmation',render:programmation},
+ {id:'commercial',label:'Commercialisation',group:'Programmation',render:commercial},
+ {id:'toutes',label:'Toutes les données',group:'Données territoriales',render:globalData},
+ {id:'fiche',label:'Focus commune',group:'Données territoriales',render:fiche},
+ {id:'population',label:'Population',group:'SOCIO / DÉMO',render:population},
+ {id:'familles',label:'Familles et ménages',group:'SOCIO / DÉMO',render:()=>{}},
+ {id:'emploi',label:'Emploi et activité',group:'SOCIO / DÉMO',render:r=>metrics(r,cat('emploi'))},
+ {id:'salaires',label:'Salaires nets',group:'SOCIO / DÉMO',render:()=>{}},
+ {id:'revenus',label:'Revenus disponibles',group:'SOCIO / DÉMO',render:r=>metrics(r,cat('revenus'))},
+ {id:'migrations',label:'Migrations résidentielles',group:'SOCIO / DÉMO',render:()=>{}},
+ {id:'elections',label:'Élections',group:'SOCIO / DÉMO',render:()=>{}},
+ {id:'equipements',label:'Équipements et transports',group:'SOCIO / DÉMO',render:()=>{}},
+ {id:'logements',label:'Logements',group:'IMMO',render:logements},
+ {id:'social',label:'Parc social',group:'IMMO',render:()=>{}},
+ {id:'sru',label:'Loi SRU',group:'IMMO',render:()=>{}},
+ {id:'zonage',label:'Zonage ABC',group:'IMMO',render:()=>{}},
+ {id:'permis',label:'Permis de construire',group:'IMMO',render:r=>metrics(r,cat('permis'))},
+ {id:'prix',label:'Prix (DVF)',group:'IMMO',render:dvf},
+ {id:'loyers',label:'Loyers du parc privé',group:'IMMO',render:loyers},
+ {id:'batiments',label:'Bâtiments et DPE',group:'IMMO',render:energie},
+ {id:'eau',label:'Contrat eau potable',group:'ENVIRONNEMENT',render:()=>{}},
+ {id:'risques',label:'Risques territoriaux',group:'ENVIRONNEMENT',render:risques},
+ {id:'chaleur',label:'Îlots de chaleur',group:'ENVIRONNEMENT',render:()=>{}},
+ {id:'artificialisation',label:'Artificialisation',group:'ENVIRONNEMENT',render:()=>{}},
+ {id:'urbanisme',label:'Urbanisme',group:'COMPLÉMENTS FONCIERS',render:urbanisme},
+ {id:'finances',label:'Finances locales',group:'COMPLÉMENTS FONCIERS',render:r=>metrics(r,cat('finances'))},
+ {id:'sources',label:'Provenance des données',group:'COMPLÉMENTS FONCIERS',render:provenance}
 ];
-const available=()=>tabs.filter(t=>t.has());
+// La synthèse ne propose que les sections effectivement alimentées.
+const populated=()=>tabs.filter(t=>{
+ switch(t.id){
+  case 'programmation':return cat('population').length+cat('logements').length+cat('permis').length+cat('prix').length>0;
+  case 'commercial':return cat('prix').length+cat('revenus').length+rents().length+sales().length>0;
+  case 'toutes':return arr(state.analysis?.indicateurs).filter(good).length+homes().length+rents().length+sales().length+dpes().length+zones().length+risks().length>0;
+  case 'fiche':return !!state.loc;
+  case 'population':return cat('population').length+ages().length+arr(state.analysis?.categories?.population_historique).length>0;
+  case 'emploi':return cat('emploi').length>0;
+  case 'revenus':return cat('revenus').length>0;
+  case 'logements':return cat('logements').length+homes().length+rooms().length>0;
+  case 'permis':return cat('permis').length>0;
+  case 'prix':return cat('prix').length+sales().length>0;
+  case 'loyers':return rents().length>0;
+  case 'batiments':return dpes().length>0;
+  case 'risques':return risks().length>0;
+  case 'urbanisme':return zones().length>0;
+  case 'finances':return cat('finances').length>0;
+  case 'sources':return arr(state.analysis?.indicateurs).filter(good).length+homes().length+rents().length+sales().length+dpes().length+zones().length+risks().length>0;
+  default:return false;
+ }
+});
+const available=()=>populated();
 function redraw(){
- const selected=available().find(t=>t.id===state.tab)||available()[0];
- if(!selected)return;
+ const selected=tabs.find(t=>t.id===state.tab)||tabs[0];
  state.tab=selected.id;
- const nav=$('nav');nav.replaceChildren();let group='';
- available().forEach(t=>{
-  if(group!==t.group){group=t.group;nav.append(elem('div','navTitle',group))}
+ const nav=$('nav');nav.replaceChildren();
+ let group='';
+ tabs.forEach(t=>{
+  if(group!==t.group){
+   group=t.group;nav.append(elem('div','navTitle',group));
+  }
   const b=elem('button','navBtn'+(t.id===state.tab?' active':''),t.label);
-  b.onclick=()=>pick(t.id);nav.append(b);
+  b.type='button';b.dataset.section=t.id;
+  b.onclick=()=>pick(t.id);
+  nav.append(b);
  });
  $('category').textContent=selected.group;
  $('pageTitle').textContent=selected.label;
  $('crumbCategory').textContent=selected.label;
- $('description').textContent='Données mesurées ou publiées pour le périmètre géographique indiqué.';
+ $('description').textContent='Données officielles disponibles pour le périmètre de l’adresse étudiée.';
  $('currentAddress').textContent=state.loc?.adresse||requested;
  $('city').textContent=state.loc?.commune||'';
  $('crumbCity').textContent=state.loc?.commune||'';
  $('locationPill').textContent=state.loc?.commune?state.loc.commune+' · '+state.loc.code_insee:'';
- const body=$('analysis');body.replaceChildren();selected.render(body);
+ const body=$('analysis');body.replaceChildren();
+ selected.render(body);
+ if(body.childElementCount===0)missingDataContext(body,selected);
 }
 function pick(id){
- if(!available().some(t=>t.id===id))return;
- state.tab=id;redraw();$('side').classList.remove('show');$('overlay').classList.remove('show');window.scrollTo(0,0);
+ if(!tabs.some(t=>t.id===id))return;
+ state.tab=id;redraw();
+ $('side').classList.remove('show');$('overlay').classList.remove('show');
+ window.scrollTo(0,0);
 }
+
 async function get(url,ms=65000){
  const c=new AbortController(),timer=setTimeout(()=>c.abort(),ms);
  try{const r=await fetch(url,{signal:c.signal});return r.ok?await r.json():null}
