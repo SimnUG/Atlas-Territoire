@@ -53,7 +53,15 @@ function asObservations(payload){
  });
 }
 function cell(o,k){const v=o?.dimensions?.[k];return typeof v==='object'?v.value??v.id??null:v??null}
-function value(o){const m=o?.measures||{};for(const entry of Object.values(m)){const n=Number(typeof entry==='object'?entry?.value:entry);if(Number.isFinite(n))return n}return null}
+function value(o){
+ const m=o?.measures||{};
+ for(const entry of Object.values(m)){
+  const raw=typeof entry==='object'&&entry!==null?entry.value:entry;
+  if(raw===null||raw===undefined||raw==='')continue;
+  const n=Number(raw);if(Number.isFinite(n))return n;
+ }
+ return null;
+}
 function geoMatches(o,code){
  const g=cell(o,'GEO');
  return g===code||String(g).endsWith('-'+code);
@@ -140,6 +148,29 @@ async function ademeDpe(adresse,code,postcode,banId){
  const unique=[...new Map(records.map(x=>[x.numero,x])).values()];
  return {enregistrements:unique.slice(0,20),nombre_resultats_exacts:unique.length,erreurs:errors};
 }
+async function emploi(code){
+ const out=[],errors=[];
+ const defs=[
+  {dataset:'DS_RP_EMPLOI_LR_PRINC',nom:'Actifs résidents de 15 à 64 ans ayant un emploi',filters:{AGE:'Y15T64',EMPSTA_ENQ:'1',SEX:'_T'},extra:[]},
+  {dataset:'DS_RP_EMPLOI_LT_PRINC',nom:'Emplois au lieu de travail',filters:{EMPFORM:'_T',SEX:'_T',EMPSTA_ENQ:'1',WKTIME:'_T'},extra:[]}
+ ];
+ await Promise.all(defs.map(async d=>{
+  try{
+   const raw=await melodi(d.dataset,code,d.filters);
+   const match=asObservations(raw).filter(o=>{
+     if(!geoMatches(o,code)||value(o)===null||year(o)===null)return false;
+     for(const [k,v] of Object.entries(d.filters)){
+       if(String(cell(o,k))!==v)return false;
+     }
+     return true;
+   }).map(o=>({valeur:value(o),millesime:year(o)}));
+   const selected=latest(match);
+   if(selected)out.push(indicator(d.nom,Math.round(selected.valeur),'personnes',selected.millesime,SRC.insee,'commune',{dataset:d.dataset}));
+   else errors.push(d.nom+' : aucune observation correspondant exactement aux filtres');
+  }catch(e){errors.push(d.nom+' : '+e.message)}
+ }));
+ return {indicateurs:out,erreurs:errors};
+}
 async function logements(code){
  const indicators=[],errors=[];
  try{
@@ -191,23 +222,23 @@ function deadline(task,ms,fallback){
 
 async function analyze({code_insee,adresse,code_postal,ban_id}){
  if(!/^([0-9]{5}|2[AB][0-9]{3})$/i.test(code_insee||''))throw Error('Code INSEE invalide');
- const [insee,geo,dpe,ofgl,rpLogements,dvf,sitadel,ages]=await Promise.all([
+ const [insee,geo,dpe,ofgl,rpLogements,dvf,sitadel,ages,employment]=await Promise.all([
    population(code_insee), administrative(code_insee),
    adresse?ademeDpe(adresse,code_insee,code_postal,ban_id):Promise.resolve({enregistrements:[],nombre_resultats_exacts:0,erreurs:[]}), finances(code_insee), logements(code_insee), deadline(()=>market.dvf(code_insee),26000,{source:{nom:'DVF+ — DGFiP / Cerema',niveau:'commune'},statut:'indisponible',indicateurs:[],transactions:[],erreurs:['Délai maximum de réponse DVF+ dépassé'],exhaustif:false}),
    deadline(()=>market.sitadel(code_insee),26000,{source:{nom:'Sitadel — SDES',niveau:'commune'},statut:'indisponible',indicateurs:[],permis:[],erreurs:['Délai maximum de réponse Sitadel dépassé'],exhaustif:false}),
-   demographicDetails.demographics({melodi,asObservations,code:code_insee})
+   demographicDetails.demographics({melodi,asObservations,code:code_insee}), emploi(code_insee)
  ]);
  const byName=new Map();
- for(const v of [...geo.indicateurs,...insee.indicateurs,...ofgl.indicateurs,...rpLogements.indicateurs,...dvf.indicateurs,...sitadel.indicateurs])byName.set(v.nom,v);
+ for(const v of [...geo.indicateurs,...insee.indicateurs,...ofgl.indicateurs,...rpLogements.indicateurs,...dvf.indicateurs,...sitadel.indicateurs,...employment.indicateurs])byName.set(v.nom,v);
  const all=[...byName.values()];
  // Référence Melodi prioritaire ; la population API Géo conserve un statut informatif sans millésime.
- const stats={population:all.filter(x=>x.nom.startsWith('Population')),revenus:all.filter(x=>x.nom.startsWith('Niveau')),finances:ofgl.indicateurs,logements:rpLogements.indicateurs,prix:dvf.indicateurs,permis:sitadel.indicateurs};
+ const stats={population:all.filter(x=>x.nom.startsWith('Population')),revenus:all.filter(x=>x.nom.startsWith('Niveau')),finances:ofgl.indicateurs,logements:rpLogements.indicateurs,prix:dvf.indicateurs,permis:sitadel.indicateurs,emploi:employment.indicateurs};
  return {code_insee,adresse:adresse||null,commune:geo.commune||null,
-   categories:{population:stats.population,revenus:stats.revenus,finances:stats.finances,logements:stats.logements,prix:stats.prix,permis:stats.permis,population_age:ages.tranches_age,dpe:dpe.enregistrements},
+   categories:{population:stats.population,revenus:stats.revenus,finances:stats.finances,logements:stats.logements,prix:stats.prix,permis:stats.permis,population_age:ages.tranches_age,emploi:stats.emploi,dpe:dpe.enregistrements},
    indicateurs:all,dpe:{nombre_resultats_exacts:dpe.nombre_resultats_exacts,enregistrements:dpe.enregistrements},
    dvf,sitadel,
    sources:[SRC.insee,SRC.geo,SRC.ademe,SRC.ofgl,dvf.source,sitadel.source],
-   erreurs:[...insee.erreurs,...geo.erreurs,...dpe.erreurs,...ofgl.erreurs,...rpLogements.erreurs,...dvf.erreurs,...sitadel.erreurs,...ages.erreurs],
+   erreurs:[...insee.erreurs,...geo.erreurs,...dpe.erreurs,...ofgl.erreurs,...rpLogements.erreurs,...dvf.erreurs,...sitadel.erreurs,...ages.erreurs,...employment.erreurs],
    indisponibles:['Autres catégories : connecteurs non encore validés'],
    genere_le:new Date().toISOString(),
    avertissement:'Les indicateurs agrégés portent sur la commune, pas sur le seul immeuble. Un DPE ne correspond à l’adresse que lorsque son identifiant BAN ou son adresse normalisée coïncide exactement.'
