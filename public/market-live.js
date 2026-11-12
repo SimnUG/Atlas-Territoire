@@ -87,6 +87,11 @@ function fiche(root){
 }
 function population(root){
  metrics(root,cat('population'));
+ const trend=arr(state.analysis?.categories?.population_historique).filter(x=>typeof x.population==='number'&&Number.isFinite(x.annee));
+ if(trend.length>=2){
+  chart(root,'Évolution de la population',trend.map(x=>({label:String(x.annee),valeur:x.population,unit:'habitants',millesime:x.annee})),
+  {nom:'INSEE — Populations historiques',url:'https://www.insee.fr/',niveau:'commune'});
+ }
  chart(root,'Structure démographique',ages().map(x=>({label:x.libelle,valeur:x.valeur,unit:'habitants',millesime:x.millesime})),state.analysis?.demographie_detail?.source);
 }
 function logements(root){
@@ -155,14 +160,14 @@ function urbanisme(root){
  const rows=elem('div','statusGrid');
  zones().forEach(z=>rows.append(append(elem('div','statusItem'),elem('strong',null,z.libelle),z.details?.document?elem('small',null,z.details.document):null)));
  x.append(rows);source(x,state.planning?.source,'point');
- x.append(elem('p','source','Ce zonage n’est pas une confirmation de constructibilité : lire le règlement et les servitudes.'));root.append(x);
+ x.append(elem('p','source','Source supplémentaire hors des 14 sources initiales : IGN. Ce zonage n’est pas une confirmation de constructibilité : lire le règlement et les servitudes.'));root.append(x);
 }
 function risques(root){
  const x=card('Risques recensés dans la commune');
  const g=elem('div','statusGrid');
  risks().forEach(n=>g.append(append(elem('div','statusItem'),elem('strong',null,n))));
  x.append(g);source(x,state.risk?.source,'commune');
- x.append(elem('p','source','Une présence communale ne confirme pas l’exposition de la parcelle.'));root.append(x);
+ x.append(elem('p','source','Source supplémentaire hors des 14 sources initiales : BRGM / Géorisques. Une présence communale ne confirme pas l’exposition de la parcelle.'));root.append(x);
 }
 function programmation(root){
  const group=[...cat('population'),...cat('logements'),...cat('permis'),...cat('prix')];
@@ -197,7 +202,7 @@ const tabs=[
  {id:'risques',label:'Risques territoriaux',group:'Étude foncière',has:()=>risks().length>0,render:risques},
  {id:'programmation',label:'Programmation',group:'Programmation',has:()=>cat('population').length+cat('logements').length+cat('permis').length+cat('prix').length>=2,render:programmation},
  {id:'commercial',label:'Commercialisation',group:'Programmation',has:()=>cat('prix').length+rents().length>0,render:commercial},
- {id:'population',label:'Population',group:'Socio / Démo',has:()=>cat('population').length+ages().length>0,render:population},
+ {id:'population',label:'Population',group:'Socio / Démo',has:()=>cat('population').length+ages().length+arr(state.analysis?.categories?.population_historique).length>0,render:population},
  {id:'emploi',label:'Emploi et activité',group:'Socio / Démo',has:()=>cat('emploi').length>0,render:r=>metrics(r,cat('emploi'))},
  {id:'revenus',label:'Revenus disponibles',group:'Socio / Démo',has:()=>cat('revenus').length>0,render:r=>metrics(r,cat('revenus'))},
  {id:'logements',label:'Logements',group:'Immo',has:()=>cat('logements').length+homes().length+rooms().length>0,render:logements},
@@ -206,7 +211,7 @@ const tabs=[
  {id:'permis',label:'Permis de construire',group:'Immo',has:()=>cat('permis').length>0,render:r=>metrics(r,cat('permis'))},
  {id:'dpe',label:'DPE et audits',group:'Énergie et territoire',has:()=>dpes().length>0,render:energie},
  {id:'finances',label:'Finances locales',group:'Énergie et territoire',has:()=>cat('finances').length>0,render:r=>metrics(r,cat('finances'))},
- {id:'sources',label:'Provenance des données',group:'Données',has:()=>cat('population').length+cat('prix').length+homes().length+rents().length+zones().length+risks().length+dpes().length>0,render:provenance}
+ {id:'sources',label:'Provenance des données',group:'Données',has:()=>arr(state.analysis?.indicateurs).filter(good).length+homes().length+rents().length+zones().length+risks().length+dpes().length>0,render:provenance}
 ];
 const available=()=>tabs.filter(t=>t.has());
 function redraw(){
