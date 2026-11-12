@@ -252,6 +252,16 @@ function missingDataContext(root,tab){
  root.append(c);
 }
 // Le menu ne dépend plus des statistiques disponibles dans la commune.
+// Pictogrammes du menu historique, séparés des noms pour conserver leur ordre.
+const tabIcons={
+ programmation:'▥',commercial:'◈',toutes:'▦',fiche:'◉',
+ population:'♙',familles:'♧',emploi:'◫',salaires:'▤',revenus:'◇',
+ migrations:'⇄',elections:'▣',equipements:'♧',
+ logements:'⌂',social:'▥',sru:'▤',zonage:'◈',
+ permis:'▧',prix:'€',loyers:'◈',batiments:'▦',
+ eau:'◉',risques:'⚠',chaleur:'☀',artificialisation:'▧',
+ urbanisme:'◈',finances:'€',sources:'▦'
+};
 const tabs=[
  {id:'programmation',label:'Programmation théorique',group:'Programmation',render:programmation},
  {id:'commercial',label:'Commercialisation',group:'Programmation',render:commercial},
@@ -313,7 +323,10 @@ function redraw(){
   if(group!==t.group){
    group=t.group;nav.append(elem('div','navTitle',group));
   }
-  const b=elem('button','navBtn'+(t.id===state.tab?' active':''),t.label);
+  const b=elem('button','navBtn'+(t.id===state.tab?' active':''));
+  const pictogram=elem('span','glyph',tabIcons[t.id]||'•');
+  pictogram.setAttribute('aria-hidden','true');
+  b.append(pictogram,elem('span',null,t.label));
   b.type='button';b.dataset.section=t.id;
   b.onclick=()=>pick(t.id);
   nav.append(b);
