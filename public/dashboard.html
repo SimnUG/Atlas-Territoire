@@ -199,4 +199,76 @@ async function loadOfficial(){
 }
 draw('programmation');loadOfficial();
 })();
+</script><script>
+/* Catalogue officiel : une liste de jeux de données n'est pas une preuve que
+   les valeurs correspondantes sont disponibles pour l'adresse affichée. */
+(function(){
+let catalogue=null;
+let fetched=false;
+const escapeHtml=v=>String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+function addCatalog(id){
+ if(id!=='toutes')return;
+ const target=document.getElementById('content');
+ if(!target)return;
+ const el=document.createElement('section');
+ el.className='section';el.id='source-registry';
+ el.innerHTML='<article class="card"><h2>Catalogue des sources et jeux de données officiels</h2><p class="subtitle">Les données sont recherchées à la demande pour chaque territoire. Les sources listées ne sont pas toutes encore disponibles sous forme d’indicateurs.</p><div id="source-registry-status" class="muted">Chargement du catalogue…</div><div id="source-registry-items"></div><div style="margin-top:22px"><h2>Rechercher un jeu de données officiel</h2><p class="subtitle">Recherche dans le catalogue data.gouv.fr, limitée aux organismes publics autorisés. Les résultats sont des métadonnées, pas des chiffres calculés pour la commune.</p><form id="catalog-form" style="display:flex;gap:8px;flex-wrap:wrap"><input id="catalog-query" aria-label="Mot-clé d’un jeu de données" placeholder="Ex. logements sociaux, mobilités" minlength="3" maxlength="120" style="flex:1;min-width:200px;padding:11px;border:1px solid #dfe3ec;border-radius:9px"><button class="back" type="submit">Rechercher</button></form><div id="catalog-search-results" class="section muted"></div></div></article>';
+ target.prepend(el);
+ el.querySelector('#catalog-form').addEventListener('submit',async evt=>{
+   evt.preventDefault();
+   const q=el.querySelector('#catalog-query').value.trim();
+   const results=el.querySelector('#catalog-search-results');
+   if(q.length<3)return;
+   results.textContent='Recherche dans le catalogue officiel…';
+   try{
+     const r=await fetch('/api/jeux-de-donnees?q='+encodeURIComponent(q));
+     const data=await r.json();
+     if(!r.ok)throw Error(data.erreur||'Catalogue indisponible');
+     results.replaceChildren();
+     if(!data.jeux_officiels?.length){results.textContent='Aucun jeu identifié parmi les producteurs autorisés pour ce mot-clé.';return}
+     const listing=document.createElement('div');listing.className='grid2';
+     for(const item of data.jeux_officiels){
+       const box=document.createElement('article');box.className='card';
+       const h=document.createElement('h2');h.textContent=item.titre;
+       const p=document.createElement('p');p.className='subtitle';p.textContent='Producteur : '+item.producteur+' · Actualisation : '+(item.actualisation?new Date(item.actualisation).toLocaleDateString('fr-FR'):'non précisée');
+       box.append(h,p);
+       if(item.url&&item.url.startsWith('https://www.data.gouv.fr/')){
+         const link=document.createElement('a');link.href=item.url;link.target='_blank';link.rel='noopener noreferrer';link.textContent='Voir la fiche officielle';link.className='source';box.append(link);
+       }
+       listing.append(box);
+     }
+     results.append(listing);
+   }catch(e){results.textContent='Impossible de consulter le catalogue : '+e.message}
+ });
+ if(catalogue)populate(el,catalogue);
+ else if(!fetched){fetched=true;fetch('/api/catalogue').then(r=>{if(!r.ok)throw Error('Catalogue indisponible');return r.json()}).then(d=>{catalogue=d;const current=document.getElementById('source-registry');if(current)populate(current,d)}).catch(e=>{const current=document.getElementById('source-registry-status');if(current)current.textContent='Catalogue indisponible : '+e.message})}
+}
+function populate(el,data){
+ const summary=el.querySelector('#source-registry-status');const items=el.querySelector('#source-registry-items');
+ if(!summary||!items)return;
+ const ss=data.sources||[],ds=data.jeux||[];
+ summary.textContent=ss.length+' sources autorisées · '+ds.length+' jeux de données documentés. Chaque indicateur conserve sa granularité et son état de connexion.';
+ items.replaceChildren();
+ const list=document.createElement('div');list.className='grid2';list.style.marginTop='20px';
+ for(const src of ss){
+  const box=document.createElement('div');box.className='card';
+  const h=document.createElement('h2');h.textContent=src.nom;
+  const p=document.createElement('p');p.className='subtitle';p.textContent='Accès : '+src.type+' · Couverture : '+src.scope.join(', ');
+  const badge=document.createElement('span');badge.className='status'+(src.state==='connecteur'?' good':'');
+  badge.textContent=src.state==='connecteur'?'Connecteur intégré':src.state==='catalogue_connecte'?'Catalogue interrogeable':src.state==='connecteur_a_valider'?'Connecteur à valider':src.state==='identification_necessaire'?'Identification à préciser':'Jeu référencé';
+  box.append(h,p,badge);
+  const n=ds.filter(x=>x.source_id===src.id);
+  if(n.length){
+   const ul=document.createElement('ul');ul.className='source';
+   for(const item of n){const li=document.createElement('li');if(item.url){const a=document.createElement('a');a.href=item.url;a.target='_blank';a.rel='noopener noreferrer';a.textContent=item.title;li.append(a)}else li.textContent=item.title;ul.append(li)}
+   box.append(ul);
+  }
+  const meta=document.createElement('p');meta.className='source';meta.textContent=src.notes;box.append(meta);list.append(box);
+ }
+ items.append(list);
+}
+const previousRender=render;
+render=function(id){previousRender(id);addCatalog(id)};
+if(document.querySelector('.navitem.active')?.dataset.id==='toutes')addCatalog('toutes');
+})();
 </script></body></html>
