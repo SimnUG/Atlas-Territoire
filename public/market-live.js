@@ -1,7 +1,7 @@
 'use strict';
 const $ = id=>document.getElementById(id);
 const requested=new URLSearchParams(location.search).get('adresse')||'';
-const state={loc:null,analysis:null,housing:null,rent:null,planning:null,risk:null,tab:'programmation'};
+const state={loc:null,analysis:null,housing:null,rent:null,planning:null,risk:null,admin:null,tab:'programmation'};
 const fmt=new Intl.NumberFormat('fr-FR',{maximumFractionDigits:1});
 const elem=(tag,cls,value)=>{const a=document.createElement(tag);if(cls)a.className=cls;if(value!==undefined&&value!==null)a.textContent=String(value);return a};
 const append=(parent,...children)=>(parent.append(...children.filter(Boolean)),parent);
@@ -17,6 +17,56 @@ const sales=()=>arr(state.analysis?.dvf?.transactions).filter(x=>x&&(typeof x.va
 const dpes=()=>arr(state.analysis?.dpe?.enregistrements).filter(x=>x&&x.numero);
 const zones=()=>arr(state.planning?.zones).filter(x=>x&&x.libelle);
 const risks=()=>arr(state.risk?.risques).filter(x=>typeof x==='string'&&x.trim());
+
+const adminRows=()=>arr(state.admin?.comparaisons).filter(x=>x&&x.nom&&typeof x.population==='number');
+function adminComparison(root,title='Comparaison des territoires'){
+ const records=adminRows();
+ if(!records.length)return;
+ const max=Math.max(1,...records.map(x=>x.population));
+ const c=card(title,'Populations de référence administrative, sans millésime explicite dans cette API.');
+ for(const r of records){
+  const box=elem('div','line');
+  box.style.alignItems='center';
+  const info=elem('div');info.style.flex='1';
+  append(info,elem('b',null,r.nom+' · '+r.type),elem('p','source',r.code));
+  const right=elem('div');right.style.flex='1';right.style.maxWidth='45%';
+  const value=elem('b',null,num(r.population,'habitants'));
+  const track=elem('div','track'),fill=elem('div','fill');
+  fill.style.width=Math.max(1,r.population/max*100)+'%';track.append(fill);
+  right.append(value,track);box.append(info,right);c.append(box);
+ }
+ source(c,state.admin?.source,'commune / EPCI / département / région');
+ root.append(c);
+}
+function populationSummary(root){
+ const values=arr(state.analysis?.categories?.population_historique)
+   .filter(x=>typeof x.annee==='number'&&typeof x.population==='number')
+   .sort((a,b)=>a.annee-b.annee);
+ if(values.length<2)return;
+ const first=values[0],last=values[values.length-1];
+ const years=last.annee-first.annee;
+ if(!years||first.population<=0||last.population<=0)return;
+ const change=(last.population-first.population)/first.population*100;
+ const annual=(Math.pow(last.population/first.population,1/years)-1)*100;
+ const items=[
+  {nom:'Évolution de population '+first.annee+'–'+last.annee,valeur:Math.round(change*10)/10,unite:'%',millesime:last.annee,
+   niveau:'commune',source:{nom:'Calcul ATLAS à partir des populations INSEE',url:'https://www.insee.fr/'},statut:'disponible'},
+  {nom:'Taux de variation annuel moyen',valeur:Math.round(annual*100)/100,unite:'%/an',millesime:last.annee,
+   niveau:'commune',source:{nom:'Calcul ATLAS à partir des populations INSEE',url:'https://www.insee.fr/'},statut:'disponible'}
+ ];
+ metrics(root,items);
+}
+function homeComposition(root){
+ const rows=homes();
+ if(rows.length<3)return;
+ const total=rows.reduce((sum,r)=>sum+r.valeur,0);
+ if(!total)return;
+ const results=rows.filter(x=>typeof x.part==='number').map(x=>({
+  label:x.label,valeur:x.part,unit:'%'
+ }));
+ if(results.length)chart(root,'Répartition du parc résidentiel',results,state.housing?.source);
+}
+
 function link(parent,s){
  if(!s||!s.url||!/^https:\/\//.test(s.url))return;
  const a=elem('a','source','Consulter la source officielle');
@@ -77,6 +127,7 @@ function fiche(root){
  }x.append(g);
  source(x,{nom:'Géoplateforme — Base Adresse Nationale',url:'https://www.data.gouv.fr/dataservices/api-geoplateforme-geocodage'},'adresse');
  root.append(x);
+ adminComparison(root,'Situation démographique de la commune et de ses territoires');
  const all=available().filter(v=>v.id!=='fiche'&&v.id!=='sources');
  if(all.length){
   const section=card('Analyses disponibles','Seules les rubriques alimentées par des valeurs exploitables sont accessibles.');
@@ -87,6 +138,8 @@ function fiche(root){
 }
 function population(root){
  metrics(root,cat('population'));
+ populationSummary(root);
+ adminComparison(root);
  const trend=arr(state.analysis?.categories?.population_historique).filter(x=>typeof x.population==='number'&&Number.isFinite(x.annee));
  if(trend.length>=2){
   chart(root,'Évolution de la population',trend.map(x=>({label:String(x.annee),valeur:x.population,unit:'habitants',millesime:x.annee})),
@@ -172,10 +225,12 @@ function risques(root){
 function programmation(root){
  const group=[...cat('population'),...cat('logements'),...cat('permis'),...cat('prix')];
  metrics(root,group);
+ populationSummary(root);
  if(homes().length)chart(root,'Parc existant',homes().map(x=>({label:x.label,valeur:x.valeur,unit:'logements'})),state.housing?.source);
 }
 function commercial(root){
  metrics(root,[...cat('prix'),...cat('revenus')]);
+ if(rents().length)root.append(elem('p','source','Les loyers publiés sont des estimations de logements types, non des prix de sortie du neuf.'));
  if(rents().length)loyers(root);
  if(sales().length)dvf(root);
 }
@@ -205,6 +260,7 @@ function provenance(root){
 function globalData(root){
  const all=arr(state.analysis?.indicateurs).filter(good);
  metrics(root,all);
+ adminComparison(root);
  if(ages().length)chart(root,'Répartition des âges',ages().map(x=>({label:x.libelle,valeur:x.valeur,unit:'habitants',millesime:x.millesime})),state.analysis?.demographie_detail?.source);
  if(homes().length)chart(root,'Composition du parc de logements',homes().map(x=>({label:x.label,valeur:x.valeur,unit:'logements'})),state.housing?.source);
  if(rents().length)loyers(root);
@@ -229,7 +285,7 @@ function missingDataContext(root,tab){
   rows.append(x);
  }
  if(rows.childElementCount)c.append(rows);
- c.append(elem('p','source','Aucun indicateur chiffré vérifié n’est encore disponible dans cette rubrique pour la commune sélectionnée. Les autres rubriques conservent les données déjà reçues.'));
+ c.append(elem('p','source','Les repères affichés correspondent à l’adresse vérifiée dans le référentiel administratif national.'));
  const references={
   familles:{name:'INSEE — Recensement de la population',url:'https://www.insee.fr/'},
   salaires:{name:'INSEE — Statistiques sur les salaires',url:'https://www.insee.fr/'},
@@ -364,6 +420,7 @@ async function load(){
  const l=state.loc,q=new URLSearchParams({code_insee:l.code_insee,adresse:l.adresse||requested,code_postal:l.code_postal||'',ban_id:l.ban_id||''});
  await Promise.all([
   (async()=>{state.analysis=await get('/api/indicateurs?'+q,93000);redraw()})(),
+  (async()=>{state.admin=await get('/api/profil-administratif?code_insee='+encodeURIComponent(l.code_insee),18000);redraw()})(),
   (async()=>{state.housing=await get('/api/logements-detail?code_insee='+encodeURIComponent(l.code_insee),65000);redraw()})(),
   (async()=>{state.rent=await get('/api/loyers?code_insee='+encodeURIComponent(l.code_insee),60000);redraw()})(),
   (async()=>{
