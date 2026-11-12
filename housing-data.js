@@ -42,6 +42,7 @@ function eligible(o,geo){
  const g=String(dim(o,'GEO')||'');
  if(![geo.code,geo.year+'-'+geo.type+'-'+geo.code,geo.type+'-'+geo.code].includes(g))return false;
  if(dim(o,'RP_MEASURE')!==undefined && dim(o,'RP_MEASURE')!=='DWELLINGS')return false;
+ if(dim(o,'MEASURE')!==undefined && dim(o,'MEASURE')!=='DWELLINGS')return false;
  const date=Number(dim(o,'TIME_PERIOD'));
  return date>=2012&&date<=2026&&val(o)!==null;
 }
@@ -80,7 +81,7 @@ async function studyOne(geo){
  for(const target of geos){
   try{
    const u=new URL('https://api.insee.fr/melodi/data/DS_RP_SERIE_HISTORIQUE');
-   u.searchParams.set('GEO',target);u.searchParams.set('RP_MEASURE','DWELLINGS');u.searchParams.set('maxResult','1000');
+   u.searchParams.set('GEO',target);u.searchParams.set('MEASURE','DWELLINGS');u.searchParams.set('maxResult','1000');
    const raw=await memo('logement-historique:'+u.search,()=>request(u.toString(),13000),3600000);
    series=objects(raw).filter(o=>eligible(o,geo));
    if(series.length)break;
