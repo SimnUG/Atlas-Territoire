@@ -3,6 +3,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 const official = require('./official-data');
 const catalog = require('./data-catalog');
+const rental = require('./rental-data');
+const housing = require('./housing-data');
 
 const PORT = Number(process.env.PORT || 3000);
 const PUBLIC = path.join(__dirname, 'public');
@@ -38,7 +40,17 @@ http.createServer(async(req,res)=>{
     try {return send(res,200,await catalog.discover((url.searchParams.get('q')||'').trim(),url.searchParams.get('page')||'1'));}
     catch(e){return send(res,503,{erreur:e.message||'Catalogue officiel indisponible'});}
   }
-  if(url.pathname==='/api/health')return send(res,200,{status:'ok',version:'0.2',sources:['INSEE','ADEME','data.gouv.fr']});
+  if(url.pathname==='/api/loyers'||url.pathname==='/api/logements-detail'){
+    const code=(url.searchParams.get('code_insee')||'').trim();
+    if(!/^(?:[0-9]{5}|2[AB][0-9]{3})$/i.test(code))return send(res,400,{erreur:'Code INSEE invalide'});
+    try{
+      const result=url.pathname==='/api/loyers'
+        ?await rental.rent({code,historique:url.searchParams.get('historique')==='1'})
+        :await housing.housing(code);
+      return send(res,200,result);
+    }catch(err){return send(res,502,{erreur:err.message||'Source officielle momentanément indisponible'});}
+  }
+  if(url.pathname==='/api/health')return send(res,200,{status:'ok',version:'0.4',sources:['INSEE','ADEME','DVF','Sitadel','DGCL–OFGL','Ministère de la Transition écologique']});
   if(url.pathname==='/api/indicateurs'){
     try{
       const code_insee=(url.searchParams.get('code_insee')||'').trim();
