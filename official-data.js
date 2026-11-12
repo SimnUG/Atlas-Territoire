@@ -120,6 +120,20 @@ async function ademeDpe(adresse,code,postcode,banId){
  const unique=[...new Map(records.map(x=>[x.numero,x])).values()];
  return {enregistrements:unique.slice(0,20),nombre_resultats_exacts:unique.length,erreurs:errors};
 }
+async function logements(code){
+ const indicators=[],errors=[];
+ try{
+   const result=await melodi('DS_RP_LOGEMENT_PRINC',code,{OCS:'DW_MAIN',TDW:'_T'});
+   const matches=asObservations(result).map(o=>({
+     valeur:value(o),millesime:year(o),oc:cell(o,'OCS'),typ:cell(o,'TDW'),geo:cell(o,'GEO')
+   })).filter(x=>x.valeur!==null&&x.millesime&&x.oc==='DW_MAIN'&&x.typ==='_T'&&String(x.geo).endsWith('-'+code));
+   const chosen=latest(matches);
+   if(chosen)indicators.push(indicator('Résidences principales',Math.round(chosen.valeur),'logements',chosen.millesime,SRC.insee,'commune',{dataset:'DS_RP_LOGEMENT_PRINC'}));
+   else errors.push('Logements INSEE : aucune observation exploitable');
+ }catch(e){errors.push('Logements INSEE : '+e.message)}
+ return {indicateurs:indicators,erreurs:errors};
+}
+
 async function finances(code){
  const out=[],errors=[];
  const url=new URL('https://data.ofgl.fr/api/explore/v2.1/catalog/datasets/ofgl-base-communes/records');
@@ -150,20 +164,20 @@ async function finances(code){
 
 async function analyze({code_insee,adresse,code_postal,ban_id}){
  if(!/^([0-9]{5}|2[AB][0-9]{3})$/i.test(code_insee||''))throw Error('Code INSEE invalide');
- const [insee,geo,dpe,ofgl]=await Promise.all([
+ const [insee,geo,dpe,ofgl,rpLogements]=await Promise.all([
    population(code_insee), administrative(code_insee),
-   adresse?ademeDpe(adresse,code_insee,code_postal,ban_id):Promise.resolve({enregistrements:[],nombre_resultats_exacts:0,erreurs:[]}), finances(code_insee)
+   adresse?ademeDpe(adresse,code_insee,code_postal,ban_id):Promise.resolve({enregistrements:[],nombre_resultats_exacts:0,erreurs:[]}), finances(code_insee), logements(code_insee)
  ]);
  const byName=new Map();
- for(const v of [...geo.indicateurs,...insee.indicateurs,...ofgl.indicateurs])byName.set(v.nom,v);
+ for(const v of [...geo.indicateurs,...insee.indicateurs,...ofgl.indicateurs,...rpLogements.indicateurs])byName.set(v.nom,v);
  const all=[...byName.values()];
  // Référence Melodi prioritaire ; la population API Géo conserve un statut informatif sans millésime.
- const stats={population:all.filter(x=>x.nom.startsWith('Population')),revenus:all.filter(x=>x.nom.startsWith('Niveau')),finances:ofgl.indicateurs};
+ const stats={population:all.filter(x=>x.nom.startsWith('Population')),revenus:all.filter(x=>x.nom.startsWith('Niveau')),finances:ofgl.indicateurs,logements:rpLogements.indicateurs};
  return {code_insee,adresse:adresse||null,commune:geo.commune||null,
-   categories:{population:stats.population,revenus:stats.revenus,finances:stats.finances,dpe:dpe.enregistrements},
+   categories:{population:stats.population,revenus:stats.revenus,finances:stats.finances,logements:stats.logements,dpe:dpe.enregistrements},
    indicateurs:all,dpe:{nombre_resultats_exacts:dpe.nombre_resultats_exacts,enregistrements:dpe.enregistrements},
    sources:[SRC.insee,SRC.geo,SRC.ademe,SRC.ofgl],
-   erreurs:[...insee.erreurs,...geo.erreurs,...dpe.erreurs,...ofgl.erreurs],
+   erreurs:[...insee.erreurs,...geo.erreurs,...dpe.erreurs,...ofgl.erreurs,...rpLogements.erreurs],
    indisponibles:['DVF : accès aux mutations à intégrer','Sitadel : données de permis à intégrer','Autres catégories : connecteurs non encore validés'],
    genere_le:new Date().toISOString(),
    avertissement:'Les indicateurs agrégés portent sur la commune, pas sur le seul immeuble. Un DPE ne correspond à l’adresse que lorsque son identifiant BAN ou son adresse normalisée coïncide exactement.'
