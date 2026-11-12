@@ -21,3 +21,43 @@ table{width:100%;border-collapse:collapse;font-size:11px;text-align:left}th{font
 @media(max-width:1100px){.sidebar{width:217px}.content{padding:25px 20px}.top{padding:13px 20px}.grid4{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:790px){.grid2,.grid3{grid-template-columns:1fr}.addressPill{white-space:normal}}
 @media(max-width:650px){.sidebar{position:fixed;z-index:30;left:-260px;top:0;width:252px;transition:left .2s}.sidebar.show{left:0}#mobileNav{display:inline-flex;background:white;border:1px solid #e4e6ee;border-radius:8px;padding:7px 10px}#overlay.show{display:block;position:fixed;inset:0;background:#141a2b84;z-index:29}.top{padding:12px 14px}.content{padding:22px 14px}.titleRow{align-items:flex-start;flex-wrap:wrap}.toolRow{margin-bottom:14px}.grid4{grid-template-columns:repeat(2,minmax(0,1fr))}.addressPill{width:100%}}
+
+/* Présentation inspirée des deux captures fournies : loyers privés et logements. */
+.rent-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.rent-card{padding:14px 13px;min-height:245px}
+.rent-head{display:flex;justify-content:space-between;align-items:center;gap:6px;font-weight:800;font-size:10px;text-transform:uppercase;letter-spacing:.1px;color:#4d5770;min-height:17px}
+.rent-head .chip{font-size:9px}
+.rent-value{font-size:18px;font-weight:800;color:#283357;margin:5px 0 0;letter-spacing:-.5px}
+.rent-extra{font-size:9px;color:#8e96a7;line-height:1.4}
+.mini-rent-chart{height:142px;display:flex;gap:5px;justify-content:space-around;align-items:flex-end;padding:8px 0 0}
+.mini-rent-column{flex:1;max-width:55px;display:flex;flex-direction:column;align-items:center;gap:3px;color:#8190a4;font-size:9px}
+.mini-rent-column .bar-number{height:14px;font-size:9px;font-weight:650;color:#64718a}
+.mini-rent-bar{background:#9da6c1;height:85px;width:100%;min-height:3px;border-radius:2px 2px 0 0}
+.rent-bar-missing{height:5px!important;background:#ebedf4!important}
+.mini-rent-column .year{font-size:9px}
+.rental-section-title{font-size:12px;letter-spacing:-.2px;margin:18px 0 12px;font-weight:800}
+.rent-yield{min-height:112px;padding:13px}
+.rent-yield-empty{margin-top:9px;font-size:15px;font-weight:750;color:#b0b6c2}
+.rent-yield .source{font-size:9px}
+.rent-warning{color:#96612d;font-size:9px;margin:5px 0}
+.housing-reference{background:white;border:1px solid var(--border);border-radius:11px;overflow:hidden}
+.housing-reference-title{background:#757e8e;color:white;padding:6px 12px;letter-spacing:.5px;font-size:10px;font-weight:760}
+.housing-ref-grid{display:grid;grid-template-columns:repeat(3,1fr)}
+.housing-reference-cell{padding:12px;border-right:1px solid #e7e9ef;display:flex;flex-direction:column;gap:5px}
+.housing-reference-cell:last-child{border-right:0}
+.housing-reference-cell span{font-size:10px;color:#8b94a2}
+.housing-reference-cell strong{font-size:15px;font-weight:750;color:#343d55}
+.housing-reference .source{margin:0;padding:6px 12px;border-top:1px solid #eff0f4}
+.comparison-headers,.comparison-row{display:grid;grid-template-columns:minmax(180px,1.35fr) repeat(2,minmax(0,1fr));gap:16px;align-items:center;border-bottom:1px solid #eceef4;padding:12px 5px}
+.comparison-headers{font-size:10px;font-weight:760;color:#7d879a;background:#f7f8fb}
+.comparison-row{font-size:11px}
+.comparison-row:nth-child(even){background:#fafbfc}
+.comparison-label{font-weight:670;color:#36415b}
+.comparison-cell strong{font-size:11px}
+.comparison-track{height:5px;border-radius:99px;background:#e9ecf4;margin-top:5px;overflow:hidden}
+.comparison-fill{height:100%;background:#364878;border-radius:99px}
+.comparison-cell:nth-child(3) .comparison-fill{background:#222a58}
+.muted{color:#a2aab9}
+@media(max-width:1100px){.rent-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.rent-grid{grid-template-columns:1fr}.comparison-headers,.comparison-row{gap:5px;grid-template-columns:minmax(100px,1.3fr) repeat(2,minmax(0,1fr))}.comparison-label{font-size:10px}.housing-reference-cell{padding:8px}.housing-reference-cell span{font-size:9px}}
+@media print{.sidebar,.top,.toolRow{display:none!important}.page{width:100%}.content{padding:8px}.card{break-inside:avoid}.rent-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
