@@ -89,6 +89,25 @@ function methodPanel(root,id){
  const m=meta[id],box=card('Points de contrôle pour l’étude de marché','Éléments à interpréter après disponibilité des jeux officiels.');
  const lines=e('div');for(const question of m.questions){const x=e('div','line');add(x,e('b',null,question),e('span',null,'À documenter'));lines.append(x)}box.append(lines);sourceFooter(box,m.sources);box.classList.add('section');root.append(box);
 }
+function financeDetail(root){
+ const arr=(data?.categories?.finances||[]).filter(x=>typeof x.valeur==='number'&&x.valeur>=0);
+ const c=card('Lecture budgétaire communale','Comparaison des montants issus des comptes DGCL–OFGL, sans projection ni simulation.');
+ if(arr.length){
+  const max=Math.max(1,...arr.map(x=>x.valeur));
+  for(const rowData of arr.slice(0,7)){
+   const row=e('div','barRow');
+   row.style.gridTemplateColumns='minmax(135px,1fr) minmax(90px,2fr) minmax(95px,1fr)';
+   const track=e('div','track'),fill=e('div','fill');
+   fill.style.width=Math.max(2,rowData.valeur/max*100)+'%';track.append(fill);
+   add(row,e('span',null,rowData.nom),track,e('span','pct',fmt(rowData.valeur,'€')));
+   c.append(row);
+  }
+  const sources=[...new Set(arr.map(sourceText))];
+  c.append(e('p','source',sources.join(' · ')));
+ }else c.append(empty('Comptes communaux non disponibles','Les données DGCL–OFGL doivent avoir un exercice budgétaire et un périmètre vérifiables.'));
+ c.classList.add('section');root.append(c);
+}
+
 function populationAges(root){
  const groups=data?.demographie_detail?.tranches_age||[];
  const c=card('Répartition de la population par tranche d’âge','Recensement INSEE : effectifs par classe d’âge, à l’échelle communale. Les classes ne sont pas utilisées pour inventer une programmation immobilière.');
@@ -203,6 +222,7 @@ function draw(){
  else if(current==='toutes')allData(root);
  else if(current==='permis')permits(root);
  else if(current==='population'){leadMetrics(root,'population');populationAges(root);standardPanels(root,'population');methodPanel(root,'population')}
+ else if(current==='finances'){leadMetrics(root,'finances');financeDetail(root);standardPanels(root,'finances');methodPanel(root,'finances')}
  else if(current==='prix'){leadMetrics(root,'prix');standardPanels(root,'prix');dvfTable(root);methodPanel(root,'prix')}
  else{leadMetrics(root,current);standardPanels(root,current);methodPanel(root,current)}
 }
