@@ -127,11 +127,11 @@ function interpret(row,year,kind){
  /^loypred/, /^loyer.*m2$/, /^medianloyer/
  ]);
  const n=nval(val.value);
- const geo=colValue(row,[/^niveaugeo$/, /^nivgeo$/, /^niveauprediction$/, /^niveaugeographique$/, /^echgeo$/]);
- const obs=colValue(row,[/^nbobs$/, /^nobs$/, /^nombreannonces$/, /^nbannonces$/, /^nombreobservations$/, /^nbann/]);
+ const geo=colValue(row,[/^typpred$/, /^niveaugeo$/, /^nivgeo$/, /^niveauprediction$/, /^niveaugeographique$/, /^echgeo$/]);
+ const obs=colValue(row,[/^nbobscom$/, /^nbobs$/, /^nobs$/, /^nombreannonces$/, /^nbannonces$/, /^nombreobservations$/, /^nbann/]);
  const r2=colValue(row,[/^r2adj$/, /^r2$/, /^r2ajuste$/]);
- const lo=colValue(row,[/^loypredm2min$/, /^loybasse$/, /^low$/, /^ipbas/, /^borneinf/]);
- const hi=colValue(row,[/^loypredm2max$/, /^loyhaute$/, /^high$/, /^iphaut/, /^bornesup/]);
+ const lo=colValue(row,[/^lwripm2$/, /^loypredm2min$/, /^loybasse$/, /^low$/, /^ipbas/, /^borneinf/]);
+ const hi=colValue(row,[/^upripm2$/, /^loypredm2max$/, /^loyhaute$/, /^high$/, /^iphaut/, /^bornesup/]);
  const level=String(geo.value||'').trim();
  return {
   type:kind,annee:year,loyer:n!==null&&n>0&&n<150?n:null,unite:'€/m²/mois',
