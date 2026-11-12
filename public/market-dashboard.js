@@ -88,6 +88,22 @@ function methodPanel(root,id){
  const m=meta[id],box=card('Points de contrôle pour l’étude de marché','Éléments à interpréter après disponibilité des jeux officiels.');
  const lines=e('div');for(const question of m.questions){const x=e('div','line');add(x,e('b',null,question),e('span',null,'À documenter'));lines.append(x)}box.append(lines);sourceFooter(box,m.sources);box.classList.add('section');root.append(box);
 }
+function populationAges(root){
+ const groups=data?.demographie_detail?.tranches_age||[];
+ const c=card('Répartition de la population par tranche d’âge','Recensement INSEE : effectifs par classe d’âge, à l’échelle communale. Les classes ne sont pas utilisées pour inventer une programmation immobilière.');
+ if(groups.length){
+   const max=Math.max(1,...groups.map(g=>g.valeur));
+   for(const g of groups){
+    const row=e('div','barRow');
+    const track=e('div','track');const fill=e('div','fill');fill.style.width=Math.max(2,g.valeur/max*100)+'%';track.append(fill);
+    add(row,e('span',null,g.libelle),track,e('span','pct',fmt(g.valeur)),e('span','count',String(g.millesime)));
+    c.append(row);
+   }
+   c.append(e('p','source','Valeurs du recensement de la population — INSEE, dernier millésime disponible dans les observations reçues. Les classes absentes ne sont pas extrapolées.'));
+ }else c.append(empty('Structure par âge indisponible','Aucune distribution cohérente n’a été vérifiée dans les réponses de l’INSEE.'));
+ c.classList.add('section');root.append(c);
+}
+
 function programming(root){
  const warn=e('div','alert','La programmation T1 à T5 doit être calculée sur des distributions réelles de ménages et confrontée aux permis et ventes. Sans ces données détaillées, une répartition chiffrée serait trompeuse.');root.append(warn);
  const grid=e('div','grid2');for(const [name,desc] of [['Programmation au niveau commune','La première lecture de programmation s’appuie sur les besoins résidentiels communaux.'],['Programmation opérationnelle','La programmation d’une opération exige les caractéristiques du terrain, son PLU et son marché.']]){
@@ -185,6 +201,7 @@ function draw(){
  else if(current==='dpe')dpe(root);
  else if(current==='toutes')allData(root);
  else if(current==='permis')permits(root);
+ else if(current==='population'){leadMetrics(root,'population');populationAges(root);standardPanels(root,'population');methodPanel(root,'population')}
  else if(current==='prix'){leadMetrics(root,'prix');standardPanels(root,'prix');dvfTable(root);methodPanel(root,'prix')}
  else{leadMetrics(root,current);standardPanels(root,current);methodPanel(root,current)}
 }
