@@ -4,7 +4,7 @@ const address=new URLSearchParams(location.search).get('adresse')||'';
 const sectionGroups=[
 {title:'Programmation',items:[['programmation','▥','Programmation théorique'],['commercialisation','◈','Commercialisation'],['toutes','▦','Toutes les données']]},
 {title:'Socio / Démo',items:[['population','♙','Population'],['familles','♧','Familles et ménages'],['emploi','◫','Emploi et activité'],['salaires','▤','Salaires nets'],['revenus','◇','Revenus disponibles'],['migrations','⇄','Migrations résidentielles'],['elections','▣','Élections'],['equipements','♧','Équipements et transports']]},
-{title:'Immo',items:[['logements','⌂','Logements'],['social','▥','Parc social'],['sru','▤','Loi SRU'],['zonage','◈','Zonage ABC'],['permis','▧','Permis de construire'],['prix','€','Prix immobiliers — DVF']]},
+{title:'Immo',items:[['logements','⌂','Logements'],['social','▥','Parc social'],['sru','▤','Loi SRU'],['zonage','◈','Zonage ABC'],['permis','▧','Permis de construire'],['prix','€','Prix immobiliers — DVF'],['loyers','◈','Loyers du parc privé']]},
 {title:'Énergie et territoire',items:[['dpe','◉','DPE et audits'],['batiments','▦','Bâtiments — BDNB'],['environnement','♧','Environnement'],['finances','€','Finances locales']]}
 ];
 const meta={
@@ -25,12 +25,14 @@ sru:{title:'Loi SRU',head:'IMMO',desc:'Obligations applicables à la commune et 
 zonage:{title:'Zonage ABC',head:'IMMO',desc:'Classement réglementaire et conséquences possibles sur les dispositifs de logement.',sources:['Ministère de la Transition écologique'],left:'Zonage réglementaire',right:'Dispositifs concernés',questions:['Quel zonage s’applique à la commune ?','Quel arrêté est en vigueur ?','Quelles conséquences sur la programmation ?']},
 permis:{title:'Permis de construire',head:'IMMO',desc:'Flux de logements autorisés et commencés selon Sitadel et leur chronologie.',sources:['Sitadel / SDES'],left:'Logements autorisés',right:'Dynamique de construction',questions:['Combien de logements ont été autorisés ?','Quelle est la dernière année complète ?','Quelle part est commencée ?']},
 prix:{title:'Prix immobiliers — DVF',head:'IMMO',desc:'Mutations enregistrées, prix de vente et références de marché existantes.',sources:['DVF / DGFiP'],left:'Prix observés au m²',right:'Volume des mutations',questions:['Quel est le prix médian des mutations comparables ?','Quelle est la profondeur du marché ?','Les ventes complexes sont-elles exclues ?']},
+loyers:{title:'Loyers du parc privé',head:'IMMO',desc:'Loyers d’annonces non meublées charges comprises : appartements, T1/T2, T3 et plus, maisons. Source ministérielle.',sources:['Ministère de la Transition écologique — Carte des loyers'],left:'Loyers d’annonce par typologie',right:'Rendement locatif brut',questions:['Quel loyer est observé pour le bien type ?','La comparaison 2022–2025 est-elle statistiquement valide ?','Dispose-t-on de ventes DVF comparables pour calculer un rendement brut ?']},
 dpe:{title:'DPE et audits',head:'ÉNERGIE ET TERRITOIRE',desc:'Diagnostics énergétiques rattachés avec certitude à l’adresse recherchée.',sources:['ADEME','DPE — Audit'],left:'Étiquettes énergie',right:'Émissions de gaz à effet de serre',questions:['Des DPE correspondent-ils exactement à cette adresse ?','Quel est leur état de validité ?','La rénovation représente-t-elle un enjeu ?']},
 batiments:{title:'Bâtiments — BDNB',head:'ÉNERGIE ET TERRITOIRE',desc:'Caractéristiques des bâtiments existants, composition technique et ancienneté.',sources:['BDNB'],left:'Caractéristiques du bâti',right:'Périodes de construction',questions:['Quel bâtiment correspond à l’adresse ?','Quelle est sa période de construction ?','Quelles informations sont mesurées ou estimées ?']},
 environnement:{title:'Environnement',head:'ÉNERGIE ET TERRITOIRE',desc:'Artificialisation, consommation foncière et enjeux d’aménagement durable.',sources:['Ministère de la Transition écologique','Observatoire des territoires'],left:'Consommation d’espaces',right:'Occupation du sol',questions:['Le territoire consomme-t-il de nouveaux espaces ?','Quels enjeux de densification ?','Quelle période de référence ?']},
 finances:{title:'Finances locales',head:'ÉNERGIE ET TERRITOIRE',desc:'Capacité d’investissement communale et lecture des budgets publics officiels.',sources:['DGCL — OFGL'],left:'Recettes et dépenses',right:'Épargne et investissement',questions:['Quelle est l’épargne disponible ?','Quel niveau d’investissement ?','Les budgets sont-ils comparables sur la même période ?']}
 };
 let current='programmation',locationData=null,data=null,loading=true,error=null,registry=null;
+let rentalValues=null,housingValues=null,rentLoading=false,housingLoading=false,rentError=null,housingError=null,rentAttempted=false,housingAttempted=false;
 const nf=new Intl.NumberFormat('fr-FR',{maximumFractionDigits:1});
 const e=(tag,cls,txt)=>{const el=document.createElement(tag);if(cls)el.className=cls;if(txt!==undefined&&txt!==null)el.textContent=String(txt);return el};
 const fmt=(v,u='')=>typeof v==='number'&&Number.isFinite(v)?nf.format(v)+(u?' '+u:''):'—';
@@ -208,6 +210,141 @@ function allData(root){
  const issues=data?.erreurs||[];
  if(issues.length){const box=card('Sources temporairement indisponibles','Messages techniques transmis sans fabrication de valeur.');const rows=e('div');for(const err of issues.slice(0,12))rows.append(e('div','line',err));box.append(rows);box.classList.add('section');root.append(box)}
 }
+
+function narrowChart(series,color,comparable){
+ const graph=e('div','mini-rent-chart');
+ for(const year of [2022,2023,2024,2025]){
+  const d=(series||[]).find(x=>x.annee===year);
+  const use=d&&typeof d.loyer==='number'&&(year===2025||comparable);
+  const cell=e('div','mini-rent-column');
+  const num=e('span','bar-number',use?fmt(d.loyer).replace(',','.'):'—');
+  const bar=e('div','mini-rent-bar');
+  if(use){bar.style.height=Math.max(12,Math.min(88,d.loyer/25*90))+'px';bar.style.background=year===2025?color:color+'aa';}
+  else bar.classList.add('rent-bar-missing');
+  cell.append(num,bar,e('span','year',year));
+  graph.append(cell);
+ }
+ return graph;
+}
+function rentsPage(root){
+ if(rentLoading)root.append(e('div','alert neutral','Chargement des cartes des loyers officielles 2022–2025…'));
+ if(rentError)root.append(e('div','alert','Données des loyers : '+rentError));
+ if(!rentalValues&&!rentLoading)root.append(e('div','alert neutral','Le chargement des loyers attend l’identification de la commune.'));
+ const typologies=[
+  ['appartements','APPARTEMENTS','#283663'],
+  ['petits','APPARTEMENTS T1/T2','#45789d'],
+  ['grands','APPARTEMENTS T3 ET PLUS','#695797'],
+  ['maisons','MAISONS','#d10a72']
+ ];
+ const grid=e('div','rent-grid');
+ for(const [id,label,color] of typologies){
+  const type=(rentalValues?.types||[]).find(x=>x.id===id);
+  const c=e('article','card rent-card');
+  const head=e('div','rent-head');
+  const title=e('strong',null,label);title.style.color=color;head.append(title);
+  const latest=(type?.serie||[]).find(x=>x.annee===2025);
+  if(latest?.niveau_prediction)head.append(e('span','chip','Niveau : '+latest.niveau_prediction));
+  c.append(head);
+  c.append(e('div','rent-value',typeof type?.dernier==='number'?fmt(type.dernier,'€/m²'):'— €/m²'));
+  const y=e('div','rent-extra','en 2025 · loyers d’annonces charges comprises');c.append(y);
+  c.append(narrowChart(type?.serie||[],color,type?.historique_comparable===true));
+  if(type?.note)c.append(e('p','source',type.note));
+  if(latest?.fiabilite)c.append(e('p','rent-warning',latest.fiabilite));
+  if(!type&&!rentLoading)c.append(e('p','source','Aucun résultat officiel pour cette typologie.'));
+  grid.append(c);
+ }
+ root.append(grid);
+ const label=e('h2','rental-section-title','Rendement locatif brut');root.append(label);
+ const yieldGrid=e('div','rent-grid');
+ for(const [id,title,color] of typologies){
+  const c=e('article','card rent-yield');
+  c.append(e('div','rent-head',title));
+  c.append(e('div','rent-yield-empty','Non calculable'));
+  c.append(e('p','source','Un rendement brut nécessite un prix d’achat médian DVF comparable pour cette typologie, ainsi qu’un loyer annuel. Les données actuelles ne permettent pas un calcul fiable.'));
+  yieldGrid.append(c);
+ }
+ root.append(yieldGrid);
+ const disclaimer=card('Méthode et fiabilité','Série officielle « Carte des loyers » : logements non meublés et loyers d’annonces charges comprises.');
+ const list=e('div');
+ for(const msg of [
+  'Les barres historiques 2022–2024 ne sont affichées que lorsque le niveau de prédiction est confirmé communal sur les millésimes comparés.',
+  'Une estimation peut être produite à partir de communes voisines si peu d’annonces sont disponibles localement.',
+  'Pour 2025, les biens types ont des surfaces de référence : appartement 52 m², T1/T2 37 m², T3+ 72 m², maison 92 m².',
+  'Source à mentionner : « Estimations ANIL, à partir des données du Groupe SeLoger et de leboncoin ».'
+ ])list.append(e('p','source',msg));
+ disclaimer.append(list);
+ const a=e('a','source','Consulter la fiche officielle de la Carte des loyers');a.href='https://www.data.gouv.fr/datasets/carte-des-loyers-indicateurs-de-loyers-dannonce-par-commune-en-2025';a.target='_blank';a.rel='noopener noreferrer';disclaimer.append(a);
+ disclaimer.classList.add('section');root.append(disclaimer);
+ const epi=card('Position dans le bassin de marché','Une comparaison avec l’intercommunalité nécessite des séries de loyers de communes voisines, établies avec le même millésime et la même méthode.');
+ epi.append(empty('Comparaison à compléter','Aucune moyenne intercommunale n’est fabriquée à partir d’un nombre incomplet de communes.'));
+ epi.classList.add('section');root.append(epi);
+}
+function compRow(title,epci,commune,max){
+ const row=e('div','comparison-row');
+ row.append(e('div','comparison-label',title));
+ for(const item of [epci,commune]){
+  const cell=e('div','comparison-cell');
+  if(typeof item==='number'){
+   cell.append(e('strong',null,fmt(item)));
+   const bar=e('div','comparison-track'),fill=e('div','comparison-fill');
+   fill.style.width=(max>0?Math.min(100,item/max*100):0)+'%';bar.append(fill);cell.append(bar);
+  }else cell.append(e('span','muted','—'));
+  row.append(cell);
+ }
+ return row;
+}
+function housingPage(root){
+ if(housingLoading)root.append(e('div','alert neutral','Chargement des données logements INSEE pour la commune et l’intercommunalité…'));
+ if(housingError)root.append(e('div','alert','Logements : '+housingError));
+ const commune=housingValues?.commune||{},epci=housingValues?.epci||{};
+ const cells=commune.distribution||[];
+ const ref=e('div','housing-reference');
+ ref.append(e('div','housing-reference-title','RÉFÉRENCE COMMUNALE — '+(commune.annee?'RP '+commune.annee:'RECENSEMENT INSEE')+' · parts du parc résidentiel'));
+ const dataLine=e('div','housing-ref-grid');
+ for(const [key,title] of [['principales','Résidences principales'],['secondaires','Résidences secondaires'],['vacants','Logements vacants']]){
+  const r=cells.find(x=>x.key===key);
+  const box=e('div','housing-reference-cell');
+  box.append(e('span',null,title));
+  box.append(e('strong',null,typeof r?.part==='number'?fmt(r.part,'%'):'—'));
+  dataLine.append(box);
+ }
+ ref.append(dataLine,e('p','source','Source : INSEE, Recensement de la population. Les données sont communales et non spécifiques au bâtiment recherché.'));root.append(ref);
+ const occ=card('Résidences principales par statut d’occupation','Comparaison entre commune et établissement public de coopération intercommunale — effectif et part (%).');
+ const top=e('div','comparison-headers');
+ top.append(e('div',null,'STATUT D’OCCUPATION'),e('div',null,epci.geo?.code?'INTERCOMMUNALITÉ ('+epci.geo.code+')':'INTERCOMMUNALITÉ'),e('div',null,'COMMUNE ('+(commune.geo?.code||'—')+')'));occ.append(top);
+ for(const r of housingValues?.occupation||[
+ {libelle:'Propriétaires'}, {libelle:'Locataires'}, {libelle:'dont locataires HLM'}, {libelle:'dont locataires du parc privé'}, {libelle:'Logés gratuitement'}
+ ])occ.append(compRow(r.libelle,r.epci,r.commune,1));
+ occ.append(e('div','source','Les chiffres du statut d’occupation restent indisponibles tant que le jeu détaillé INSEE n’a pas pu être vérifié. Aucun chiffre provenant de la capture n’a été repris.'));
+ occ.classList.add('section');root.append(occ);
+ const sections=[
+ {title:'Résidences principales par nombre de pièces',key:'pieces',desc:'Répartition du parc habité selon le nombre de pièces, pour la commune et l’intercommunalité.'},
+ {title:'Répartition du parc de logements',key:'distribution',desc:'Résidences principales, secondaires et logements vacants selon la même définition INSEE.'}
+ ];
+ for(const sec of sections){
+  const c=card(sec.title,sec.desc);
+  const head=e('div','comparison-headers');
+  head.append(e('div',null,'CATÉGORIE'),e('div',null,'INTERCOMMUNALITÉ'),e('div',null,'COMMUNE'));c.append(head);
+  const comp=sec.key==='pieces'?(commune.pieces||[]):(commune.distribution||[]);
+  const epciRows=sec.key==='pieces'?(epci.pieces||[]):(epci.distribution||[]);
+  if(comp.length||epciRows.length){
+   const keys=new Set([...comp.map(x=>x.piece||x.key),...epciRows.map(x=>x.piece||x.key)]);
+   const max=Math.max(1,...comp.map(x=>x.valeur),...epciRows.map(x=>x.valeur));
+   for(const k of keys){
+    const a=comp.find(x=>(x.piece||x.key)===k),b=epciRows.find(x=>(x.piece||x.key)===k);
+    c.append(compRow(a?.piece||a?.label||b?.piece||b?.label||k,b?.valeur,a?.valeur,max));
+   }
+  }else c.append(empty('Données non disponibles','Les résultats INSEE n’ont pas fourni de répartition complète pour les périmètres demandés.'));
+  c.append(e('div','source','INSEE — Recensement de la population. Les effectifs ne sont comparés que lorsque le jeu de données et les périmètres sont vérifiés.'));
+  c.classList.add('section');root.append(c);
+ }
+ const methodological=card('Analyse du parc résidentiel','Indicateurs permettant d’interpréter la programmation et les besoins immobiliers.');
+ methodological.append(e('p','source','La part des résidences principales traduit l’importance de l’occupation permanente. La vacance doit être interprétée en fonction des caractéristiques du parc, sans déduire directement une demande de logements neufs.'));
+ const errors=[...(commune.erreurs||[]),...(epci.erreurs||[])];
+ if(errors.length)methodological.append(e('div','alert neutral','Données incomplètes : '+errors.slice(0,3).join(' • ')));
+ methodological.classList.add('section');root.append(methodological);
+}
+
 function draw(){
  const m=meta[current];renderNav();$('category').textContent=m.head;$('pageTitle').textContent=m.title;$('description').textContent=m.desc;$('crumbCategory').textContent=m.title;
  $('currentAddress').textContent=locationData?.adresse||address||'Adresse non renseignée';
@@ -224,9 +361,30 @@ function draw(){
  else if(current==='population'){leadMetrics(root,'population');populationAges(root);standardPanels(root,'population');methodPanel(root,'population')}
  else if(current==='finances'){leadMetrics(root,'finances');financeDetail(root);standardPanels(root,'finances');methodPanel(root,'finances')}
  else if(current==='prix'){leadMetrics(root,'prix');standardPanels(root,'prix');dvfTable(root);methodPanel(root,'prix')}
+ else if(current==='loyers')rentsPage(root);
+ else if(current==='logements')housingPage(root);
  else{leadMetrics(root,current);standardPanels(root,current);methodPanel(root,current)}
 }
-function select(id){if(!meta[id])return;current=id;draw();$('side').classList.remove('show');$('overlay').classList.remove('show');window.scrollTo(0,0)}
+async function loadRent(){
+ if(rentAttempted||!locationData?.code_insee)return;
+ rentAttempted=true;rentLoading=true;if(current==='loyers')draw();
+ try{rentalValues=await request('/api/loyers?historique=1&code_insee='+encodeURIComponent(locationData.code_insee),115000);}
+ catch(err){rentError=err.message||'Récupération impossible'}
+ rentLoading=false;if(current==='loyers')draw();
+}
+async function loadHousing(){
+ if(housingAttempted||!locationData?.code_insee)return;
+ housingAttempted=true;housingLoading=true;if(current==='logements')draw();
+ try{housingValues=await request('/api/logements-detail?code_insee='+encodeURIComponent(locationData.code_insee),65000);}
+ catch(err){housingError=err.message||'Récupération impossible'}
+ housingLoading=false;if(current==='logements')draw();
+}
+function loadSelected(){
+ if(current==='loyers')void loadRent();
+ if(current==='logements')void loadHousing();
+}
+
+function select(id){if(!meta[id])return;current=id;draw();loadSelected();$('side').classList.remove('show');$('overlay').classList.remove('show');window.scrollTo(0,0)}
 $('newSearch').onclick=()=>location.assign('/');
 $('mobileNav').onclick=()=>{$('side').classList.add('show');$('overlay').classList.add('show')};
 $('overlay').onclick=()=>{$('side').classList.remove('show');$('overlay').classList.remove('show')};
@@ -242,7 +400,7 @@ async function load(){
  if(!address){loading=false;error='L’adresse est absente. Revenez à la recherche.';draw();return}
  try{
   const r=await request('/api/analyse?adresse='+encodeURIComponent(address),14000);
-  locationData=r.localisation;draw();
+  locationData=r.localisation;draw();loadSelected();
   const l=r.localisation;
   if(!l?.code_insee)throw Error('Commune non identifiée');
   const q=new URLSearchParams({code_insee:l.code_insee,adresse:l.adresse||address,code_postal:l.code_postal||'',ban_id:l.ban_id||''});
