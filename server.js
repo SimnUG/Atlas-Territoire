@@ -2,6 +2,7 @@ const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
 const official = require('./official-data');
+const catalog = require('./data-catalog');
 
 const PORT = Number(process.env.PORT || 3000);
 const PUBLIC = path.join(__dirname, 'public');
@@ -30,6 +31,13 @@ const pending = new Map();
 http.createServer(async(req,res)=>{
   const url = new URL(req.url,'http://localhost');
   if(req.method!=='GET')return send(res,405,{erreur:'Méthode non autorisée'});
+  if(url.pathname==='/api/catalogue'){
+    return send(res,200,catalog.catalogue(url.searchParams.get('categorie')||''));
+  }
+  if(url.pathname==='/api/jeux-de-donnees'){
+    try {return send(res,200,await catalog.discover((url.searchParams.get('q')||'').trim(),url.searchParams.get('page')||'1'));}
+    catch(e){return send(res,503,{erreur:e.message||'Catalogue officiel indisponible'});}
+  }
   if(url.pathname==='/api/health')return send(res,200,{status:'ok',version:'0.2',sources:['INSEE','ADEME','data.gouv.fr']});
   if(url.pathname==='/api/indicateurs'){
     try{
