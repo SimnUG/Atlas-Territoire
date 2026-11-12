@@ -6,6 +6,7 @@ const catalog = require('./data-catalog');
 const rental = require('./rental-data');
 const housing = require('./housing-data');
 const territory = require('./territory-extra');
+const adminProfile = require('./administrative-profile');
 
 const PORT = Number(process.env.PORT || 3000);
 const PUBLIC = path.join(__dirname, 'public');
@@ -40,6 +41,12 @@ http.createServer(async(req,res)=>{
   if(url.pathname==='/api/jeux-de-donnees'){
     try {return send(res,200,await catalog.discover((url.searchParams.get('q')||'').trim(),url.searchParams.get('page')||'1'));}
     catch(e){return send(res,503,{erreur:e.message||'Catalogue officiel indisponible'});}
+  }
+  if(url.pathname==='/api/profil-administratif'){
+    const code=(url.searchParams.get('code_insee')||'').trim();
+    if(!/^(?:[0-9]{5}|2[AB][0-9]{3})$/i.test(code))return send(res,400,{erreur:'Code INSEE invalide'});
+    try{return send(res,200,await adminProfile.profile(code));}
+    catch(_){return send(res,200,{commune:null,epci:null,departement:null,region:null,comparaisons:[]});}
   }
   if(url.pathname==='/api/contexte-foncier'){
     const code_insee=(url.searchParams.get('code_insee')||'').trim();
