@@ -100,7 +100,7 @@ render('programmation');load();
 /* Indicateurs réels provenant UNIQUEMENT des sources officielles autorisées. */
 (function(){
 let official=null, loading=true, problem=null;
-const affected=new Set(['population','revenus','dpe','finances','toutes','programmation','commercialisation','logements']);
+const affected=new Set(['population','revenus','dpe','finances','toutes','programmation','commercialisation','logements','prix','permis']);
 function fmt(v,unit){if(typeof v==='number')return new Intl.NumberFormat('fr-FR',{maximumFractionDigits:2}).format(v)+(unit?' '+unit:'');return 'Non disponible'}
 function elt(tag,cls,txt){const e=document.createElement(tag);if(cls)e.className=cls;if(txt!==undefined)e.textContent=txt;return e}
 function addIndicator(root,i){
@@ -128,11 +128,16 @@ function draw(id){
    id==='revenus'?official.categories.revenus:
    id==='finances'?official.categories.finances:
    id==='logements'?official.categories.logements:
+   id==='prix'?official.categories.prix:
+   id==='permis'?official.categories.permis:
    id==='dpe'?[]:
    id==='toutes'||id==='programmation'||id==='commercialisation'||id==='logements'?official.indicateurs:[];
  const all=Array.isArray(chosen)?chosen:[];
  const isDpe=id==='dpe'||id==='toutes';
- if(!all.length&&!isDpe)panel.append(elt('p','subtitle','Aucun indicateur vérifié disponible actuellement pour cette catégorie.'));
+ const showDvf=id==='prix'||id==='toutes';
+ const showSitadel=id==='permis'||id==='toutes';
+ if(!all.length&&!isDpe&&!showDvf&&!showSitadel)panel.append(elt('p','subtitle','Aucun indicateur vérifié disponible actuellement pour cette catégorie.'));
+ if(!all.length&&(showDvf||showSitadel))panel.append(elt('p','subtitle','Aucun indicateur agrégé vérifié disponible actuellement pour cette catégorie.'));
  else if(all.length){panel.append(elt('p','subtitle','Chiffres transmis directement par les organismes publics — échelle communale.'));
  const cards=elt('div','grid2');
  all.forEach(i=>addIndicator(cards,i));panel.append(cards)}
@@ -149,10 +154,29 @@ function draw(id){
     for(const d of ds){const row=elt('tr');for(const k of ['numero','dpe','ges','surface','date'])row.append(elt('td',null,d[k]===null||d[k]===undefined?'—':String(d[k])));tbody.append(row)}table.append(tbody);panel.append(table);
    }else{panel.append(elt('p','subtitle','Aucun DPE identifié avec certitude pour cette adresse par la recherche actuelle. Cela ne signifie pas qu’aucun DPE n’existe.'))}
  }
- if(official.erreurs?.length){
+ if(showDvf){
+  const dvf=official.dvf||{};
+  panel.append(elt('h2',null,'Transactions immobilières — DVF+'));
+  if(dvf.statut==='partiel')panel.append(elt('p','subtitle','Résultat partiel : impossible de calculer un indicateur communal exhaustif.'));
+  const rows=dvf.transactions||[];
+  if(rows.length){
+    panel.append(elt('p','subtitle','Dernières mutations retournées par DVF+ ; chaque valeur est celle d’une mutation et non une estimation de prix du logement recherché.'));
+    const table=elt('table','table'),head=elt('thead'),h=elt('tr');
+    ['Date','Type','Valeur foncière','Surface bâtie','Prix / m²'].forEach(n=>h.append(elt('th',null,n)));head.append(h);table.append(head);
+    const tbody=elt('tbody');
+    rows.slice(0,15).forEach(t=>{const tr=elt('tr');[t.date||'—',t.type||'—',fmt(t.valeur,'€'),fmt(t.surface,'m²'),fmt(t.prix_m2,'€/m²')].forEach(n=>tr.append(elt('td',null,String(n))));tbody.append(tr)});table.append(tbody);panel.append(table);
+  }else panel.append(elt('p','subtitle','Aucune transaction DVF+ récupérée. Le service peut être indisponible, ou aucune mutation ne correspondre aux filtres.'));
+}
+if(showSitadel){
+  const sit=official.sitadel||{};
+  panel.append(elt('h2',null,'Autorisations de construire — Sitadel / SDES'));
+  panel.append(elt('p','subtitle',sit.statut==='disponible'?
+   'Données communales officielles identifiées dans le catalogue DiDo.':'Aucune observation communale vérifiée récupérée depuis DiDo. Les valeurs ne sont pas simulées.'));
+}
+if(official.erreurs?.length){
   panel.append(elt('p','source','Accès ou résultat incomplet : '+official.erreurs.join(' • ')));
  }
- panel.append(elt('p','source','Provenance : INSEE Melodi, ADEME, DGCL–OFGL et référentiel administratif data.gouv.fr. Valeurs en direct, non simulées. Les autres sources autorisées restent à connecter.'));
+ panel.append(elt('p','source','Provenance : INSEE Melodi, ADEME, DGCL–OFGL, DVF+ (DGFiP / Cerema), Sitadel / SDES et référentiel data.gouv.fr. Valeurs en direct, non simulées. Les autres sources autorisées restent à connecter.'));
  wrapper.append(panel);container.prepend(wrapper);
 }
 const originalRender=render;
