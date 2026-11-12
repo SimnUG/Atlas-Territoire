@@ -1,0 +1,12 @@
+{
+  "name": "atlas-territoires",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Recherche d'adresse et analyse territoriale à partir de sources officielles",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
