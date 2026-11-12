@@ -5,6 +5,7 @@ const official = require('./official-data');
 const catalog = require('./data-catalog');
 const rental = require('./rental-data');
 const housing = require('./housing-data');
+const territory = require('./territory-extra');
 
 const PORT = Number(process.env.PORT || 3000);
 const PUBLIC = path.join(__dirname, 'public');
@@ -40,6 +41,19 @@ http.createServer(async(req,res)=>{
     try {return send(res,200,await catalog.discover((url.searchParams.get('q')||'').trim(),url.searchParams.get('page')||'1'));}
     catch(e){return send(res,503,{erreur:e.message||'Catalogue officiel indisponible'});}
   }
+  if(url.pathname==='/api/contexte-foncier'){
+    const code_insee=(url.searchParams.get('code_insee')||'').trim();
+    const longitude=Number(url.searchParams.get('lon'));
+    const latitude=Number(url.searchParams.get('lat'));
+    if(!/^(?:[0-9]{5}|2[AB][0-9]{3})$/i.test(code_insee)
+       ||!Number.isFinite(longitude)||!Number.isFinite(latitude)||Math.abs(longitude)>180||Math.abs(latitude)>90)
+      return send(res,400,{erreur:'Coordonnées ou commune invalides'});
+    try{
+      return send(res,200,await territory.analyze({code_insee,longitude,latitude}));
+    }catch(_){
+      return send(res,200,{urbanisme:null,risques:null,sources_supplementaires:[]});
+    }
+  }
   if(url.pathname==='/api/loyers'||url.pathname==='/api/logements-detail'){
     const code=(url.searchParams.get('code_insee')||'').trim();
     if(!/^(?:[0-9]{5}|2[AB][0-9]{3})$/i.test(code))return send(res,400,{erreur:'Code INSEE invalide'});
@@ -50,7 +64,7 @@ http.createServer(async(req,res)=>{
       return send(res,200,result);
     }catch(err){return send(res,502,{erreur:err.message||'Source officielle momentanément indisponible'});}
   }
-  if(url.pathname==='/api/health')return send(res,200,{status:'ok',version:'0.4',sources:['INSEE','ADEME','DVF','Sitadel','DGCL–OFGL','Ministère de la Transition écologique']});
+  if(url.pathname==='/api/health')return send(res,200,{status:'ok',version:'0.5',sources:['INSEE','ADEME','DVF','Sitadel','DGCL–OFGL','Ministère de la Transition écologique']});
   if(url.pathname==='/api/indicateurs'){
     try{
       const code_insee=(url.searchParams.get('code_insee')||'').trim();
