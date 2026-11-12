@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Analyse territoriale — ATLAS Territoires</title>
+<style>
+:root{--nav:#171b2f;--nav2:#22273c;--pink:#d81c76;--ink:#202640;--muted:#858da0;--border:#e7e9f0;--bg:#f7f8fb}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;color:var(--ink);background:var(--bg)}button,input{font:inherit}button{cursor:pointer}
+#layout{display:flex;min-height:100vh}.sidebar{width:256px;flex-shrink:0;background:var(--nav);color:#e8eaf3;position:sticky;top:0;height:100vh;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#444b63 transparent}.logo{height:74px;border-bottom:1px solid #30354a;display:flex;align-items:center;padding:20px 18px;gap:11px;font-size:15px;font-weight:780}.logo .dot{height:22px;width:22px;background:var(--pink);border-radius:8px;box-shadow:inset 0 0 0 7px #562647}.address-card{padding:20px 17px 19px;border-bottom:1px solid #30354a;font-size:12px;line-height:1.5;font-weight:600;overflow-wrap:anywhere}.address-card small{display:block;font-size:11px;color:#aeb4ca;font-weight:400;margin-top:4px}.sidegroup{margin:13px 0}.sideheading{font-size:10px;letter-spacing:1.4px;color:#aab2c9;text-transform:uppercase;font-weight:750;padding:12px 19px 6px}.navitem{display:flex;gap:11px;align-items:center;width:calc(100% - 16px);margin:2px 8px;text-align:left;padding:10px 12px;border:0;border-radius:7px;background:transparent;color:#bdc3d5;font-size:12px}.navitem:hover{background:#30364d;color:#fff}.navitem.active{background:var(--pink);color:white;font-weight:650}.navitem .sym{font-size:14px;width:16px;text-align:center;opacity:.95}.workspace{min-width:0;flex:1}.top{min-height:75px;background:#fff;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);padding:15px 34px;flex-wrap:wrap}.crumb{font-size:12px;color:#8590a2}.crumb strong{color:#424c62;font-weight:600}.top .grow{flex:1}.back{background:white;border:1px solid #dde1eb;padding:9px 13px;border-radius:9px;color:#51586b;font-size:12px}.main{max-width:1340px;padding:32px 36px 80px;margin:auto}.eyebrow{font-size:10px;color:var(--pink);font-weight:800;letter-spacing:1.2px;text-transform:uppercase;margin:4px 0 8px}.heading{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:26px}.heading h1{font-size:clamp(23px,2.6vw,29px);line-height:1.2;letter-spacing:-.85px;margin:0 0 9px}.desc{font-size:12px;color:var(--muted);line-height:1.65;max-width:780px;margin:0}.tag{font-size:11px;border:1px solid #dfe2e9;border-radius:9px;padding:10px 13px;background:white;color:#646f83}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:15px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:15px}.card{background:#fff;border:1px solid var(--border);border-radius:13px;padding:20px 22px;box-shadow:0 1px 2px rgba(18,25,55,.03)}.card h2{font-size:14px;letter-spacing:-.15px;margin:0 0 5px}.subtitle{font-size:11px;color:var(--muted);line-height:1.6;margin:0 0 20px}.empty{border:1px dashed #d8dce7;border-radius:11px;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:180px;background:linear-gradient(#fff,#fafbfe);text-align:center;padding:20px;gap:8px}.empty .symbol{font-size:24px;color:#abb2c0}.empty strong{font-size:13px;color:#677088}.empty small{font-size:11px;color:#989faf;line-height:1.5}.section{margin-top:17px}.table{width:100%;border-collapse:collapse;font-size:12px}.table td,.table th{padding:13px 9px;border-bottom:1px solid #eef0f4;text-align:left;vertical-align:top}.table th{color:#8991a2;font-weight:600;font-size:11px}.table td:last-child{text-align:right}.note{font-size:12px;color:#8a6475;background:#fff9fb;border:1px solid #f3deea;border-radius:9px;padding:14px 17px;line-height:1.65;margin-bottom:17px}.status{font-size:10px;color:#966b23;background:#fbf5e7;padding:5px 8px;border-radius:12px;display:inline-block}.status.good{color:#227c60;background:#e9f8f1}.score{font-size:25px;font-weight:740;letter-spacing:-1px;margin:12px 0 2px}.source{font-size:11px;color:#8b92a1;margin-top:12px;line-height:1.7}.source a{color:#545e78}.strip{height:8px;background:#f0f1f6;border-radius:99px;margin:13px 0}.skeleton{height:8px;background:#e9ebf3;width:56%;border-radius:99px}.skeleton.short{width:30%}.skeleton.long{width:83%}.mini{display:flex;justify-content:space-between;gap:12px;margin-top:17px;align-items:center}.mini span{font-size:11px;color:#777f93}.mobile-menu{display:none}.overlay{display:none}#err{display:none}.foot{font-size:11px;color:#949cab;margin-top:30px;line-height:1.6}@media(max-width:920px){.sidebar{width:216px}.main{padding:26px 22px}.top{padding:15px 22px}.grid2{grid-template-columns:1fr}}@media(max-width:680px){.sidebar{position:fixed;z-index:9;left:-270px;top:0;width:255px;transition:left .2s}.sidebar.open{left:0}.overlay.show{display:block;position:fixed;z-index:8;inset:0;background:#0a10206e}.mobile-menu{display:block;border:1px solid #e2e5ee;border-radius:9px;background:white;padding:8px 12px}.main{padding:22px 15px}.grid3{grid-template-columns:1fr}.top{padding:12px 15px}.heading{margin-bottom:19px}.card{padding:17px}.tag{width:100%}}
+</style></head><body>
+<div id="overlay" class="overlay"></div><div id="layout">
+<aside id="sidebar" class="sidebar" aria-label="Rubriques d'analyse">
+<div class="logo"><span class="dot"></span>ATLAS Territoires</div>
+<div class="address-card" id="sideAddress">Adresse en cours d'identification<small id="sideCity">Recherche officielle</small></div>
+<nav id="nav">
+<div class="sidegroup"><div class="sideheading">Programmation</div>
+<button class="navitem active" data-id="programmation"><span class="sym">▥</span>Programmation théorique</button>
+<button class="navitem" data-id="commercialisation"><span class="sym">◈</span>Commercialisation</button>
+<button class="navitem" data-id="toutes"><span class="sym">▦</span>Toutes les données</button></div>
+<div class="sidegroup"><div class="sideheading">Socio / Démo</div>
+<button class="navitem" data-id="population"><span class="sym">♙</span>Population</button>
+<button class="navitem" data-id="familles"><span class="sym">♧</span>Familles et ménages</button>
+<button class="navitem" data-id="emploi"><span class="sym">◫</span>Emploi et activité</button>
+<button class="navitem" data-id="salaires"><span class="sym">▤</span>Salaires nets</button>
+<button class="navitem" data-id="revenus"><span class="sym">◇</span>Revenus disponibles</button>
+<button class="navitem" data-id="migrations"><span class="sym">⇄</span>Migrations résidentielles</button>
+<button class="navitem" data-id="elections"><span class="sym">▣</span>Élections</button>
+<button class="navitem" data-id="equipements"><span class="sym">♧</span>Équipements et transports</button></div>
+<div class="sidegroup"><div class="sideheading">Immo</div>
+<button class="navitem" data-id="logements"><span class="sym">⌂</span>Logements</button>
+<button class="navitem" data-id="social"><span class="sym">▥</span>Parc social</button>
+<button class="navitem" data-id="sru"><span class="sym">▤</span>Loi SRU</button>
+<button class="navitem" data-id="zonage"><span class="sym">◈</span>Zonage ABC</button>
+<button class="navitem" data-id="permis"><span class="sym">▧</span>Permis de construire</button>
+<button class="navitem" data-id="prix"><span class="sym">€</span>Prix immobiliers — DVF</button></div>
+<div class="sidegroup"><div class="sideheading">Énergie et territoire</div>
+<button class="navitem" data-id="dpe"><span class="sym">◉</span>DPE et audits</button>
+<button class="navitem" data-id="batiments"><span class="sym">▦</span>Bâtiments — BDNB</button>
+<button class="navitem" data-id="environnement"><span class="sym">♧</span>Environnement</button>
+<button class="navitem" data-id="finances"><span class="sym">€</span>Finances locales</button></div>
+</nav>
+</aside>
+<div class="workspace"><header class="top"><button id="menu" class="mobile-menu" aria-label="Ouvrir le menu">☰</button><span class="crumb">Mes études</span><span class="crumb">›</span><span id="breadcrumbCity" class="crumb">Adresse recherchée</span><span class="crumb">›</span><span id="breadcrumbCategory" class="crumb"><strong>Programmation théorique</strong></span><div class="grow"></div><button id="newSearch" class="back">← Nouvelle recherche</button></header>
+<main class="main">
+<p id="err" class="note"></p>
+<div class="eyebrow" id="categoryLabel">Programmation</div><div class="heading"><div><h1 id="title">Programmation théorique</h1><p class="desc" id="description">Une approche méthodologique pour rapprocher les besoins résidentiels et les dynamiques immobilières locales.</p></div><div class="tag" id="localTag">Recherche de l'adresse…</div></div>
+<section id="content" aria-live="polite"></section>
+<p class="foot">ATLAS Territoires — Les données affichées proviennent exclusivement des sources officielles autorisées. Les indicateurs non connectés sont identifiés comme tels et aucune valeur statistique n'est inventée.</p>
+</main></div></div>
+<script>
+const settings={
+programmation:['Programmation','Programmation théorique','Répartition indicative des types de logements à partir de la démographie, du parc existant, des transactions et des permis.',['Programmation au niveau commune','Programmation opérationnelle'],['INSEE','Sitadel','DVF']],
+commercialisation:['Programmation','Commercialisation','Analyse du marché local, des prix observés, de la demande et des profils d’acquéreurs.',['Marché immobilier local','Positionnement commercial'],['DVF','INSEE']],
+toutes:['Explorer','Toutes les données','Retrouvez les indicateurs regroupés par grande famille de données et leur disponibilité.',['Indicateurs territoriaux','Sources et millésimes'],['INSEE','DVF','Sitadel','ADEME','ANCT']],
+population:['Socio / Démo','Population','Structure par âge, évolution démographique, densité et comparaison des territoires.',['Évolution de la population','Répartition par âge'],['INSEE']],
+familles:['Socio / Démo','Familles et ménages','Composition des ménages, familles monoparentales et nombre de personnes par foyer.',['Composition des ménages','Taille des ménages'],['INSEE']],
+emploi:['Socio / Démo','Emploi et activité','Population active, statut d’occupation, chômage et tissu économique local.',['Activité et emploi','Répartition des actifs'],['INSEE','Urssaf']],
+salaires:['Socio / Démo','Salaires nets','Salaires par catégorie socioprofessionnelle et caractéristiques de l’emploi.',['Salaires par CSP','Distribution des salaires'],['INSEE','Urssaf']],
+revenus:['Socio / Démo','Revenus disponibles','Niveaux de vie, revenus disponibles des ménages et distribution des ressources.',['Revenus médians','Distribution par déciles'],['INSEE']],
+migrations:['Socio / Démo','Migrations résidentielles','Origine, destination et profils des personnes ayant récemment changé de résidence.',['Origine des nouveaux habitants','Profils des entrants'],['INSEE']],
+elections:['Socio / Démo','Élections','Résultats électoraux officiels et participation selon les scrutins disponibles.',['Participation électorale','Résultats des scrutins'],['Ministère de l’Intérieur']],
+equipements:['Socio / Démo','Équipements et transports','Services, établissements scolaires, santé, commerces, équipements et accessibilité.',['Équipements du territoire','Répartition par activité'],['INSEE','ANCT','Observatoire des territoires']],
+logements:['Immo','Logements','Structure du parc immobilier, vacance, résidences principales et secondaires, types de logements.',['Composition du parc','Statut d’occupation'],['INSEE']],
+social:['Immo','Parc social','Poids du parc locatif social et caractéristiques des logements sociaux.',['Parc locatif social','Typologie des logements'],['Ministère de la Transition écologique','INSEE']],
+sru:['Immo','Loi SRU','Indicateurs SRU, avec contrôle des millésimes et des obligations officielles.',['Part de logements sociaux','Objectifs réglementaires'],['Ministère de la Transition écologique']],
+zonage:['Immo','Zonage ABC','Classement officiel de la commune selon le zonage applicable.',['Zonage de la commune','Historique réglementaire'],['Ministère de la Transition écologique']],
+permis:['Immo','Permis de construire','Nombre de logements autorisés et commencés, typologies et évolution des opérations.',['Logements autorisés','Évolution annuelle'],['Sitadel']],
+prix:['Immo','Prix immobiliers — DVF','Transactions enregistrées, prix au m² et évolution du marché immobilier.',['Prix au m²','Transactions observées'],['République française — DVF']],
+dpe:['Énergie et territoire','DPE et audits','Diagnostics de performance énergétique et informations disponibles sur les audits.',['Répartition des étiquettes DPE','Énergie et émissions'],['ADEME','DPE – Audit']],
+batiments:['Énergie et territoire','Bâtiments — BDNB','Caractéristiques techniques, période de construction et informations sur le bâti.',['Typologie du bâti','Caractéristiques des bâtiments'],['BDNB']],
+environnement:['Énergie et territoire','Environnement','Occupation du sol, artificialisation et indicateurs environnementaux territoriaux.',['Consommation d’espaces','Occupation des sols'],['Ministère de la Transition écologique','Observatoire des territoires']],
+finances:['Énergie et territoire','Finances locales','Recettes, dépenses, capacité financière et équilibres budgétaires communaux.',['Recettes et dépenses','Épargne et investissements'],['DGCL – OFGL']]
+};
+const $=id=>document.getElementById(id);
+const params=new URLSearchParams(location.search),address=params.get('adresse')||'';
+let loc=null;
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function blank(n){return '<div class="empty"><span class="symbol">▥</span><strong>'+esc(n)+'</strong><small>Indicateurs officiels non encore connectés.<br>Aucune donnée fictive affichée.</small></div>'}
+function card(t,desc,body){return '<article class="card"><h2>'+esc(t)+'</h2><p class="subtitle">'+esc(desc)+'</p>'+body+'</article>'}
+function render(id){const s=settings[id]||settings.programmation;document.querySelectorAll('.navitem').forEach(b=>b.classList.toggle('active',b.dataset.id===id));$('categoryLabel').textContent=s[0];$('title').textContent=s[1];$('breadcrumbCategory').textContent=s[1];$('description').textContent=s[2];let html='';
+if(id==='programmation'){html='<div class="note">La programmation proposée par une analyse territoriale nécessite les données INSEE, Sitadel et DVF. Les proportions T1 à T5 ne sont pas calculées avant la connexion effective de ces sources.</div><div class="grid2">'+card(s[3][0],'Répartition théorique des logements à l’échelle de la commune.',blank('Répartition T1 / T2 / T3 / T4 / T5'))+card(s[3][1],'Adaptation à la taille et aux caractéristiques de l’opération.',blank('Programmation du projet'))+'</div><div class="section">'+card('Recommandation face aux marchés observés','Comparaison entre parc existant, logements autorisés et ventes enregistrées.',blank('Analyse croisée des typologies et des ventes'))+'</div>'}
+else if(id==='toutes'){html='<div class="grid3">'+Object.entries(settings).filter(([key])=>!['toutes','programmation','commercialisation'].includes(key)).map(([key,v])=>'<article class="card"><h2>'+esc(v[1])+'</h2><p class="subtitle">'+esc(v[3].join(' / '))+'</p><span class="status">À connecter</span><div class="mini"><span>'+esc(v[4].join(' • '))+'</span><button class="back goCategory" data-id="'+key+'">Ouvrir</button></div></article>').join('')+'</div>'}
+else{html='<div class="grid2">'+card(s[3][0],'Visualisation et évolution à l’échelle de la commune.',blank(s[3][0]))+card(s[3][1],'Comparaison et répartition des indicateurs.',blank(s[3][1]))+'</div><div class="section">'+card('Indicateurs et sources','Les valeurs vérifiées apparaîtront ici après connexion des jeux de données officiels.','<table class="table"><thead><tr><th>Source autorisée</th><th>État</th></tr></thead><tbody>'+s[4].map(src=>'<tr><td>'+esc(src)+'</td><td><span class="status">À connecter</span></td></tr>').join('')+'</tbody></table>')+'</div>'}
+$('content').innerHTML=html;
+document.querySelectorAll('.goCategory').forEach(b=>b.onclick=()=>render(b.dataset.id));
+$('sidebar').classList.remove('open');$('overlay').classList.remove('show');
+}
+document.querySelectorAll('.navitem').forEach(b=>b.addEventListener('click',()=>render(b.dataset.id)));
+$('menu').onclick=()=>{$('sidebar').classList.add('open');$('overlay').classList.add('show')};
+$('overlay').onclick=()=>{$('sidebar').classList.remove('open');$('overlay').classList.remove('show')};
+$('newSearch').onclick=()=>location.href='/';
+async function load(){
+if(!address){$('err').style.display='block';$('err').textContent='Aucune adresse fournie. Revenez à la recherche depuis le bouton en haut à droite.';$('localTag').textContent='Adresse non renseignée';return}
+$('sideAddress').firstChild.textContent=address;$('localTag').textContent='Identification en cours…';
+try{const r=await fetch('/api/analyse?adresse='+encodeURIComponent(address));const data=await r.json();if(!r.ok)throw Error(data.erreur||'Adresse introuvable');loc=data.localisation;
+$('sideAddress').firstChild.textContent=loc.adresse;$('sideCity').textContent=(loc.commune||'Commune non identifiée')+(loc.code_insee?' • '+loc.code_insee:'');
+$('breadcrumbCity').textContent=loc.commune||'Adresse';$('localTag').textContent='Commune : '+(loc.commune||'—');
+}catch(e){$('err').style.display='block';$('err').textContent='Localisation indisponible : '+e.message;$('localTag').textContent='Non vérifié'}
+}
+render('programmation');load();
+</script></body></html>
