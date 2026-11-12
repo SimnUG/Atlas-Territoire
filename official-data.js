@@ -21,7 +21,8 @@ async function json(url, timeout=8500) {
 const SRC={
  insee:{nom:'INSEE — API Melodi',url:'https://api.insee.fr/melodi',niveau:'commune'},
  geo:{nom:'Référentiel administratif — data.gouv.fr / INSEE',url:'https://geo.api.gouv.fr/',niveau:'commune'},
- ademe:{nom:'ADEME — DPE logements existants',url:'https://data.ademe.fr/datasets/dpe03existant',niveau:'adresse'}
+ ademe:{nom:'ADEME — DPE logements existants',url:'https://data.ademe.fr/datasets/dpe03existant',niveau:'adresse'},
+ ofgl:{nom:'DGCL — OFGL, comptes des communes',url:'https://data.ofgl.fr/explore/dataset/ofgl-base-communes/',niveau:'commune'}
 };
 const empty=(nom,source,msg)=>({nom,statut:'indisponible',message:msg||'Donnée non disponible',source});
 function indicator(nom,valeur,unite,millesime,source,niveau='commune',extra={}) {
@@ -119,23 +120,51 @@ async function ademeDpe(adresse,code,postcode,banId){
  const unique=[...new Map(records.map(x=>[x.numero,x])).values()];
  return {enregistrements:unique.slice(0,20),nombre_resultats_exacts:unique.length,erreurs:errors};
 }
+async function finances(code){
+ const out=[],errors=[];
+ const url=new URL('https://data.ofgl.fr/api/explore/v2.1/catalog/datasets/ofgl-base-communes/records');
+ url.searchParams.set('where','com_code="'+code+'" and year(exer)=2025 and type_de_budget="Budget principal"');
+ url.searchParams.set('limit','100');
+ try{
+  const resp=await memo('ofgl:'+code,()=>json(url.toString(),11000),3600000);
+  const records=Array.isArray(resp.results)?resp.results:[];
+  const allowed=new Map([
+   ['RECETTES DE FONCTIONNEMENT','Recettes de fonctionnement'],
+   ['DEPENSES DE FONCTIONNEMENT','Dépenses de fonctionnement'],
+   ['EPARGNE BRUTE','Épargne brute'],
+   ['DEPENSES D EQUIPEMENT',"Dépenses d'équipement"]
+  ]);
+  for(const line of records){
+   if(String(line.com_code)!==code||line.type_de_budget!=='Budget principal')continue;
+   const raw=normalized(line.agregat).replace(/([A-Z])([A-Z])/g,'$1$2');
+   const found=[...allowed].find(([key])=>normalized(key)===raw);
+   const montant=Number(line.montant);
+   if(found&&Number.isFinite(montant)){
+      out.push(indicator(found[1],Math.round(montant),'€',2025,SRC.ofgl,'commune',{dataset:'ofgl-base-communes'}));
+   }
+  }
+  if(out.length===0)errors.push('OFGL : pas de comptes 2025 répondant aux critères stricts');
+ }catch(e){errors.push('OFGL : '+e.message)}
+ return {indicateurs:out,erreurs:errors};
+}
+
 async function analyze({code_insee,adresse,code_postal,ban_id}){
  if(!/^([0-9]{5}|2[AB][0-9]{3})$/i.test(code_insee||''))throw Error('Code INSEE invalide');
- const [insee,geo,dpe]=await Promise.all([
+ const [insee,geo,dpe,ofgl]=await Promise.all([
    population(code_insee), administrative(code_insee),
-   adresse?ademeDpe(adresse,code_insee,code_postal,ban_id):Promise.resolve({enregistrements:[],nombre_resultats_exacts:0,erreurs:[]})
+   adresse?ademeDpe(adresse,code_insee,code_postal,ban_id):Promise.resolve({enregistrements:[],nombre_resultats_exacts:0,erreurs:[]}), finances(code_insee)
  ]);
  const byName=new Map();
- for(const v of [...geo.indicateurs,...insee.indicateurs])byName.set(v.nom,v);
+ for(const v of [...geo.indicateurs,...insee.indicateurs,...ofgl.indicateurs])byName.set(v.nom,v);
  const all=[...byName.values()];
  // Référence Melodi prioritaire ; la population API Géo conserve un statut informatif sans millésime.
- const stats={population:all.filter(x=>x.nom.startsWith('Population')),revenus:all.filter(x=>x.nom.startsWith('Niveau'))};
+ const stats={population:all.filter(x=>x.nom.startsWith('Population')),revenus:all.filter(x=>x.nom.startsWith('Niveau')),finances:ofgl.indicateurs};
  return {code_insee,adresse:adresse||null,commune:geo.commune||null,
-   categories:{population:stats.population,revenus:stats.revenus,dpe:dpe.enregistrements},
+   categories:{population:stats.population,revenus:stats.revenus,finances:stats.finances,dpe:dpe.enregistrements},
    indicateurs:all,dpe:{nombre_resultats_exacts:dpe.nombre_resultats_exacts,enregistrements:dpe.enregistrements},
-   sources:[SRC.insee,SRC.geo,SRC.ademe],
-   erreurs:[...insee.erreurs,...geo.erreurs,...dpe.erreurs],
-   indisponibles:['DVF : accès aux mutations à intégrer','Sitadel : données de permis à intégrer','DGCL / OFGL : indicateurs financiers à intégrer','Autres catégories : connecteurs non encore validés'],
+   sources:[SRC.insee,SRC.geo,SRC.ademe,SRC.ofgl],
+   erreurs:[...insee.erreurs,...geo.erreurs,...dpe.erreurs,...ofgl.erreurs],
+   indisponibles:['DVF : accès aux mutations à intégrer','Sitadel : données de permis à intégrer','Autres catégories : connecteurs non encore validés'],
    genere_le:new Date().toISOString(),
    avertissement:'Les indicateurs agrégés portent sur la commune, pas sur le seul immeuble. Un DPE ne correspond à l’adresse que lorsque son identifiant BAN ou son adresse normalisée coïncide exactement.'
  };
