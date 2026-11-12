@@ -44,6 +44,7 @@ function metricsForPage(id){
  const c=data?.categories||{};
  if(id==='population')return c.population||[];
  if(id==='revenus')return c.revenus||[];
+ if(id==='emploi')return c.emploi||[];
  if(id==='logements')return c.logements||[];
  if(id==='finances')return c.finances||[];
  if(id==='prix')return c.prix||[];
