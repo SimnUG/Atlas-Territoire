@@ -149,7 +149,7 @@ function dpe(root){
   }}else item.append(empty('Pas de diagnostic exploitable','Aucun DPE exact dans les réponses récupérées.'));grid.append(item);
  }root.append(grid);
  const tableCard=card('Détail des diagnostics','Résultats ayant une correspondance d’adresse stricte.');
- if(xs.length){const t=e('table'),thead=e('thead'),row=e('tr');['Date','Énergie','GES','Surface','Identifiant DPE'].forEach(a=>row.append(e('th',null,a)));thead.append(row);t.append(thead);const tb=e('tbody');xs.forEach(x=>{const r=e('tr');[x.date||'—',x.dpe||'—',x.ges||'—',fmt(Number(x.surface),'m²'),x.numero||'—'].forEach(v=>r.append(e('td',null,v)));tb.append(r)});t.append(tb);tableCard.append(e('div','tablewrap')).lastChild.append(t)}
+ if(xs.length){const t=e('table'),thead=e('thead'),row=e('tr');['Date','Énergie','GES','Surface','Identifiant DPE'].forEach(a=>row.append(e('th',null,a)));thead.append(row);t.append(thead);const tb=e('tbody');xs.forEach(x=>{const r=e('tr');[x.date||'—',x.dpe||'—',x.ges||'—',fmt(Number(x.surface),'m²'),x.numero||'—'].forEach(v=>r.append(e('td',null,v)));tb.append(r)});t.append(tb);const tableWrap=e('div','tablewrap');tableWrap.append(t);tableCard.append(tableWrap)}
  else tableCard.append(empty('Aucun rapprochement certain','Cela ne signifie pas qu’aucun DPE n’existe pour cette adresse.'));
  tableCard.append(e('p','source','Un DPE peut être ancien, incomplet ou ne pas concerner tout l’immeuble.'));tableCard.classList.add('section');root.append(tableCard);methodPanel(root,'dpe');
 }
