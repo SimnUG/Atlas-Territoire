@@ -100,7 +100,7 @@ render('programmation');load();
 /* Indicateurs réels provenant UNIQUEMENT des sources officielles autorisées. */
 (function(){
 let official=null, loading=true, problem=null;
-const affected=new Set(['population','revenus','dpe','toutes','programmation','commercialisation','logements']);
+const affected=new Set(['population','revenus','dpe','finances','toutes','programmation','commercialisation','logements']);
 function fmt(v,unit){if(typeof v==='number')return new Intl.NumberFormat('fr-FR',{maximumFractionDigits:2}).format(v)+(unit?' '+unit:'');return 'Non disponible'}
 function elt(tag,cls,txt){const e=document.createElement(tag);if(cls)e.className=cls;if(txt!==undefined)e.textContent=txt;return e}
 function addIndicator(root,i){
@@ -126,6 +126,7 @@ function draw(id){
  if(problem){panel.append(elt('p','subtitle','Données momentanément indisponibles : '+problem));wrapper.append(panel);container.prepend(wrapper);return}
  const chosen = id==='population'?official.categories.population:
    id==='revenus'?official.categories.revenus:
+   id==='finances'?official.categories.finances:
    id==='dpe'?[]:
    id==='toutes'||id==='programmation'||id==='commercialisation'||id==='logements'?official.indicateurs:[];
  const all=Array.isArray(chosen)?chosen:[];
@@ -150,7 +151,7 @@ function draw(id){
  if(official.erreurs?.length){
   panel.append(elt('p','source','Accès ou résultat incomplet : '+official.erreurs.join(' • ')));
  }
- panel.append(elt('p','source','Provenance : INSEE Melodi, ADEME et référentiel administratif data.gouv.fr. Valeurs en direct, non simulées. Les autres sources autorisées restent à connecter.'));
+ panel.append(elt('p','source','Provenance : INSEE Melodi, ADEME, DGCL–OFGL et référentiel administratif data.gouv.fr. Valeurs en direct, non simulées. Les autres sources autorisées restent à connecter.'));
  wrapper.append(panel);container.prepend(wrapper);
 }
 const originalRender=render;
