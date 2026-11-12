@@ -30,15 +30,33 @@ function indicator(nom,valeur,unite,millesime,source,niveau='commune',extra={}) 
  return {nom,valeur,unite,millesime,source,niveau,statut:'disponible',...extra};
 }
 function asObservations(payload){
- const o=payload?.observations;
- if(Array.isArray(o))return o;
- if(o && Array.isArray(o.dimensions)){
-   return o.dimensions.map((dimensions,i)=>({dimensions,measures:o.measures?.[i]||{},attributes:o.attributes?.[i]||{}}));
- }
- return [];
+ // Melodi : observations.dimensions est un tableau de lignes.
+ // observations.measures est un dictionnaire de séries, notamment OBS_VALUE.
+ const block=payload?.observations;
+ if(Array.isArray(block))return block;
+ if(!block||!Array.isArray(block.dimensions))return [];
+ const attrs=Array.isArray(block.attributes)?block.attributes:[];
+ const measures=block.measures||{};
+ return block.dimensions.map((dimensions,i)=>{
+  const m={};
+  if(Array.isArray(measures)){
+   const row=measures[i]||{};
+   for(const [k,v] of Object.entries(row))m[k]=v;
+  }else if(typeof measures==='object'){
+   for(const [k,rows] of Object.entries(measures)){
+    if(Array.isArray(rows)){const entry=rows[i];m[k]=typeof entry==='object'&&entry!==null?entry.value??entry:entry}
+    else if(rows&&typeof rows==='object'&&Array.isArray(rows.values)){m[k]=rows.values[i]}
+   }
+  }
+  return {dimensions,measures:m,attributes:attrs[i]||{}};
+ });
 }
 function cell(o,k){const v=o?.dimensions?.[k];return typeof v==='object'?v.value??v.id??null:v??null}
 function value(o){const m=o?.measures||{};for(const entry of Object.values(m)){const n=Number(typeof entry==='object'?entry?.value:entry);if(Number.isFinite(n))return n}return null}
+function geoMatches(o,code){
+ const g=cell(o,'GEO');
+ return g===code||String(g).endsWith('-'+code);
+}
 function year(o){const v=cell(o,'TIME_PERIOD');return /^\d{4}$/.test(String(v))?Number(v):null}
 function latest(arr){return arr.sort((a,b)=>(b.millesime||0)-(a.millesime||0))[0]}
 function normalized(v){return String(v??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/[^A-Z0-9]/g,'')}
@@ -55,7 +73,7 @@ async function population(code){
  try{
    const r=await melodi('DS_POPULATIONS_REFERENCE',code,{POPREF_MEASURE:'PMUN'});
    const observations=asObservations(r).map(o=>({valeur:value(o),millesime:year(o),mesure:cell(o,'POPREF_MEASURE'),geo:cell(o,'GEO')}))
-      .filter(x=>x.valeur!==null && x.millesime && x.mesure==='PMUN' && String(x.geo).endsWith('-'+code));
+      .filter(x=>x.valeur!==null && x.millesime && x.mesure==='PMUN' && (x.geo===code||String(x.geo).endsWith('-'+code)));
    const row=latest(observations);
    if(row)indicators.push(indicator('Population municipale',Math.round(row.valeur),'habitants',row.millesime,SRC.insee,'commune',{dataset:'DS_POPULATIONS_REFERENCE'}));
    else errors.push('Population municipale : aucune observation officielle exploitable');
@@ -63,7 +81,7 @@ async function population(code){
  try{
    const r=await melodi('DS_FILOSOFI_CC',code,{FILOSOFI_MEASURE:'MED_SL'});
    const obs=asObservations(r).map(o=>({valeur:value(o),millesime:year(o),mesure:cell(o,'FILOSOFI_MEASURE'),geo:cell(o,'GEO')}))
-     .filter(x=>x.valeur!==null&&x.millesime&&x.mesure==='MED_SL'&&String(x.geo).endsWith('-'+code));
+     .filter(x=>x.valeur!==null&&x.millesime&&x.mesure==='MED_SL'&&(x.geo===code||String(x.geo).endsWith('-'+code)));
    const row=latest(obs);
    if(row)indicators.push(indicator('Niveau de vie médian',Math.round(row.valeur),'€/an par unité de consommation',row.millesime,SRC.insee,'commune',{dataset:'DS_FILOSOFI_CC'}));
    else errors.push('Niveau de vie médian : aucune observation officielle exploitable');
@@ -127,7 +145,7 @@ async function logements(code){
    const result=await melodi('DS_RP_LOGEMENT_PRINC',code,{OCS:'DW_MAIN',TDW:'_T'});
    const matches=asObservations(result).map(o=>({
      valeur:value(o),millesime:year(o),oc:cell(o,'OCS'),typ:cell(o,'TDW'),geo:cell(o,'GEO')
-   })).filter(x=>x.valeur!==null&&x.millesime&&x.oc==='DW_MAIN'&&x.typ==='_T'&&String(x.geo).endsWith('-'+code));
+   })).filter(x=>x.valeur!==null&&x.millesime&&x.oc==='DW_MAIN'&&x.typ==='_T'&&(x.geo===code||String(x.geo).endsWith('-'+code)));
    const chosen=latest(matches);
    if(chosen)indicators.push(indicator('Résidences principales',Math.round(chosen.valeur),'logements',chosen.millesime,SRC.insee,'commune',{dataset:'DS_RP_LOGEMENT_PRINC'}));
    else errors.push('Logements INSEE : aucune observation exploitable');
