@@ -17,7 +17,7 @@ test('Melodi: l’absence de mesures ne donne aucun chiffre inventé',()=>{
  assert.equal(result.length,1);assert.deepEqual(result[0].measures,{});
 });
 test('normalisation d’adresse : casse et accents neutres',()=>{
- assert.equal(normalized('12 Rue des Écoles'),'12RUEDESCOLES');
+ assert.equal(normalized('12 Rue des Écoles'),'12RUEDESECOLES');
 });
 test('tranches d’âge : accepter seulement des couples F + M complets',async()=>{
  const ages=['Y0T14','Y15T29','Y30T44','Y45T59'];
