@@ -191,7 +191,7 @@ function deadline(task,ms,fallback){
 
 async function analyze({code_insee,adresse,code_postal,ban_id}){
  if(!/^([0-9]{5}|2[AB][0-9]{3})$/i.test(code_insee||''))throw Error('Code INSEE invalide');
- const [insee,geo,dpe,ofgl,rpLogements,dvf,sitadel,demographie_detail:{tranches_age:ages.tranches_age,source:ages.source},ages]=await Promise.all([
+ const [insee,geo,dpe,ofgl,rpLogements,dvf,sitadel,ages]=await Promise.all([
    population(code_insee), administrative(code_insee),
    adresse?ademeDpe(adresse,code_insee,code_postal,ban_id):Promise.resolve({enregistrements:[],nombre_resultats_exacts:0,erreurs:[]}), finances(code_insee), logements(code_insee), deadline(()=>market.dvf(code_insee),26000,{source:{nom:'DVF+ — DGFiP / Cerema',niveau:'commune'},statut:'indisponible',indicateurs:[],transactions:[],erreurs:['Délai maximum de réponse DVF+ dépassé'],exhaustif:false}),
    deadline(()=>market.sitadel(code_insee),26000,{source:{nom:'Sitadel — SDES',niveau:'commune'},statut:'indisponible',indicateurs:[],permis:[],erreurs:['Délai maximum de réponse Sitadel dépassé'],exhaustif:false}),
