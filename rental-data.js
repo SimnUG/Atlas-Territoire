@@ -93,7 +93,7 @@ function parseRecords(text){
 function nval(value){
  if(value===null||value===undefined)return null;
  const str=String(value).trim().replace(/\s/g,'');
- if(!str||/^(NA|ND|NR|N/A|null|nan|\.)$/i.test(str))return null;
+ if(!str||/^(NA|ND|NR|N\/A|null|nan|\.)$/i.test(str))return null;
  const n=Number(str.replace(',','.'));
  return Number.isFinite(n)?n:null;
 }
