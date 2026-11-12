@@ -8,6 +8,7 @@
  * Les erreurs de réseau ne sont JAMAIS remplacées par des données simulées.
  */
 const cache = new Map();
+const market = require('./market-data');
 function memo(key, func, lifetime=3600000) {
   const prev=cache.get(key);
   if(prev && prev.exp>Date.now())return Promise.resolve(prev.data);
@@ -164,21 +165,22 @@ async function finances(code){
 
 async function analyze({code_insee,adresse,code_postal,ban_id}){
  if(!/^([0-9]{5}|2[AB][0-9]{3})$/i.test(code_insee||''))throw Error('Code INSEE invalide');
- const [insee,geo,dpe,ofgl,rpLogements]=await Promise.all([
+ const [insee,geo,dpe,ofgl,rpLogements,dvf,sitadel]=await Promise.all([
    population(code_insee), administrative(code_insee),
-   adresse?ademeDpe(adresse,code_insee,code_postal,ban_id):Promise.resolve({enregistrements:[],nombre_resultats_exacts:0,erreurs:[]}), finances(code_insee), logements(code_insee)
+   adresse?ademeDpe(adresse,code_insee,code_postal,ban_id):Promise.resolve({enregistrements:[],nombre_resultats_exacts:0,erreurs:[]}), finances(code_insee), logements(code_insee), market.dvf(code_insee), market.sitadel(code_insee)
  ]);
  const byName=new Map();
- for(const v of [...geo.indicateurs,...insee.indicateurs,...ofgl.indicateurs,...rpLogements.indicateurs])byName.set(v.nom,v);
+ for(const v of [...geo.indicateurs,...insee.indicateurs,...ofgl.indicateurs,...rpLogements.indicateurs,...dvf.indicateurs,...sitadel.indicateurs])byName.set(v.nom,v);
  const all=[...byName.values()];
  // Référence Melodi prioritaire ; la population API Géo conserve un statut informatif sans millésime.
- const stats={population:all.filter(x=>x.nom.startsWith('Population')),revenus:all.filter(x=>x.nom.startsWith('Niveau')),finances:ofgl.indicateurs,logements:rpLogements.indicateurs};
+ const stats={population:all.filter(x=>x.nom.startsWith('Population')),revenus:all.filter(x=>x.nom.startsWith('Niveau')),finances:ofgl.indicateurs,logements:rpLogements.indicateurs,prix:dvf.indicateurs,permis:sitadel.indicateurs};
  return {code_insee,adresse:adresse||null,commune:geo.commune||null,
-   categories:{population:stats.population,revenus:stats.revenus,finances:stats.finances,logements:stats.logements,dpe:dpe.enregistrements},
+   categories:{population:stats.population,revenus:stats.revenus,finances:stats.finances,logements:stats.logements,prix:stats.prix,permis:stats.permis,dpe:dpe.enregistrements},
    indicateurs:all,dpe:{nombre_resultats_exacts:dpe.nombre_resultats_exacts,enregistrements:dpe.enregistrements},
-   sources:[SRC.insee,SRC.geo,SRC.ademe,SRC.ofgl],
-   erreurs:[...insee.erreurs,...geo.erreurs,...dpe.erreurs,...ofgl.erreurs,...rpLogements.erreurs],
-   indisponibles:['DVF : accès aux mutations à intégrer','Sitadel : données de permis à intégrer','Autres catégories : connecteurs non encore validés'],
+   dvf,sitadel,
+   sources:[SRC.insee,SRC.geo,SRC.ademe,SRC.ofgl,dvf.source,sitadel.source],
+   erreurs:[...insee.erreurs,...geo.erreurs,...dpe.erreurs,...ofgl.erreurs,...rpLogements.erreurs,...dvf.erreurs,...sitadel.erreurs],
+   indisponibles:['Autres catégories : connecteurs non encore validés'],
    genere_le:new Date().toISOString(),
    avertissement:'Les indicateurs agrégés portent sur la commune, pas sur le seul immeuble. Un DPE ne correspond à l’adresse que lorsque son identifiant BAN ou son adresse normalisée coïncide exactement.'
  };
