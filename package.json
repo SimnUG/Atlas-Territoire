@@ -4,7 +4,9 @@
   "private": true,
   "description": "Recherche d'adresse et analyse territoriale à partir de sources officielles",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "test": "node --test tests/*.test.js",
+    "prestart": "node --check server.js && node --check official-data.js && node --check market-data.js && node --check data-catalog.js && node --check demographics.js && node --check public/market-dashboard.js && npm test"
   },
   "engines": {
     "node": ">=20"
