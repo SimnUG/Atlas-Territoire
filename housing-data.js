@@ -1,5 +1,5 @@
 'use strict';
-const SOURCE={nom:'INSEE — Recensement de la population, logements',url:'https://www.insee.fr/fr/statistiques/8997194',niveau:'commune / EPCI',dataset:'DS_RP_LOGEMENT_PRINC'};
+const SOURCE={nom:'INSEE — Recensement de la population, logements',url:'https://www.insee.fr/fr/statistiques/8997194',niveau:'commune / EPCI',dataset:'DS_RP_SERIE_HISTORIQUE / DS_RP_LOGEMENT_PRINC'};
 const cache=new Map();
 async function request(url,timeout=12500){
  const r=await fetch(url,{signal:AbortSignal.timeout(timeout),headers:{Accept:'application/json'}});
@@ -72,48 +72,64 @@ async function fetchGeo(code){
 }
 async function studyOne(geo){
  const errs=[];
- let result=[];
- // La requête ciblée sur une géographie et un indicateur ne suppose
- // aucune jointure/ventilation cachée.
- for(const target of [geo.year+'-'+geo.type+'-'+geo.code,geo.code]){
+ const outcomes={geo,annee:null,distribution:[],pieces:[],erreurs:errs};
+ const geos=[geo.year+'-'+geo.type+'-'+geo.code,geo.code];
+ // Série historique officielle : 4 modalités par millésime, lecture fiable
+ // des résidences principales, secondaires/occasionnelles et vacantes.
+ let series=[];
+ for(const target of geos){
+  try{
+   const u=new URL('https://api.insee.fr/melodi/data/DS_RP_SERIE_HISTORIQUE');
+   u.searchParams.set('GEO',target);u.searchParams.set('RP_MEASURE','DWELLINGS');u.searchParams.set('maxResult','1000');
+   const raw=await memo('logement-historique:'+u.search,()=>request(u.toString(),13000),3600000);
+   series=objects(raw).filter(o=>eligible(o,geo));
+   if(series.length)break;
+  }catch(e){errs.push('Série historique : '+e.message)}
+ }
+ const grouped=series.filter(o=>['DW_MAIN','DW_SEC_DW_OCC','DW_VAC'].includes(String(dim(o,'OCS'))));
+ const years=[...new Set(grouped.map(o=>Number(dim(o,'TIME_PERIOD'))))].sort((a,b)=>b-a);
+ for(const year of years){
+  const rows=[];
+  for(const spec of values){
+   const matches=grouped.filter(o=>Number(dim(o,'TIME_PERIOD'))===year&&spec.codes.includes(dim(o,'OCS')));
+   if(matches.length===1)rows.push({key:spec.key,label:spec.label,valeur:Math.round(val(matches[0])),millesime:year});
+  }
+  if(rows.length===3){
+   const total=rows.reduce((sum,r)=>sum+r.valeur,0);
+   if(total>0){
+    rows.forEach(r=>r.part=Math.round(1000*r.valeur/total)/10);
+    outcomes.distribution=rows;outcomes.annee=year;break;
+   }
+  }
+ }
+ if(!outcomes.distribution.length)errs.push('Répartition du parc non disponible dans la série historique INSEE');
+ // Détail du nombre de pièces via le recensement principal, avec chaque
+ // autre ventilation fixée au total ; jamais de somme de lignes imbriquées.
+ let principal=[];
+ for(const target of geos){
   try{
    const u=new URL('https://api.insee.fr/melodi/data/DS_RP_LOGEMENT_PRINC');
-   u.searchParams.set('GEO',target);
-   u.searchParams.set('RP_MEASURE','DWELLINGS');
-   u.searchParams.set('maxResult','2500');
-   const d=await memo('housingschema:'+u.search,()=>request(u.toString(),15500),3600000);
-   const rows=objects(d).filter(o=>eligible(o,geo));
-   if(rows.length){result=rows;break}
-  }catch(e){errs.push(e.message)}
+   u.searchParams.set('GEO',target);u.searchParams.set('RP_MEASURE','DWELLINGS');
+   u.searchParams.set('TIME_PERIOD',String(outcomes.annee||2023));
+   u.searchParams.set('OCS','DW_MAIN');u.searchParams.set('TDW','_T');u.searchParams.set('maxResult','2500');
+   const raw=await memo('logement-pieces:'+u.search,()=>request(u.toString(),15500),3600000);
+   principal=objects(raw).filter(o=>eligible(o,geo));
+   if(principal.length)break;
+  }catch(e){errs.push('Détail nombre de pièces : '+e.message)}
  }
- if(!result.length)return {geo,annee:null,distribution:[],pieces:[],erreurs:['Aucune observation INSEE cohérente dans le jeu logement principal',...errs]};
- const years=[...new Set(result.map(o=>Number(dim(o,'TIME_PERIOD'))))].sort((a,b)=>b-a);
- const distributions=[],rooms=[];
- let selectedYear=null;
- for(const year of years){
-  const distribution=[];
-  for(const v of values){
-   const match=result.filter(o=>Number(dim(o,'TIME_PERIOD'))===year&&v.codes.includes(dim(o,'OCS'))&&dim(o,'TDW')==='_T'&&totals(o));
-   if(match.length===1)distribution.push({key:v.key,label:v.label,valeur:Math.round(val(match[0])),millesime:year});
-  }
-  if(distribution.length>=2){
-   selectedYear=year;distributions.push(...distribution);
-   break;
-  }
- }
- const roomYear=selectedYear||years[0];
  for(const room of roomTypes){
-  const rows=result.filter(o=>Number(dim(o,'TIME_PERIOD'))===roomYear&&
-   dim(o,'OCS')==='DW_MAIN' && dim(o,'TDW')==='_T'&&room.codes.includes(dim(o,'NOR'))&&
-   otherDims.filter(k=>k!=='NOR').every(k=>dim(o,k)===undefined||dim(o,k)===null||String(dim(o,k))==='_T'));
-  if(rows.length===1)rooms.push({piece:room.label,valeur:Math.round(val(rows[0])),millesime:roomYear});
+  const rows=principal.filter(o=>
+    dim(o,'OCS')==='DW_MAIN'&&dim(o,'TDW')==='_T'&&
+    Number(dim(o,'TIME_PERIOD'))===(outcomes.annee||2023)&&
+    room.codes.includes(String(dim(o,'NOR'))) &&
+    otherDims.filter(k=>k!=='NOR').every(k=>dim(o,k)===undefined||dim(o,k)===null||String(dim(o,k))==='_T')
+  );
+  if(rows.length===1)outcomes.pieces.push({piece:room.label,valeur:Math.round(val(rows[0])),millesime:Number(dim(rows[0],'TIME_PERIOD'))});
  }
- const sum=distributions.reduce((acc,x)=>acc+x.valeur,0);
- if(distributions.length===3&&sum>0)distributions.forEach(r=>r.part=Math.round(1000*r.valeur/sum)/10);
- if(!distributions.length)errs.push('Répartition principales / secondaires / vacants non disponible avec des dimensions de total strictes');
- if(!rooms.length)errs.push('Nombre de pièces non disponible : filtres INSEE complets à confirmer');
- return {geo,annee:selectedYear,distribution:distributions,pieces:rooms,erreurs:errs,identifiants_disponibles:[...new Set(result.map(o=>dim(o,'OCS')))].filter(Boolean)};
+ if(!outcomes.pieces.length)errs.push('Ventilation par pièces indisponible ou incomplète');
+ return outcomes;
 }
+
 async function housing(code){
  if(!/^(?:[0-9]{5}|2[AB][0-9]{3})$/i.test(code||''))throw Error('Code INSEE invalide');
  const place=await fetchGeo(code);
