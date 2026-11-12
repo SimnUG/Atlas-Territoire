@@ -81,7 +81,7 @@ async function studyOne(geo){
  for(const target of geos){
   try{
    const u=new URL('https://api.insee.fr/melodi/data/DS_RP_SERIE_HISTORIQUE');
-   u.searchParams.set('GEO',target);u.searchParams.set('MEASURE','DWELLINGS');u.searchParams.set('maxResult','1000');
+   u.searchParams.set('GEO',target);u.searchParams.set('RP_MEASURE','DWELLINGS');u.searchParams.set('maxResult','1000');
    const raw=await memo('logement-historique:'+u.search,()=>request(u.toString(),13000),3600000);
    series=objects(raw).filter(o=>eligible(o,geo));
    if(series.length)break;
