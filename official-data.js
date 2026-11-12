@@ -95,7 +95,26 @@ async function population(code){
    if(row)indicators.push(indicator('Niveau de vie médian',Math.round(row.valeur),'€/an par unité de consommation',row.millesime,SRC.insee,'commune',{dataset:'DS_FILOSOFI_CC'}));
    else errors.push('Niveau de vie médian : aucune observation officielle exploitable');
  }catch(e){errors.push('Niveau de vie médian : '+e.message)}
+ try{
+   const r=await melodi('DS_FILOSOFI_CC',code,{FILOSOFI_MEASURE:'PR_MD60'});
+   const rows=asObservations(r).map(o=>({valeur:value(o),millesime:year(o),mesure:cell(o,'FILOSOFI_MEASURE'),geo:cell(o,'GEO')}))
+    .filter(x=>x.valeur!==null&&x.millesime&&x.mesure==='PR_MD60'&&(x.geo===code||String(x.geo).endsWith('-'+code)));
+   const best=latest(rows);
+   if(best&&best.valeur>=0&&best.valeur<=100)
+      indicators.push(indicator('Taux de pauvreté',Math.round(best.valeur*10)/10,'%',best.millesime,SRC.insee,'commune',{dataset:'DS_FILOSOFI_CC'}));
+ }catch(e){errors.push('Taux de pauvreté : '+e.message)}
  return {indicateurs:indicators,erreurs:errors};
+}
+async function populationHistory(code){
+ try{
+  const r=await melodi('DS_POPULATIONS_HISTORIQUES',code,{POPREF_MEASURE:'PMUN'});
+  const rows=asObservations(r).map(o=>({
+    valeur:value(o),millesime:year(o),mesure:cell(o,'POPREF_MEASURE'),geo:cell(o,'GEO')
+  })).filter(x=>x.valeur!==null&&x.millesime&&x.mesure==='PMUN'&&(x.geo===code||String(x.geo).endsWith('-'+code)));
+  const byYear=new Map();
+  for(const r of rows)if(r.valeur>=0)byYear.set(r.millesime,{annee:r.millesime,population:Math.round(r.valeur)});
+  return [...byYear.values()].sort((a,b)=>a.annee-b.annee).slice(-12);
+ }catch(_){return []}
 }
 async function administrative(code){
  const u=new URL('https://geo.api.gouv.fr/communes/'+code);
@@ -172,17 +191,23 @@ async function emploi(code){
  return {indicateurs:out,erreurs:errors};
 }
 async function logements(code){
- const indicators=[],errors=[];
+ const indicateurs=[],erreurs=[];
  try{
-   const result=await melodi('DS_RP_LOGEMENT_PRINC',code,{OCS:'DW_MAIN',TDW:'_T'});
-   const matches=asObservations(result).map(o=>({
-     valeur:value(o),millesime:year(o),oc:cell(o,'OCS'),typ:cell(o,'TDW'),geo:cell(o,'GEO')
-   })).filter(x=>x.valeur!==null&&x.millesime&&x.oc==='DW_MAIN'&&x.typ==='_T'&&(x.geo===code||String(x.geo).endsWith('-'+code)));
-   const chosen=latest(matches);
-   if(chosen)indicators.push(indicator('Résidences principales',Math.round(chosen.valeur),'logements',chosen.millesime,SRC.insee,'commune',{dataset:'DS_RP_LOGEMENT_PRINC'}));
-   else errors.push('Logements INSEE : aucune observation exploitable');
- }catch(e){errors.push('Logements INSEE : '+e.message)}
- return {indicateurs:indicators,erreurs:errors};
+  const filters={RP_MEASURE:'DWELLINGS',OCS:'DW_MAIN',TDW:'_T',NOR:'_T',
+    TSH:'_T',CARS:'_T',L_STAY:'_T',CARPARK:'_T',NRG_SRC:'_T',BUILD_END:'_T'};
+  const raw=await melodi('DS_RP_LOGEMENT_PRINC',code,filters);
+  const rows=asObservations(raw).filter(o=>{
+   if(!geoMatches(o,code)||year(o)===null||value(o)===null)return false;
+   return Object.entries(filters).every(([key,expected])=>cell(o,key)===undefined||cell(o,key)===expected);
+  }).map(o=>({annee:year(o),valeur:value(o)}));
+  const latestYear=rows.reduce((m,x)=>Math.max(m,x.annee),0);
+  const current=rows.filter(x=>x.annee===latestYear);
+  if(latestYear&&current.length===1){
+   indicateurs.push(indicator('Résidences principales',Math.round(current[0].valeur),'logements',
+     latestYear,SRC.insee,'commune',{dataset:'DS_RP_LOGEMENT_PRINC'}));
+  }
+ }catch(e){erreurs.push('Recensement logement : '+e.message)}
+ return {indicateurs,erreurs};
 }
 
 async function finances(code){
@@ -222,19 +247,19 @@ function deadline(task,ms,fallback){
 
 async function analyze({code_insee,adresse,code_postal,ban_id}){
  if(!/^([0-9]{5}|2[AB][0-9]{3})$/i.test(code_insee||''))throw Error('Code INSEE invalide');
- const [insee,geo,dpe,ofgl,rpLogements,dvf,sitadel,ages,employment]=await Promise.all([
+ const [insee,geo,dpe,ofgl,rpLogements,dvf,sitadel,ages,employment,history]=await Promise.all([
    population(code_insee), administrative(code_insee),
    adresse?ademeDpe(adresse,code_insee,code_postal,ban_id):Promise.resolve({enregistrements:[],nombre_resultats_exacts:0,erreurs:[]}), finances(code_insee), logements(code_insee), deadline(()=>market.dvf(code_insee),26000,{source:{nom:'DVF+ — DGFiP / Cerema',niveau:'commune'},statut:'indisponible',indicateurs:[],transactions:[],erreurs:['Délai maximum de réponse DVF+ dépassé'],exhaustif:false}),
    deadline(()=>market.sitadel(code_insee),26000,{source:{nom:'Sitadel — SDES',niveau:'commune'},statut:'indisponible',indicateurs:[],permis:[],erreurs:['Délai maximum de réponse Sitadel dépassé'],exhaustif:false}),
-   demographicDetails.demographics({melodi,asObservations,code:code_insee}), emploi(code_insee)
+   demographicDetails.demographics({melodi,asObservations,code:code_insee}), emploi(code_insee),populationHistory(code_insee)
  ]);
  const byName=new Map();
  for(const v of [...geo.indicateurs,...insee.indicateurs,...ofgl.indicateurs,...rpLogements.indicateurs,...dvf.indicateurs,...sitadel.indicateurs,...employment.indicateurs])byName.set(v.nom,v);
  const all=[...byName.values()];
  // Référence Melodi prioritaire ; la population API Géo conserve un statut informatif sans millésime.
- const stats={population:all.filter(x=>x.nom.startsWith('Population')),revenus:all.filter(x=>x.nom.startsWith('Niveau')),finances:ofgl.indicateurs,logements:rpLogements.indicateurs,prix:dvf.indicateurs,permis:sitadel.indicateurs,emploi:employment.indicateurs};
+ const stats={population:all.filter(x=>x.nom.startsWith('Population')),revenus:all.filter(x=>x.nom.startsWith('Niveau')||x.nom==='Taux de pauvreté'),finances:ofgl.indicateurs,logements:rpLogements.indicateurs,prix:dvf.indicateurs,permis:sitadel.indicateurs,emploi:employment.indicateurs};
  return {code_insee,adresse:adresse||null,commune:geo.commune||null,
-   categories:{population:stats.population,revenus:stats.revenus,finances:stats.finances,logements:stats.logements,prix:stats.prix,permis:stats.permis,population_age:ages.tranches_age,emploi:stats.emploi,dpe:dpe.enregistrements},
+   categories:{population:stats.population,revenus:stats.revenus,finances:stats.finances,logements:stats.logements,prix:stats.prix,permis:stats.permis,population_age:ages.tranches_age,population_historique:history,emploi:stats.emploi,dpe:dpe.enregistrements},
    indicateurs:all,dpe:{nombre_resultats_exacts:dpe.nombre_resultats_exacts,enregistrements:dpe.enregistrements},
    dvf,sitadel,
    sources:[SRC.insee,SRC.geo,SRC.ademe,SRC.ofgl,dvf.source,sitadel.source],
