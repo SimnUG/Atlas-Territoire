@@ -96,4 +96,81 @@ $('breadcrumbCity').textContent=loc.commune||'Adresse';$('localTag').textContent
 }catch(e){$('err').style.display='block';$('err').textContent='Localisation indisponible : '+e.message;$('localTag').textContent='Non vérifié'}
 }
 render('programmation');load();
+</script><script>
+/* Indicateurs réels provenant UNIQUEMENT des sources officielles autorisées. */
+(function(){
+let official=null, loading=true, problem=null;
+const affected=new Set(['population','revenus','dpe','toutes','programmation','commercialisation','logements']);
+function fmt(v,unit){if(typeof v==='number')return new Intl.NumberFormat('fr-FR',{maximumFractionDigits:2}).format(v)+(unit?' '+unit:'');return 'Non disponible'}
+function elt(tag,cls,txt){const e=document.createElement(tag);if(cls)e.className=cls;if(txt!==undefined)e.textContent=txt;return e}
+function addIndicator(root,i){
+  const tile=elt('article','card');
+  tile.append(elt('p','subtitle',i.nom));
+  tile.append(elt('div','score',fmt(i.valeur,i.unite)));
+  const provenance=elt('div','source','Source : '+(i.source?.nom||'Source non identifiée')+
+    ' · Échelle : '+(i.niveau||'commune')+' · Millésime : '+(i.millesime||'non communiqué'));
+  tile.append(provenance);
+  if(i.avertissement)tile.append(elt('p','muted',i.avertissement));
+  root.append(tile);
+}
+function draw(id){
+ const container=document.getElementById('content');
+ if(!container)return;
+ const old=document.getElementById('official-data');
+ if(old)old.remove();
+ if(!affected.has(id))return;
+ const wrapper=elt('section','section');wrapper.id='official-data';
+ const panel=elt('article','card');
+ panel.append(elt('h2',null,'Données officielles vérifiées'));
+ if(loading){panel.append(elt('p','subtitle','Interrogation en cours : INSEE, ADEME et référentiel administratif…'));wrapper.append(panel);container.prepend(wrapper);return}
+ if(problem){panel.append(elt('p','subtitle','Données momentanément indisponibles : '+problem));wrapper.append(panel);container.prepend(wrapper);return}
+ const chosen = id==='population'?official.categories.population:
+   id==='revenus'?official.categories.revenus:
+   id==='dpe'?[]:
+   id==='toutes'||id==='programmation'||id==='commercialisation'||id==='logements'?official.indicateurs:[];
+ const all=Array.isArray(chosen)?chosen:[];
+ const isDpe=id==='dpe'||id==='toutes';
+ if(!all.length&&!isDpe)panel.append(elt('p','subtitle','Aucun indicateur vérifié disponible actuellement pour cette catégorie.'));
+ else if(all.length){panel.append(elt('p','subtitle','Chiffres transmis directement par les organismes publics — échelle communale.'));
+ const cards=elt('div','grid2');
+ all.forEach(i=>addIndicator(cards,i));panel.append(cards)}
+ if(isDpe){
+   const dpe=official.dpe||{};
+   panel.append(elt('h2',null,'Diagnostics de performance énergétique — ADEME'));
+   const ds=dpe.enregistrements||[];
+   if(ds.length){
+    panel.append(elt('p','subtitle',ds.length+' DPE correspondant à l’adresse selon les critères stricts de rapprochement.'));
+    const table=elt('table','table');const head=elt('thead');const tr=elt('tr');
+    for(const name of ['DPE','Énergie','GES','Surface','Date'])tr.append(elt('th',null,name));
+    head.append(tr);table.append(head);
+    const tbody=elt('tbody');
+    for(const d of ds){const row=elt('tr');for(const k of ['numero','dpe','ges','surface','date'])row.append(elt('td',null,d[k]===null||d[k]===undefined?'—':String(d[k])));tbody.append(row)}table.append(tbody);panel.append(table);
+   }else{panel.append(elt('p','subtitle','Aucun DPE identifié avec certitude pour cette adresse par la recherche actuelle. Cela ne signifie pas qu’aucun DPE n’existe.'))}
+ }
+ if(official.erreurs?.length){
+  panel.append(elt('p','source','Accès ou résultat incomplet : '+official.erreurs.join(' • ')));
+ }
+ panel.append(elt('p','source','Provenance : INSEE Melodi, ADEME et référentiel administratif data.gouv.fr. Valeurs en direct, non simulées. Les autres sources autorisées restent à connecter.'));
+ wrapper.append(panel);container.prepend(wrapper);
+}
+const originalRender=render;
+render=function(id){originalRender(id);draw(id)};
+async function loadOfficial(){
+ const search=new URLSearchParams(window.location.search).get('adresse')||'';
+ if(!search){loading=false;problem='Adresse absente';draw('programmation');return}
+ try{
+  const a=await fetch('/api/analyse?adresse='+encodeURIComponent(search));
+  const aData=await a.json();
+  if(!a.ok||!aData.localisation?.code_insee)throw Error(aData.erreur||'Adresse non identifiable');
+  const l=aData.localisation;
+  const query=new URLSearchParams({code_insee:l.code_insee,adresse:l.adresse,code_postal:l.code_postal||'',ban_id:l.ban_id||''});
+  const r=await fetch('/api/indicateurs?'+query);
+  const data=await r.json();
+  if(!r.ok)throw Error(data.erreur||'Service de données indisponible');
+  official=data;
+ }catch(e){problem=e.message||'Service indisponible'}
+ loading=false;draw(document.querySelector('.navitem.active')?.dataset.id||'programmation');
+}
+draw('programmation');loadOfficial();
+})();
 </script></body></html>
