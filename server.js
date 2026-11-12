@@ -1,6 +1,7 @@
 const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
+const official = require('./official-data');
 
 const PORT = Number(process.env.PORT || 3000);
 const PUBLIC = path.join(__dirname, 'public');
@@ -21,7 +22,7 @@ async function geocode(q, limit=5) {
   return (json.features||[]).map(f=>({
     adresse:f.properties?.label||'', code_insee:f.properties?.citycode||f.properties?.cityCode||null,
     commune:f.properties?.city||null,code_postal:f.properties?.postcode||null,
-    type:f.properties?.type||null,score:typeof f.properties?.score==='number'?f.properties.score:null,
+    ban_id:f.properties?.id||null,type:f.properties?.type||null,score:typeof f.properties?.score==='number'?f.properties.score:null,
     longitude:f.geometry?.coordinates?.[0]??null,latitude:f.geometry?.coordinates?.[1]??null
   }));
 }
@@ -29,7 +30,18 @@ const pending = new Map();
 http.createServer(async(req,res)=>{
   const url = new URL(req.url,'http://localhost');
   if(req.method!=='GET')return send(res,405,{erreur:'Méthode non autorisée'});
-  if(url.pathname==='/api/health')return send(res,200,{status:'ok',version:'0.1'});
+  if(url.pathname==='/api/health')return send(res,200,{status:'ok',version:'0.2',sources:['INSEE','ADEME','data.gouv.fr']});
+  if(url.pathname==='/api/indicateurs'){
+    try{
+      const code_insee=(url.searchParams.get('code_insee')||'').trim();
+      const adresse=(url.searchParams.get('adresse')||'').trim();
+      const code_postal=(url.searchParams.get('code_postal')||'').trim();
+      const ban_id=(url.searchParams.get('ban_id')||'').trim();
+      if(adresse.length>180 || ban_id.length>100)return send(res,400,{erreur:'Paramètres invalides'});
+      const result=await official.analyze({code_insee,adresse,code_postal,ban_id});
+      return send(res,200,result);
+    }catch(e){return send(res,400,{erreur:e.message||'Analyse impossible'})}
+  }
   if(url.pathname==='/api/recherche'||url.pathname==='/api/analyse'){
     const q=(url.searchParams.get('adresse')||'').trim();
     try {
