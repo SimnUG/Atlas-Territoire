@@ -25,8 +25,8 @@ function blank(){
  return {loc:{},admin:null,analysis:{categories:{},indicateurs:[],dpe:{enregistrements:[]},dvf:{transactions:[],exhaustif:false},sitadel:{permis:[]}},
  housing:null,rent:null,planning:null,risk:null,extras:null};
 }
-test('Les 27 écrans gardent le nombre exact de KPI et de panneaux de la maquette, sans chiffres',()=>{
- assert.equal(Object.keys(templates).length,27);
+test('Les 21 écrans gardent le nombre exact de KPI et de panneaux de la maquette, sans chiffres',()=>{
+ assert.equal(Object.keys(templates).length,21);
  for(const [id,t] of Object.entries(templates)){
   const root=new Element('div');
   assert.equal(draw(root,id,blank()),true,'Onglet non rendu : '+id);
