@@ -438,60 +438,444 @@ function execute(s,id){
  }
  return obj;
 }
-function render(root,id,state){
- const m=execute(state,id);
- if(!m)return false;
- // La navigation et l’habillage ne sont jamais remplacés : même maquette.
- root.replaceChildren();
- kpiSection(root,m.kpi);
- const row=text('div','panel-grid');
- const first=barPanel(m.bar1);
- const second=seriesPanel(m.series)||barPanel(m.bar2);
- if(first)row.append(first);
- if(second)row.append(second);
- else if(m.map){const map=realMapPanel(state,'Situation autour de l’adresse');if(map)row.append(map)}
- if(row.children.length===1){
-  const other=m.map?realMapPanel(state,'Localisation du site'):locationPanel(state,'Repères communaux');
-  if(other)row.append(other);
+
+/* Présentation verrouillée : reprend la structure de chaque page de la
+ * maquette approuvée, quel que soit le nombre de réponses réelles reçues.
+ * Les chiffres "—" ne sont jamais remplacés par les valeurs fictives. */
+const simplify=v=>String(v||'').normalize('NFD')
+ .replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');
+function officialKpi(s,id,label,live){
+ const key=simplify(label);
+ const all=list(live?.kpi);
+ const direct=all.find(k=>{
+  const actual=simplify(k.name),target=simplify(label);
+  return target.length>5&&(actual===target||actual.startsWith(target+' '));
+ });
+ if(direct && (numeric(direct.value)||typeof direct.value==='string'&&direct.value))return direct;
+ const a=s.analysis||{},cats=a.categories||{},extra=s.extras||{};
+ const kpis=[...list(cats.population),...list(cats.revenus),...list(cats.logements),
+  ...list(cats.permis),...list(cats.prix),...list(cats.emploi),...list(cats.finances)]
+  .filter(x=>x?.statut==='disponible'&&numeric(x.valeur));
+ const lookup=(...patterns)=>{
+  const found=kpis.find(x=>patterns.some(rx=>rx.test(simplify(x.nom))));
+  return found?record(label,found.valeur,found.unite,found.source,found.millesime,found.niveau):null;
+ };
+ const H=houses(s),R=rents(s),D=dpes(s),T=tx(s);
+ const hValue=(type,attr)=>{
+  const found=H.find(x=>x.key===type);
+  return found&&numeric(found[attr])?record(label,found[attr],attr==='part'?'%':'logements',
+    s.housing?.source,s.housing?.commune?.annee):null;
+ };
+ const total=H.length===3&&new Set(H.map(x=>x.key)).size===3
+  &&H.every(x=>numeric(x.valeur))?H.reduce((sum,x)=>sum+x.valeur,0):null;
+ const exactTotal=()=>numeric(total)&&total>0?record(label,total,'logements',
+  s.housing?.source,s.housing?.commune?.annee):null;
+ const dated=catVal=>catVal?record(label,catVal.dernier,'€/m²/mois',
+  s.rent?.source,2025):null;
+ const rentType=type=>dated(R.find(x=>x.id===type));
+ const counts=()=>new Set(kpis.map(x=>x.source?.nom).filter(Boolean)).size;
+ if(id==='programmation'){
+  if(key==='menages')return lookup(/^nombrede menages$/, /^menages$/);
+  if(key==='logementsexistants')return exactTotal();
+  if(key==='logementsautorises')return lookup(/logementsautorises/,/autorisationsdelogements/);
+  if(key==='revenumedian')return lookup(/niveaudeviemedian/,/revenumedian/);
  }
- if(!row.childElementCount){
-  const detail=locationPanel(state,'Territoire et périmètre étudié');
-  const map=realMapPanel(state);
-  if(detail)row.append(detail);
-  if(map)row.append(map);
+ if(id==='commercialisation'){
+  if(key==='prixmedianancien')return lookup(/medianeprix.*ancien/,/prixmedianancien/);
+  if(key==='prixmoyenneuf')return lookup(/prixmoyenneuf/,/prixmedianneuf/);
+  if(key==='transactionsan'&&a.dvf?.exhaustif===true){
+   const year=new Date().getUTCFullYear()-1;
+   const vals=T.filter(x=>String(x.date||'').startsWith(String(year)));
+   if(vals.length)return record(label,vals.length,'mutations',a.dvf?.source,year);
+  }
  }
- if(row.childElementCount)root.append(row);
- if(m.bar2&&m.series){
-  const c=barPanel(m.bar2);if(c)root.append(c);
+ if(id==='toutes'){
+  if(key==='indicateursproposes')return record(label,levels(s).length,'indicateurs');
+  if(key==='themesdanalyse')return record(label,27,'onglets');
+  if(key==='perimetres')return record(label,list(s.admin?.comparaisons).length,'territoires',s.admin?.source);
+  if(key==='sourcesdocumentees')return record(label,counts(),'sources');
  }
- const table=tablePanel(m.table);
- if(table)root.append(table);
- let insight=m.insight;
- if(!insight&&id==='risques'&&list(state.risk?.risques).length){
-  insight={title:'Des aléas sont répertoriés dans la commune',
-   detail:'La présence communale ne prouve pas que la parcelle recherchée est exposée. L’analyse doit se poursuivre par les cartographies réglementaires et le PPR opposable.'};
+ if(id==='focus'||id==='population'){
+  if(key==='population')return lookup(/^populationmunicipale$/, /^populationlegale$/, /^populationtotale$/)
+    ||(numeric(s.admin?.commune?.population)?record(label,s.admin.commune.population,'habitants',s.admin?.source):null);
+  if(key==='logements')return exactTotal();
+  if(key==='prixmedian')return lookup(/median.*m2/,/prixmedian/);
+  if(key==='croissance'||key==='evolutionsur5ans'){
+   const hist=history(s),last=hist.at(-1),first=hist.find(x=>last&&x.annee<=last.annee-5);
+   if(first&&last&&first.population>0&&last.annee>first.annee){
+    const growth=(last.population/first.population-1)*100;
+    return record(label,Math.round(growth*10)/10,'%',{
+     nom:'Calcul ATLAS à partir des populations INSEE',url:'https://www.insee.fr/'},last.annee);
+   }
+  }
+  if(key==='densite')return lookup(/^densitedepopulation/);
+  if(key==='agemedian')return lookup(/^agemedian/);
  }
- if(!insight&&id==='zonage'&&state.extras?.zonage?.zone){
-  insight={title:'Classement officiel '+state.extras.zonage.zone+' au 26 juin 2026',
-   detail:'Le zonage ABC intervient dans plusieurs dispositifs de financement. Il ne détermine pas à lui seul les règles de constructibilité de la parcelle.'};
+ if(id==='familles'){
+  if(key==='menages')return lookup(/^nombrede menages$/, /^menages$/);
+  if(key==='taillemoyenne')return lookup(/taillemoyennedesmenages/);
+  if(key==='personnesseules')return lookup(/personnesseules/);
+  if(key==='famillesavecenfants')return lookup(/famillesavecenfants/);
  }
- if(!insight&&id==='equipements'&&state.extras?.ecoles?.total){
-  insight={title:'La commune dispose de '+f(state.extras.ecoles.total)+' établissements scolaires référencés',
-   detail:'La proximité réelle de chaque équipement doit être calculée depuis la parcelle avant de constituer un argument commercial.'};
+ if(id==='emploi'){
+  if(key==='emploislocaux')return lookup(/emploisaulieudetravail/, /^emploislocalises/);
+  if(key==='actifsoccupes')return lookup(/actifsoccupes/,/populationactiveoccupee/);
+  if(key==='tauxdactivite')return lookup(/tauxdactivite/);
+  if(key==='tauxdechomage')return lookup(/tauxdechomage/);
  }
- if(!insight&&id==='population'&&history(state).length>=2){
-  const a=history(state)[0],b=history(state).at(-1);
-  insight={title:'Le territoire est documenté sur '+(b.annee-a.annee)+' années de recensement',
-   detail:'Les tendances démographiques doivent être rapprochées de la formation des ménages, des autorisations de construire et du marché.'};
+ if(id==='salaires'){
+  if(key==='salairemedian')return lookup(/salairenetmedian/);
+  if(key==='salairemoyen')return lookup(/salaire netmoyen/,/salairenetmoyen/);
  }
- const insightNode=insightPanel(insight,m.source);
- if(insightNode)root.append(insightNode);
- if(m.source&&root.childElementCount) {
-  const foot=text('div','source-line');
-  foot.append(text('strong',null,'Référentiel principal : '),text('span',null,m.source.nom));
-  root.append(foot);
+ if(id==='revenus'){
+  if(key==='niveaudeviemedian')return lookup(/niveaudeviemedian/);
+  if(key==='tauxdepauvrete')return lookup(/tauxdepauvrete/);
+  if(key==='d1')return lookup(/decile1/,/^d1$/);
+  if(key==='d9')return lookup(/decile9/,/^d9$/);
  }
- return root.childElementCount>0;
+ if(id==='equipements'&&key==='ecoles'){
+  const count=list(extra.ecoles?.établissements).filter(x=>
+   ['Maternelle','Élémentaire / primaire'].includes(x.categorie)).length;
+  if(count)return record(label,count,'établissements',extra.ecoles?.source);
+ }
+ if(id==='logements'){
+  if(key==='logements')return exactTotal();
+  if(key==='residencesprincipales')return hValue('principales','part');
+  if(key==='maisons')return lookup(/maisons.*parc/,/partdesmaisons/);
+  if(key==='logementsvacants')return hValue('vacants','part');
+ }
+ if(id==='zonage'&&extra.zonage?.zone){
+  if(key==='zonageabc')return record(label,extra.zonage.zone,'',extra.zonage.source,extra.zonage.millésime);
+  if(key==='reference')return record(label,'Arrêté 2026','',extra.zonage.source,extra.zonage.millésime);
+ }
+ if(id==='permis'){
+  if(key==='autorises')return lookup(/autorises/,/autorisation/);
+  if(key==='commences')return lookup(/commences/);
+  if(key==='collectifs')return lookup(/collectifs/);
+  if(key==='variationannuelle')return lookup(/variationannuelle/);
+ }
+ if(id==='prix'){
+  if(key==='appartementmedian')return lookup(/appartementmedian/,/median.*appartement/);
+  if(key==='maisonmediane')return lookup(/maisonmediane/,/median.*maison/);
+  if(key==='ventesan'&&a.dvf?.exhaustif){
+   const year=new Date().getUTCFullYear()-1;
+   const vals=T.filter(x=>String(x.date||'').startsWith(String(year)));
+   if(vals.length)return record(label,vals.length,'mutations',a.dvf.source,year);
+  }
+  if(key==='prixterrain')return lookup(/prixterrain/);
+ }
+ if(id==='loyers'){
+  if(key==='appartements')return rentType('appartements');
+  if(key==='t1t2')return rentType('petits');
+  if(key==='t3etplus')return rentType('grands');
+  if(key==='maisons')return rentType('maisons');
+ }
+ if(id==='batiments'){
+  if(key==='dperenseignes'&&D.length)return record(label,D.length,'DPE',
+   {nom:'ADEME — Diagnostics de performance énergétique',url:'https://data.ademe.fr/'});
+  if(key==='classesfg'){
+   const vals=D.map(x=>String(x.dpe||'').toUpperCase()).filter(x=>/^[A-G]$/.test(x));
+   if(vals.length){
+    const bad=vals.filter(x=>x==='F'||x==='G').length;
+    return record(label,Math.round(bad/vals.length*1000)/10,'%',
+     {nom:'Calcul ATLAS sur les DPE ADEME',url:'https://data.ademe.fr/'});
+   }
+  }
+ }
+ if(id==='risques'&&key==='famillesdaleas'&&list(s.risk?.risques).length)
+  return record(label,new Set(s.risk.risques).size,'familles',s.risk?.source);
+ if(id==='urbanisme'&&key==='zoneplu'&&list(s.planning?.zones).length)
+  return record(label,s.planning.zones[0].libelle,'',s.planning?.source);
+ if(id==='finances'){
+  if(key==='recettesdefonctionnement')return lookup(/recettesdefonctionnement/);
+  if(key==='depenses')return lookup(/depensesdefonctionnement/, /^depenses$/);
+  if(key==='epargnebrute')return lookup(/epargnebrute/);
+  if(key==='dettehab')return lookup(/detteparhabitant/,/dettehab/);
+ }
+ if(id==='sources'){
+  if(key==='sourcesdedepart')return record(label,14,'sources','',null);
+  if(key==='sourcessupplementaires'){
+   const avail=[s.planning?.source?.nom,s.risk?.source?.nom,
+    s.extras?.ecoles?.source?.nom,s.extras?.eau?.source?.nom,
+    s.admin?.source?.nom].filter(Boolean);
+   return record(label,new Set(avail).size,'sources utilisées');
+  }
+  if(key==='perimetres')return record(label,list(s.admin?.comparaisons).length,'périmètres',s.admin?.source);
+  if(key==='miseajour')return record(label,'Selon chaque source');
+ }
+ return null;
 }
+function templateKpis(root,layout,s,id,live){
+ const g=text('div','kpis');
+ for(const name of layout.kpis){
+  const data=officialKpi(s,id,name,live);
+  const available=data&&(numeric(data.value)||typeof data.value==='string'&&data.value);
+  const card=text('div','card');
+  card.append(text('div','kpi-title',name),
+   text('div','kpi-value',available?
+    (numeric(data.value)?f(data.value,data.unit):String(data.value)):'—'),
+   text('div','kpi-change',available?
+    [data.year?'Millésime '+data.year:null,data.scope,data.source?.nom].filter(Boolean).join(' · ')
+    :'Donnée non disponible'));
+  g.append(card);
+ }
+ root.append(g);
+}
+function barValues(s,id,slot,labels){
+ const blank=labels.map(label=>({label,value:null,unit:''}));
+ const l=s.analysis||{};
+ const H=houses(s),R=rents(s);
+ if(slot==='bar2')return blank;
+ if((id==='logements'||id==='focus')&&slot==='bar1'){
+  const match={'principales':'principales','secondaires':'secondaires','vacants':'vacants'};
+  const vals=['principales','secondaires','vacants'];
+  return blank.map((o,i)=>{
+   const h=H.find(x=>x.key===vals[i]);return {...o,
+    value:numeric(h?.part)?h.part:null,unit:'%'};
+  });
+ }
+ if(id==='population'&&slot==='bar1'){
+  const groups=age(s);
+  if(groups.length>=5){
+   const src=groups.slice(0,labels.length);
+   const all=groups.reduce((sum,x)=>sum+x.valeur,0);
+   return blank.map((o,i)=>({...o,
+    value:numeric(src[i]?.valeur)?src[i].valeur:null,unit:'habitants'}));
+  }
+ }
+ if(id==='loyers'&&slot==='bar1'){
+  const sequence=['appartements','petits','grands','maisons'];
+  return blank.map((o,i)=>{
+   const r=R.find(x=>x.id===sequence[i]);
+   return {...o,value:numeric(r?.dernier)?r.dernier:null,unit:'€/m²'};
+  });
+ }
+ if(id==='batiments'&&slot==='bar1'){
+  const ds=dpes(s),valid=ds.map(x=>String(x.dpe||'').toUpperCase()).filter(x=>/^[A-G]$/.test(x));
+  return blank.map(o=>({...o,value:valid.length?
+   valid.filter(x=>x===o.label).length:null,unit:'DPE'}));
+ }
+ if(id==='equipements'&&slot==='bar1'){
+  const schools=list(s.extras?.ecoles?.établissements);
+  if(schools.length){
+   return blank.map(o=>simplify(o.label)==='enseignement'?{
+    ...o,value:schools.length,unit:'établissements'}:o);
+  }
+ }
+ if(id==='prix'&&slot==='bar1'&&l.dvf?.exhaustif){
+  const types=tx(s).reduce((out,t)=>{
+   const n=simplify(t.type);
+   if(n.includes('appartement'))out.appartements++;
+   else if(n.includes('maison'))out.maisons++;
+   else if(n.includes('terrain'))out.terrains++;
+   return out;
+  },{appartements:0,maisons:0,terrains:0});
+  return blank.map((o,i)=>({...o,value:Object.values(types)[i]||null,unit:'mutations'}));
+ }
+ if((id==='toutes'||id==='sources')&&slot==='bar1'){
+  const groups=[
+   list(l.categories?.population).length+list(l.categories?.emploi).length+list(l.categories?.revenus).length,
+   list(l.categories?.logements).length+list(l.categories?.prix).length+list(l.categories?.permis).length,
+   list(l.categories?.dpe).length, list(s.planning?.zones).length+list(s.risk?.risques).length
+  ];
+  return blank.map((o,i)=>({...o,value:groups[i]>0?groups[i]:null,unit:'indicateurs'}));
+ }
+ return blank;
+}
+function fixedBarPanel(data,id,slot,s){
+ const p=newPanel(data.title,'Données observées, sans valeur simulée',
+   slot==='bar2'?'RÉPARTITION':'GRAPHIQUE');
+ const d=text('div'),rows=barValues(s,id,slot,data.labels);
+ const available=rows.filter(x=>numeric(x.value)&&x.value>=0);
+ const max=available.length?Math.max(1,...available.map(x=>x.value)):1;
+ for(const x of rows){
+  const row=text('div','barrow'),track=text('div','track'),fill=text('div','fill');
+  fill.style.width=numeric(x.value)?Math.min(100,x.value/max*100)+'%':'0%';
+  track.append(fill);
+  row.append(text('span','barrow-label',x.label),
+   track,text('span','barrow-value',numeric(x.value)?f(x.value,x.unit):'—'));
+  d.append(row);
+ }
+ p.append(d);
+ if(available.length){
+  const src=id==='loyers'?s.rent?.source:id==='logements'||id==='focus'?
+   s.housing?.source:id==='equipements'?s.extras?.ecoles?.source:
+   id==='prix'?s.analysis?.dvf?.source: id==='batiments'?
+   {nom:'ADEME',url:'https://data.ademe.fr/'}:
+   {nom:'Indicateurs issus des données officielles du territoire'};
+  addSource(p,src);
+ }
+ return p;
+}
+function blankSeriesSvg(count){
+ const ns='http://www.w3.org/2000/svg',svg=document.createElementNS(ns,'svg');
+ svg.setAttribute('viewBox','0 0 530 215');svg.setAttribute('class','figure');
+ for(let i=0;i<4;i++){
+  const line=document.createElementNS(ns,'line');
+  [['x1',24],['x2',506],['y1',24+167*i/3],['y2',24+167*i/3],
+   ['stroke','#e9edf4']].forEach(([k,v])=>line.setAttribute(k,v));
+  svg.append(line);
+ }
+ const n=Math.max(2,count||5);
+ for(let i=0;i<n;i++){
+  const caption=document.createElementNS(ns,'text');
+  caption.setAttribute('x',24+i*482/(n-1));caption.setAttribute('y',209);
+  caption.setAttribute('text-anchor','middle');
+  caption.textContent='—';svg.append(caption);
+ }
+ const tx=document.createElementNS(ns,'text');
+ tx.setAttribute('x',265);tx.setAttribute('y',110);
+ tx.setAttribute('text-anchor','middle');tx.textContent='Données non disponibles';
+ svg.append(tx);return svg;
+}
+function fixedSeriesPanel(s,id,layout,live){
+ const p=newPanel(layout.title,'Évolution au cours des périodes observées','ÉVOLUTION');
+ let rows=null;
+ if(id==='population'&&history(s).length>=2){
+  rows=history(s).slice(-layout.count).map(x=>({label:x.annee,value:x.population}));
+ }
+ if(id==='permis'){
+  const ps=list(s.analysis?.sitadel?.permis)
+   .filter(x=>numeric(x.annee)&&numeric(x.valeur)&&x.valeur>=0)
+   .sort((a,b)=>a.annee-b.annee);
+  if(ps.length>=2)rows=ps.slice(-layout.count).map(x=>({label:x.annee,value:x.valeur}));
+ }
+ if((id==='commercialisation'||id==='prix')&&s.analysis?.dvf?.exhaustif){
+  const grouped=new Map();
+  for(const t of tx(s)){
+   const yr=Number(String(t.date||'').slice(0,4));
+   if(yr<2010||yr>new Date().getUTCFullYear()||!numeric(t.prix_m2)||t.prix_m2<=0)continue;
+   if(id==='prix'&&!simplify(t.type).includes('appartement'))continue;
+   if(!grouped.has(yr))grouped.set(yr,[]);
+   grouped.get(yr).push(t.prix_m2);
+  }
+  const listYears=[...grouped].filter(([,a])=>a.length>=5).sort((a,b)=>a[0]-b[0]);
+  if(listYears.length>=2)rows=listYears.slice(-layout.count).map(([yr,prices])=>{
+   const p=[...prices].sort((a,b)=>a-b);
+   return {label:yr,value:p.length%2?p[(p.length-1)/2]:(p[p.length/2-1]+p[p.length/2])/2};
+  });
+ }
+ p.append(rows&&rows.length>=2?lineChart(rows):blankSeriesSvg(layout.count));
+ if(rows&&rows.length>=2)addSource(p,
+  id==='population'?{nom:'INSEE — Populations historiques',url:'https://www.insee.fr/'}:
+   id==='permis'?s.analysis?.sitadel?.source:s.analysis?.dvf?.source);
+ return p;
+}
+function placeholderMap(s){
+ return realMapPanel(s,'Situation autour de l’adresse')||(()=>{
+  const p=newPanel('Situation autour de l’adresse',
+   'Emplacement de la carte correspondant à la maquette','CARTE');
+  const b=text('div','map-sketch');
+  b.append(text('div','map-tag','Localisation non disponible'));
+  p.append(b);return p;
+ })();
+}
+function fixedSummaryPanel(layout,s,id){
+ const p=newPanel('Chiffres clés du territoire','Repères de cette étude','SYNTHÈSE'),
+  wrapper=text('div','two-col-summary');
+ const actual=layout.kpis.map(name=>officialKpi(s,id,name,execute(s,id)));
+ for(let i=0;i<layout.kpis.length;i++){
+  const item=text('div','summary-stat'),v=actual[i],
+   has=v&&(numeric(v.value)||typeof v.value==='string'&&v.value);
+  item.append(text('strong',null,has?(numeric(v.value)?f(v.value,v.unit):String(v.value)):'—'),
+   text('span',null,layout.kpis[i]));wrapper.append(item);
+ }
+ p.append(wrapper);return p;
+}
+function safeRows(template,id,s){
+ const labels=template.labels;
+ const cols=template.headers.length,placeholders=labels.map((label,i)=>{
+  const arr=Array(cols).fill('—');arr[0]=label;return arr;
+ });
+ if(id==='prix'){
+  const real=tx(s);
+  for(let i=0;i<Math.min(placeholders.length,real.length);i++){
+   const t=real[i],row=placeholders[i];
+   for(let k=0;k<cols;k++){
+    const h=simplify(template.headers[k]);
+    if(h==='date')row[k]=t.date||'—';
+    else if(h==='type')row[k]=t.type||'—';
+    else if(h==='surface')row[k]=numeric(t.surface)?f(t.surface,'m²'):'—';
+    else if(h==='prix')row[k]=numeric(t.valeur)?f(t.valeur,'€'):'—';
+   }
+  }
+ }
+ if(id==='logements'){
+  const commune=rooms(s),epci=list(s.housing?.epci?.pieces);
+  for(let i=0;i<Math.min(5,placeholders.length);i++){
+   const key=i<4?i+1:5;
+   const filter=x=>{
+    const n=parseInt(x.piece,10);
+    return Number.isInteger(n)&&(key===5?n>=5:n===key);
+   };
+   const c=commune.filter(filter),e=epci.filter(filter);
+   if(c.length)placeholders[i][1]=f(c.reduce((sum,x)=>sum+x.valeur,0));
+   if(e.length)placeholders[i][2]=f(e.reduce((sum,x)=>sum+x.valeur,0));
+  }
+ }
+ if(id==='eau'&&s.extras?.eau?.reseaux?.length){
+  const found=placeholders.find(x=>simplify(x[0])==='communedesservie');
+  if(found)found[1]=s.loc?.commune||'—';
+ }
+ if(id==='sources'){
+  const found=[...new Map(levels(s).map(x=>[x.source?.nom,x.source]).filter(x=>x[0])).values()];
+  for(let i=0;i<Math.min(found.length,placeholders.length);i++){
+   placeholders[i][0]=found[i].nom;
+   if(cols>1)placeholders[i][1]='Source officielle';
+  }
+ }
+ return placeholders;
+}
+function fixedTablePanel(layout,id,s){
+ const p=newPanel(layout.title,'Structure de tableau identique à la maquette','TABLEAU'),
+ wrap=text('div','tablewrap'),tbl=text('table'),
+ thead=text('thead'),tr=text('tr');
+ layout.headers.forEach(label=>tr.append(text('th',null,label)));
+ thead.append(tr);tbl.append(thead);
+ const body=text('tbody');
+ for(const cells of safeRows(layout,id,s)){
+  const row=text('tr');cells.forEach(value=>row.append(text('td',null,value)));
+  body.append(row);
+ }
+ tbl.append(body);wrap.append(tbl);p.append(wrap);
+ return p;
+}
+function fixedInsight(id,s,m){
+ const real=m.insight,insight=text('section','insight'),content=text('div');
+ content.append(text('div','insight-head','◈  Lecture pour le développement foncier'),
+  text('h3',null,'Interprétation du marché'),
+  text('p',null,real?.title?
+   [real.title,real.detail].filter(Boolean).join(' — '):
+   'Les données nécessaires à une analyse chiffrée ne sont pas disponibles dans les sources actuellement consultées.'));
+ insight.append(content,text('small',null,
+  real?.title?'Interprétation issue de données officielles, sous réserve de leur périmètre':
+  'Emplacement d’analyse conservé à l’identique de la maquette'));
+ return insight;
+}
+function render(root,id,state){
+ const template=window.AtlasMockupLayout?.[id];
+ if(!template)return false;
+ const live=execute(state,id);
+ root.replaceChildren();
+ templateKpis(root,template,state,id,live);
+ const row=text('div','panel-grid');
+ if(template.bar1)row.append(fixedBarPanel(template.bar1,id,'bar1',state));
+ if(template.series)row.append(fixedSeriesPanel(state,id,template.series,live));
+ else if(template.bar2)row.append(fixedBarPanel(template.bar2,id,'bar2',state));
+ else if(template.map)row.append(placeholderMap(state));
+ else if(template.bar1)row.append(fixedSummaryPanel(template,state,id));
+ if(row.children.length)root.append(row);
+ if(template.bar2&&(template.series||template.map))
+  root.append(fixedBarPanel(template.bar2,id,'bar2',state));
+ if(template.table)root.append(fixedTablePanel(template.table,id,state));
+ if(template.insight)root.append(fixedInsight(id,state,live));
+ const p=text('div','source-line');
+ p.append(text('strong',null,'Sources : '),
+  text('span',null,live.source?.nom||'Données officielles lorsqu’elles sont disponibles'));
+ root.append(p);
+ return true;
+}
+
+
 window.AtlasPanels={render};
 })();
