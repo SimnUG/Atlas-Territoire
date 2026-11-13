@@ -37,17 +37,18 @@ async function abc(code){
  try{
   const profile=await cached('abcprofile',()=>fetchJson(prefix+'profile/'),86400000);
   const keys=profile?.profile?.header||[];
-  const codeKey=findKey(keys,[/^codeinsee$/, /^codecommune$/, /^codgeo$/, /^inseecode$/, /^comcode$/, /^insee$/]);
-  const zoneKey=findKey(keys,[/^zonage$/, /^zoneabc$/, /^zone2026$/, /^zonageabc$/, /^zone$/, /^classement/]);
+  const codeKey=findKey(keys,[/^codeinsee/, /^codecommune/, /^codgeo/, /^inseecode/, /^inseecommune/, /^comcode$/, /^insee$/]);
+  const zoneKey=findKey(keys,[/^zonage$/, /^zoneabc/, /^zone2026/, /^zonageabc/, /^zonedetension/, /^zone$/, /^classement/]);
   if(!codeKey||!zoneKey)return null;
   const url=new URL(prefix+'data/');
   url.searchParams.set(codeKey+'__exact',code.toUpperCase());
   url.searchParams.set('page_size','20');
   const result=await cached('abc:'+code,()=>fetchJson(url.toString()));
   const rows=(Array.isArray(result?.data)?result.data:[]).filter(r=>String(r[codeKey]).trim().toUpperCase()===code.toUpperCase());
-  const found=rows.filter(r=>/^(Abis|A|B1|B2|C)$/i.test(String(r[zoneKey]??'').trim()));
+  const found=rows.map(r=>({...r,__zone:String(r[zoneKey]??'').trim().replace(/[\\s-]/g,'')}))
+   .filter(r=>/^(Abis|A|B1|B2|C)$/i.test(r.__zone));
   if(found.length!==1)return null;
-  return {zone:String(found[0][zoneKey]).trim(),millésime:2026,code_insee:code,source:SRC.abc,
+  return {zone:String(found[0].__zone),millésime:2026,code_insee:code,source:SRC.abc,
    details:rows[0],colonne_zone:zoneKey};
  }catch(_){return null}
 }
