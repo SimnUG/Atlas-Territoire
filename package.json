@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "test": "node --test tests/*.test.js",
-    "prestart": "node --check server.js && node --check official-data.js && node --check market-data.js && node --check data-catalog.js && node --check rental-data.js && node --check housing-data.js && node --check demographics.js && node --check public/market-dashboard.js && node --check public/market-live.js && node --check public/mockup-live.js && node --check public/atlas-real-panels.js && node --check official-extras.js && node --check territory-extra.js && npm test"
+    "prestart": "node --check server.js && node --check official-data.js && node --check market-data.js && node --check data-catalog.js && node --check rental-data.js && node --check housing-data.js && node --check demographics.js && node --check public/market-dashboard.js && node --check public/market-live.js && node --check public/mockup-live.js && node --check public/atlas-real-panels.js && node --check public/mockup-layout-data.js && node --check official-extras.js && node --check territory-extra.js && npm test"
   },
   "engines": {
     "node": ">=20"
