@@ -18,7 +18,7 @@ test('Parité exacte des 27 onglets : identifiants, pictogrammes et titres',()=>
 });
 test('Maquette : classes de navigation identiques et structure de page réelle',()=>{
  assert.match(html,/class="sidebar" id="sidebar"/);
- assert.match(html,/class="nav-heading"/);
+ assert.match(css,/\.nav-heading/);
  assert.match(js,/elem\('div','nav-heading',group.name\)/);
  assert.match(js,/elem\('button','nav-button'\)/);
  assert.match(js,/elem\('span','symbol',icon\)/);
