@@ -77,45 +77,65 @@ function card(title,description=''){
 }
 function source(node,s,scale,year){
  if(!s?.nom)return;
- node.append(elem('p','source','Source : '+s.nom+(scale?' · '+scale:'')+(year?' · '+year:'')));
- link(node,s);
+ const line=elem('div','source-line');
+ line.append(elem('strong',null,'Source : '),elem('span',null,
+   s.nom+(scale?' · '+scale:'')+(year?' · '+year:'')));
+ node.append(line);link(node,s);
 }
 function metricBox(i){
- const x=card(i.nom);
- x.append(elem('div','metric',num(i.valeur,i.unite)));
- source(x,i.source,i.niveau,i.millesime);
- if(i.avertissement)x.append(elem('p','source',i.avertissement));
+ const x=elem('div','card');
+ x.append(
+  elem('div','kpi-title',i.nom),
+  elem('div','kpi-value',num(i.valeur,i.unite)),
+  elem('div','kpi-change',[
+   i.millesime?'Millésime '+i.millesime:null,
+   i.niveau||null,i.source?.nom||null
+  ].filter(Boolean).join(' · '))
+ );
  return x;
 }
 function metrics(root,values){
- const rows=arr(values).filter(good);
+ const rows=arr(values).filter(good).slice(0,16);
  if(!rows.length)return;
- const group=elem('div',rows.length>2?'grid3 section':'grid2 section');
- rows.slice(0,12).forEach(x=>group.append(metricBox(x)));
+ const group=elem('div','kpis');
+ rows.forEach(i=>group.append(metricBox(i)));
  root.append(group);
 }
 function chart(root,title,items,s){
  const rows=arr(items).filter(x=>x&&typeof x.valeur==='number'&&Number.isFinite(x.valeur)&&x.valeur>=0&&x.label);
  if(!rows.length)return;
- const x=card(title);const max=Math.max(1,...rows.map(y=>y.valeur));
+ const x=elem('section','card');
+ const header=elem('div','panel-head'),lhs=elem('div');
+ lhs.append(elem('div','panel-title',title),elem('div','panel-desc','Valeurs publiées au périmètre précisé'));
+ header.append(lhs,elem('div','tag','RÉPARTITION'));x.append(header);
+ const max=Math.max(1,...rows.map(y=>y.valeur));
  rows.forEach((o,i)=>{
-  const r=elem('div','barRow');r.style.gridTemplateColumns='minmax(110px,1.3fr) minmax(90px,2fr) minmax(80px,1fr)';
-  const track=elem('div','track'),fill=elem('div','fill'+(i===0?' featured':''));
-  fill.style.width=Math.min(100,o.valeur/max*100)+'%';track.append(fill);
-  append(r,elem('span',null,o.label),track,elem('span','pct',num(o.valeur,o.unit||'')));
+  const r=elem('div','barrow'),track=elem('div','track'),fill=elem('div','fill');
+  fill.style.width=Math.min(100,o.valeur/max*100)+'%';
+  track.append(fill);
+  append(r,elem('span','barrow-label',o.label),
+   track,elem('span','barrow-value',num(o.valeur,o.unit||'')));
   x.append(r);
  });
  source(x,s,s?.niveau,rows[0].millesime);root.append(x);
 }
 function table(root,title,heads,rows,description,s){
- if(!rows?.length)return;
- const x=card(title,description),wrap=elem('div','tablewrap'),t=elem('table');
+ if(!Array.isArray(rows)||!rows.length)return;
+ const x=elem('section','card'),head=elem('div','panel-head'),lhs=elem('div');
+ lhs.append(elem('div','panel-title',title));
+ if(description)lhs.append(elem('div','panel-desc',description));
+ head.append(lhs,elem('div','tag','TABLEAU'));x.append(head);
+ const wrap=elem('div','tablewrap'),t=elem('table');
  const th=elem('thead'),tr=elem('tr');
  heads.forEach(h=>tr.append(elem('th',null,h)));th.append(tr);t.append(th);
  const tb=elem('tbody');
- rows.forEach(data=>{const row=elem('tr');data.forEach(v=>row.append(elem('td',null,v??'')));tb.append(row)});
+ rows.forEach(data=>{
+  const row=elem('tr');
+  data.forEach(v=>row.append(elem('td',null,v??'')));tb.append(row);
+ });
  t.append(tb);wrap.append(t);x.append(wrap);source(x,s,s?.niveau);root.append(x);
 }
+
 function fiche(root){
  if(!state.loc)return;
  const x=card('Localisation de l’adresse','Identification par le référentiel officiel d’adresses.');
@@ -364,6 +384,57 @@ function buildNav(){
   }
  }
 }
+function arrangePanels(root){
+ const children=[...root.children];
+ root.replaceChildren();
+ let queue=[];
+ const flush=()=>{
+  if(!queue.length)return;
+  const panel=elem('div','panel-grid');
+  if(queue.length===1)panel.classList.add('single');
+  queue.forEach(item=>panel.append(item));root.append(panel);
+  queue=[];
+ };
+ for(const child of children){
+  if(child.classList.contains('card')){
+   queue.push(child);
+   if(queue.length===2)flush();
+  }else{
+   flush();root.append(child);
+  }
+ }
+ flush();
+}
+function realInsight(root){
+ let line=null,sub=null;
+ if(state.tab==='population'){
+  const history=arr(state.analysis?.categories?.population_historique)
+    .filter(x=>typeof x.annee==='number'&&typeof x.population==='number'&&x.population>0)
+    .sort((a,b)=>a.annee-b.annee);
+  if(history.length>=2){
+   const a=history[0],b=history[history.length-1];
+   if(b.annee>a.annee&&a.population>0){
+    const delta=(b.population/a.population-1)*100;
+    line='Population '+(delta>=0?'en hausse':'en baisse')+' de '+num(Math.abs(delta),'%')+' entre '+a.annee+' et '+b.annee+'.';
+    sub='Calcul ATLAS sur la série de populations INSEE ; cette évolution ne suffit pas à établir seule le besoin en logements.';
+   }
+  }
+ }else if(state.tab==='logements'){
+  const main=homes().find(x=>x.key==='principales'&&typeof x.part==='number');
+  if(main){line='Les résidences principales représentent '+num(main.part,'%')+' du parc décrit par le recensement.';
+   sub='Cette part correspond au périmètre communal, pas nécessairement au quartier de l’adresse.'}
+ }else if(state.tab==='loyers'&&rents().length){
+  line='Le territoire dispose de '+rents().length+' catégorie(s) de loyers d’annonces estimés pour le dernier millésime.';
+  sub='Les estimations par typologie ne sont pas des loyers contractuels ni un prix de marché pour une adresse précise.';
+ }
+ if(!line)return;
+ const box=elem('section','insight'),inner=elem('div');
+ inner.append(elem('div','insight-head','◈  Lecture pour le développement foncier'),
+  elem('h3',null,line),elem('p',null,sub));
+ box.append(inner,elem('small',null,'Analyse calculée à partir des données officielles affichées'));
+ root.append(box);
+}
+
 function redraw(){
  buildNav();
  const selected=tabs.find(t=>t.id===state.tab)||tabs[0];state.tab=selected.id;
@@ -382,6 +453,8 @@ function redraw(){
  }
  const root=$('body');root.replaceChildren();selected.render(root);
  if(!root.children.length)missingDataContext(root,selected);
+ arrangePanels(root);
+ realInsight(root);
  // La grille, les marges et les cartes sont définies par les styles de la maquette.
  if(compact){
   const sections=[...root.children].filter(n=>n.classList.contains('card'));
