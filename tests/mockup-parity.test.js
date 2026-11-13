@@ -2,7 +2,7 @@
 const test=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
-const expected=[["programmation","▥","Programmation théorique"],["commercialisation","◈","Commercialisation"],["toutes","▦","Toutes les données"],["focus","◉","Focus commune"],["population","♙","Population"],["familles","♧","Familles et ménages"],["emploi","◫","Emploi et activité"],["salaires","▤","Salaires nets"],["revenus","◇","Revenus disponibles"],["migrations","⇄","Migrations résidentielles"],["elections","▣","Élections"],["equipements","♧","Équipements et transports"],["logements","⌂","Logements"],["social","▥","Parc social"],["sru","▤","Loi SRU"],["zonage","◈","Zonage ABC"],["permis","▧","Permis de construire"],["prix","€","Prix (DVF)"],["loyers","◈","Loyers du parc privé"],["batiments","▦","Bâtiments et DPE"],["eau","◉","Contrat eau potable"],["risques","⚠","Risques territoriaux"],["chaleur","☀","Îlots de chaleur"],["artificialisation","▧","Artificialisation"],["urbanisme","◈","Urbanisme"],["finances","€","Finances locales"],["sources","▦","Provenance des données"]];
+const expected=[["programmation","▥","Programmation théorique"],["commercialisation","◈","Commercialisation"],["population","♙","Population"],["familles","♧","Familles et ménages"],["emploi","◫","Emploi et activité"],["salaires","▤","Salaires nets"],["revenus","◇","Revenus disponibles"],["migrations","⇄","Migrations résidentielles"],["elections","▣","Élections"],["equipements","♧","Équipements et transports"],["logements","⌂","Logements"],["social","▥","Parc social"],["sru","▤","Loi SRU"],["zonage","◈","Zonage ABC"],["permis","▧","Permis de construire"],["prix","€","Prix (DVF)"],["loyers","◈","Loyers du parc privé"],["batiments","▦","Bâtiments et DPE"],["urbanisme","◈","Urbanisme"],["finances","€","Finances locales"],["sources","▦","Provenance des données"]];
 const js=fs.readFileSync('public/mockup-live.js','utf8');
 const html=fs.readFileSync('public/dashboard.html','utf8');
 const css=fs.readFileSync('public/mockup.css','utf8');
@@ -12,8 +12,8 @@ function groupsFrom(text){
  return [...match[0].matchAll(/\['([^']+)','([^']+)','([^']+)'\]/g)]
   .map(m=>[m[1],m[2],m[3]]);
 }
-test('Parité exacte des 27 onglets : identifiants, pictogrammes et titres',()=>{
- assert.equal(expected.length,27);
+test('Parité exacte des 21 onglets : identifiants, pictogrammes et titres',()=>{
+ assert.equal(expected.length,21);
  assert.deepEqual(groupsFrom(js),expected);
 });
 test('Maquette : classes de navigation identiques et structure de page réelle',()=>{
