@@ -329,10 +329,8 @@ function missingDataContext(root,tab){
 }
 const groups=[
  {name:'Programmation',items:[['programmation','▥','Programmation théorique'],['commercialisation','◈','Commercialisation']]},
- {name:'Données territoriales',items:[['toutes','▦','Toutes les données'],['focus','◉','Focus commune']]},
  {name:'Socio / Démo',items:[['population','♙','Population'],['familles','♧','Familles et ménages'],['emploi','◫','Emploi et activité'],['salaires','▤','Salaires nets'],['revenus','◇','Revenus disponibles'],['migrations','⇄','Migrations résidentielles'],['elections','▣','Élections'],['equipements','♧','Équipements et transports']]},
  {name:'Immo',items:[['logements','⌂','Logements'],['social','▥','Parc social'],['sru','▤','Loi SRU'],['zonage','◈','Zonage ABC'],['permis','▧','Permis de construire'],['prix','€','Prix (DVF)'],['loyers','◈','Loyers du parc privé'],['batiments','▦','Bâtiments et DPE']]},
- {name:'Environnement',items:[['eau','◉','Contrat eau potable'],['risques','⚠','Risques territoriaux'],['chaleur','☀','Îlots de chaleur'],['artificialisation','▧','Artificialisation']]},
  {name:'Compléments fonciers',items:[['urbanisme','◈','Urbanisme'],['finances','€','Finances locales'],['sources','▦','Provenance des données']]}
 ];
 
