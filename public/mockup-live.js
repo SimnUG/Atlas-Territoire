@@ -1,7 +1,7 @@
 'use strict';
 const $ = id=>document.getElementById(id);
 const requested=new URLSearchParams(location.search).get('adresse')||'';
-const state={loc:null,analysis:null,housing:null,rent:null,planning:null,risk:null,admin:null,tab:'programmation'};
+const state={loc:null,analysis:null,housing:null,rent:null,planning:null,risk:null,admin:null,extras:null,tab:'programmation'};
 const fmt=new Intl.NumberFormat('fr-FR',{maximumFractionDigits:1});
 const elem=(tag,cls,value)=>{const a=document.createElement(tag);if(cls)a.className=cls;if(value!==undefined&&value!==null)a.textContent=String(value);return a};
 const append=(parent,...children)=>(parent.append(...children.filter(Boolean)),parent);
@@ -451,10 +451,14 @@ function redraw(){
   btn.classList.toggle('active',active);
   btn.setAttribute('aria-current',active?'page':'false');
  }
- const root=$('body');root.replaceChildren();selected.render(root);
- if(!root.children.length)missingDataContext(root,selected);
- arrangePanels(root);
- realInsight(root);
+ const root=$('body');root.replaceChildren();
+ const matched=window.AtlasPanels?.render?.(root,selected.id,state)===true;
+ if(!matched){
+  selected.render(root);
+  if(!root.children.length)missingDataContext(root,selected);
+  arrangePanels(root);
+  realInsight(root);
+ }
  // La grille, les marges et les cartes sont définies par les styles de la maquette.
  if(compact){
   const sections=[...root.children].filter(n=>n.classList.contains('card'));
@@ -485,6 +489,7 @@ async function load(){
  await Promise.all([
   (async()=>{state.analysis=await get('/api/indicateurs?'+q,93000);redraw()})(),
   (async()=>{state.admin=await get('/api/profil-administratif?code_insee='+encodeURIComponent(l.code_insee),18000);redraw()})(),
+  (async()=>{state.extras=await get('/api/etude-complements?code_insee='+encodeURIComponent(l.code_insee),33000);redraw()})(),
   (async()=>{state.housing=await get('/api/logements-detail?code_insee='+encodeURIComponent(l.code_insee),65000);redraw()})(),
   (async()=>{state.rent=await get('/api/loyers?code_insee='+encodeURIComponent(l.code_insee),60000);redraw()})(),
   (async()=>{
