@@ -1,18 +1,29 @@
 <!doctype html>
-<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Analyse territoriale — ATLAS Territoires</title><meta name="description" content="Analyse territoriale et du marché immobilier à partir des données officielles françaises."><link rel="stylesheet" href="/market-dashboard.css"></head>
-<body><div id="overlay"></div><div class="shell">
-<aside id="side" class="sidebar" aria-label="Navigation par indicateur">
-<div class="brand"><b></b>ATLAS Territoires</div>
-<div class="property"><span id="currentAddress">Adresse recherchée</span><small id="city">Recherche en cours</small></div>
-<nav id="nav"></nav>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ATLAS Territoires — Analyse territoriale</title>
+<link rel="stylesheet" href="/mockup.css">
+</head>
+<body>
+<div class="app">
+<aside class="sidebar" id="sidebar">
+  <div class="brand"><div class="brand-mark">A</div><div><div class="brand-name">ATLAS Territoires</div><div class="brand-caption">INTELLIGENCE IMMOBILIÈRE</div></div></div>
+  <div class="address"><div class="tiny">Étude de marché · Données officielles</div><div class="line1" id="addressLine1">Adresse étudiée</div><div class="line2" id="addressLine2">Identification de la commune</div></div>
+  <nav id="nav" aria-label="Onglets de l'étude"></nav>
+  <div class="sidebar-foot">ATLAS TERRITOIRES · DONNÉES PUBLIQUES
+<div>Les indicateurs sont liés au périmètre géographique indiqué et à leurs millésimes.</div></div>
 </aside>
-<div class="page">
-<header class="top"><button id="mobileNav" aria-label="Afficher les rubriques">☰</button><span class="crumb">Mes études</span><span class="crumb">›</span><span class="crumb" id="crumbCity">Analyse territoriale</span><span class="crumb">›</span><span class="crumb last" id="crumbCategory">Programmation théorique</span><span class="grow"></span><button class="newSearch" id="newSearch">← Nouvelle recherche</button></header>
-<main class="content">
-<div class="toolRow"><select id="preset" aria-label="Période de référence"><option value="defaut">Par défaut</option><option value="disponible">Dernières données disponibles</option></select><span class="grow"></span><button class="action" id="copy" title="Copier le lien de cette étude" aria-label="Copier le lien">⧉</button><button class="action" id="print" title="Imprimer cette étude" aria-label="Imprimer">▤</button></div>
-<div class="eyebrow" id="category">PROGRAMMATION</div>
-<div class="titleRow"><div><h1 class="heroTitle" id="pageTitle">Programmation théorique</h1><div class="subheading" id="description"></div></div><span class="addressPill" id="locationPill">Localisation en cours</span></div>
-<div id="analysis" aria-live="polite"></div>
-<div class="foot">Les données territoriales sont celles des organismes publics autorisés, à l’échelle géographique indiquée. Elles ne sont pas des mesures propres à un bien lorsque la source couvre une commune. Les valeurs manquantes ne sont jamais simulées.</div>
-</main></div></div><script src="/market-live.js" defer></script></body></html>
+<div class="main">
+  <header class="topbar"><button class="ghost mobile-toggle" id="mobile" aria-label="Afficher le menu">☰</button><div class="breadcrumbs">Mes études &nbsp;›&nbsp; <span id="crumbCity">Commune</span> &nbsp;›&nbsp; <strong id="breadcrumb">Programmation théorique</strong></div><div class="top-actions"><button class="ghost" id="print">⎙ &nbsp; Imprimer</button><button class="ghost" id="reset">↺ &nbsp; Vue initiale</button><button class="ghost" id="homeSearch">⌕ &nbsp; Nouvelle recherche</button></div></header>
+  <div class="content">
+    <div class="demo-banner"><span style="font-size:17px">◈</span><strong>DONNÉES OFFICIELLES</strong><span>Les valeurs affichées proviennent des sources publiques effectivement récupérées. Les statistiques communales ne décrivent pas nécessairement la parcelle recherchée.</span></div>
+    <div class="tabs-top"><div class="coverage"><span class="coverage-dot"></span> 27 onglets · Navigation interactive</div><div class="mini-pills"><button class="mini-pill active" id="viewAll">Vue détaillée</button><button class="mini-pill" id="viewCompact">Vue compacte</button></div></div>
+    <div class="headline"><div><div class="eyebrow" id="category">PROGRAMMATION</div><h1 id="title">Programmation théorique</h1><p id="subtitle"></p></div><span class="status-pill" id="locationPill">◉ Étude territoriale</span></div>
+    <div id="body"></div>
+    <div class="footnote">ATLAS TERRITOIRES · Les données de la commune, de l’EPCI et de l’adresse restent distinctes. Aucun chiffre fictif n’est utilisé pour l’analyse.</div>
+  </div>
+</div>
+</div>
+<script src="/mockup-live.js" defer></script>
+</body></html>
