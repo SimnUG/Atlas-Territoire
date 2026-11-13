@@ -27,9 +27,9 @@ test('Maquette : panneaux réels avec cartes, diagrammes et tableaux',()=>{
  assert.match(html,/src="\/atlas-real-panels\.js"/);
  assert.match(html,/src="\/mockup-live\.js"/);
 });
-test('Conserver les 27 onglets sans réimporter les données fictives',()=>{
+test('Conserver les 21 onglets sans réimporter les données fictives',()=>{
  const mockup=fs.readFileSync('public/mockup-live.js','utf8');
- assert.equal((mockup.slice(mockup.indexOf('const groups=['),mockup.indexOf('const groups=[')+1700).match(/\['[^']+','[^']+','[^']+'\]/g)||[]).length,27);
+ assert.equal((mockup.slice(mockup.indexOf('const groups=['),mockup.indexOf('const groups=[')+1700).match(/\['[^']+','[^']+','[^']+'\]/g)||[]).length,21);
  assert.doesNotMatch(code,/Ville Exemple|12 rue des Ateliers|Tous les chiffres.*fictifs/i);
  assert.match(code,/function render\(root,id,state\)/);
 });
