@@ -461,8 +461,17 @@ function redraw(){
  }
  // La grille, les marges et les cartes sont définies par les styles de la maquette.
  if(compact){
-  const sections=[...root.children].filter(n=>n.classList.contains('card'));
-  sections.slice(2).forEach(n=>n.hidden=true);
+  // Même comportement que dans la maquette : KPI + première rangée,
+  // aucune suppression définitive des panneaux de la vue détaillée.
+  const children=[...root.children];
+  let rows=0;
+  for(const node of children){
+   if(node.classList.contains('kpis')||node.classList.contains('source-line'))continue;
+   if(node.classList.contains('panel-grid')){
+    rows++;
+    if(rows>1)node.hidden=true;
+   }else node.hidden=true;
+  }
  }
  $('viewAll').classList.toggle('active',!compact);
  $('viewCompact').classList.toggle('active',compact);
