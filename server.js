@@ -1,4 +1,5 @@
 const http = require('node:http');
+const privateAccess = require('./site-auth');
 const fs = require('node:fs');
 const path = require('node:path');
 const official = require('./official-data');
@@ -34,6 +35,8 @@ async function geocode(q, limit=5) {
 }
 const pending = new Map();
 http.createServer(async(req,res)=>{
+  // Vérification avant TOUTES les routes, fichiers publics et endpoints API.
+  if(!privateAccess.allow(req,res))return;
   const url = new URL(req.url,'http://localhost');
   if(req.method!=='GET')return send(res,405,{erreur:'Méthode non autorisée'});
   if(url.pathname==='/api/catalogue'){
