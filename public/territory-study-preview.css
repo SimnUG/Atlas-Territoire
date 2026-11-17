@@ -1,0 +1,29 @@
+/* Variante graphique de travail : sources publiques Terre de Données.
+   Ne pas présenter comme une copie pixel à pixel de la plateforme authentifiée. */
+:root{--nav:#2e276a;--nav2:#392f81;--pink:#e5087e;--ink:#282352;--sub:#7e829b;--edge:#ebe9f3;--bg:#f7f7fb;--white:#fff;--primary:#2e276a;--teal:#24a7a0;--soft:#fff2f9;--shadow:0 8px 26px rgba(46,39,106,.05)}
+body,.app,.main{background:#f7f7fb;color:#292454}
+.sidebar{width:272px;background:#fff;border-right:1px solid #e6e1f1;color:#3b3569;box-shadow:2px 0 17px rgba(46,39,106,.035)}
+.brand{height:80px;border-bottom:1px solid #eae5f4;background:white}
+.brand-mark{background:linear-gradient(140deg,#2e276a,#6d5ec9);box-shadow:none;border-radius:8px}
+.brand-name{color:#2e276a;font-size:17px}.brand-caption{color:#958cac}
+.address{background:#faf9fe;border-bottom:1px solid #ece9f6}.address .tiny{color:#a196b9}.address .line1{color:#373063}.address .line2{color:#8d83a5}
+.nav-heading{color:#988cac;letter-spacing:1.2px}.nav-button{color:#48436e;font-weight:650;border-radius:7px;margin:2px 10px;width:calc(100% - 20px);padding:11px 12px}
+.nav-button .symbol{color:#6b5ab2}.nav-button:hover{color:#2e276a;background:#f2effb}
+.nav-button.active{background:linear-gradient(100deg,#e5087e,#bd0c78);box-shadow:0 6px 18px #e5087e22;color:#fff}
+.nav-button.active .symbol{color:white}.sidebar-foot{border-top:1px solid #ece9f6;color:#8f89a5}
+.topbar{height:76px;background:white;border-bottom:1px solid #edeaf5;border-top:4px solid #2e276a}
+.breadcrumbs strong{color:#352b71}.ghost{border-color:#e8e2f2;color:#493a85}.ghost:hover{background:#f7f2fd}
+.content{padding:29px 35px 65px;max-width:1580px}
+.demo-banner{background:#f2effa;border:1px solid #e6dcf7;color:#5b4c91;padding:13px 17px}.demo-banner strong{color:#3c2d80}
+.coverage{color:#6d648d}.mini-pill.active{background:#ebe7f6;color:#332877}
+.headline h1{color:#2e276a;font-size:30px}.eyebrow{color:#e5087e}.status-pill{background:#ece7fa;color:#44338c}
+.card{border:1px solid #eae6f2;border-radius:9px;box-shadow:0 8px 25px rgba(46,39,106,.035);padding:21px}
+.kpis{gap:16px}.kpis .card{border-top:3px solid #e5087e;min-height:128px}.kpis .card:nth-child(even){border-top-color:#2e276a}
+.kpi-title{color:#76708e}.kpi-value{color:#352976;font-size:28px}.kpi-change{color:#958ba9}
+.panel-title{color:#32286f}.tag{background:#f3eefb;color:#7163a4}.track{background:#f2eff8}.fill{background:linear-gradient(90deg,#49399c,#8576db)}
+.barrow:nth-child(2) .fill{background:#e5087e}.barrow-value{color:#423884}
+.figure path[stroke='#d30a71'],.figure circle[stroke='#d30a71']{stroke:#e5087e!important}
+.figure path[fill='#dfebf8']{fill:#f5def0!important}
+th{background:#faf8fd;color:#8b80ad}.source-line strong{color:#5c518f}
+.insight{background:linear-gradient(135deg,#2e276a,#51479a);border-radius:9px}.insight-head{color:#f6acd9}.insight p{color:#dcd7f4}
+@media(max-width:850px){.sidebar{left:-285px;width:272px}.sidebar.open{left:0}.content{padding:20px}}
