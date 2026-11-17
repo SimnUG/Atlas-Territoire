@@ -13,7 +13,7 @@ class Element{
  }
  append(...elements){this.children.push(...elements.filter(Boolean))}
  replaceChildren(...elements){this.children=[];this.append(...elements)}
- setAttribute(key,value){this.attrs[key]=String(value)}
+ setAttribute(key,value){this.attrs[key]=String(value);if(key==='class')this.className=String(value)}
  addEventListener(){}
 }
 function setup(){
