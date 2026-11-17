@@ -27,7 +27,7 @@ function rowsFrom(payload,geo){
  return original.map(row=>{
   const d=row?.dimensions||{},n=safeNumber(row?.measures?.OBS_VALUE_NIVEAU?.value);
   const rawGeo=String(d.GEO||'').toUpperCase();
-  if(n===null||(!rawGeo.endsWith(suffix)&&rawGeo!==geo.toUpperCase())||!YEARS.includes(Number(d.TIME_PERIOD)))return null;
+  if(n===null||(!rawGeo.endsWith(suffix)&&rawGeo!==geo.toUpperCase())||!(Number(d.TIME_PERIOD)>=1968&&Number(d.TIME_PERIOD)<=2026))return null;
   if(d.RP_MEASURE && d.RP_MEASURE!=='POP')return null;
   if(d.POPREF_MEASURE&&d.POPREF_MEASURE!=='PMUN')return null;
   return {d,value:n,year:Number(d.TIME_PERIOD)};
