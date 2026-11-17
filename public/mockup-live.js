@@ -1,7 +1,7 @@
 'use strict';
 const $ = id=>document.getElementById(id);
 const requested=new URLSearchParams(location.search).get('adresse')||'';
-const state={loc:null,analysis:null,housing:null,rent:null,planning:null,risk:null,admin:null,extras:null,tab:'programmation'};
+const state={loc:null,analysis:null,housing:null,rent:null,planning:null,risk:null,admin:null,extras:null,tab:new URLSearchParams(location.search).get('onglet')==='population'?'population':'programmation'};
 const fmt=new Intl.NumberFormat('fr-FR',{maximumFractionDigits:1});
 const elem=(tag,cls,value)=>{const a=document.createElement(tag);if(cls)a.className=cls;if(value!==undefined&&value!==null)a.textContent=String(value);return a};
 const append=(parent,...children)=>(parent.append(...children.filter(Boolean)),parent);
@@ -439,7 +439,8 @@ function redraw(){
  $('title').textContent=selected.label;
  $('breadcrumb').textContent=selected.label;
  $('category').textContent=selected.group;
- $('subtitle').textContent=tabDescriptions[selected.id]||'Données territoriales vérifiées.';
+ $('subtitle').textContent=selected.id==='population'?'Population par échelle de territoire — recensement INSEE':(tabDescriptions[selected.id]||'Données territoriales vérifiées.');
+ document.querySelector('.app')?.classList.toggle('atlas-population-active',selected.id==='population');
  $('addressLine1').textContent=state.loc?.adresse||requested||'Adresse';
  $('addressLine2').textContent=[state.loc?.commune,state.loc?.code_insee].filter(Boolean).join(' · ')||'Étude territoriale';
  $('crumbCity').textContent=state.loc?.commune||'Territoire';
@@ -450,7 +451,8 @@ function redraw(){
   btn.setAttribute('aria-current',active?'page':'false');
  }
  const root=$('body');root.replaceChildren();
- const matched=window.AtlasPanels?.render?.(root,selected.id,state)===true;
+ const matched=(selected.id==='population'&&window.AtlasPopulationPage?.render?.(root,state)===true)
+  ||window.AtlasPanels?.render?.(root,selected.id,state)===true;
  if(!matched){
   selected.render(root);
   if(!root.children.length)missingDataContext(root,selected);
@@ -458,7 +460,7 @@ function redraw(){
   realInsight(root);
  }
  // La grille, les marges et les cartes sont définies par les styles de la maquette.
- if(compact){
+ if(compact&&selected.id!=='population'){
   // Même comportement que dans la maquette : KPI + première rangée,
   // aucune suppression définitive des panneaux de la vue détaillée.
   const children=[...root.children];
