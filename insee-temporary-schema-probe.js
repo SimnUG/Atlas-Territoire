@@ -1,36 +1,33 @@
 'use strict';
-// Diagnostic éphémère de schéma Melodi — uniquement les 3 premières observations et dimensions.
+// Temporary Melodi metadata sanity checks; no secrets or user data logged.
 (async()=>{
- const root='https://api.insee.fr/melodi/';
- const requests=[
- ['catalog-princ','catalog/DS_RP_POPULATION_PRINC'],
- ['catalog-comp','catalog/DS_RP_POPULATION_COMP'],
- ['catalog-imm','catalog/DS_RP_TD_IMMI_AGESEXEMPSTA_PRINC'],
- ['historic','data/DS_POPULATIONS_HISTORIQUES?GEO=COM-85081&maxResult=3'],
- ['princip','data/DS_RP_POPULATION_PRINC?GEO=COM-85081&maxResult=3'],
- ['comp','data/DS_RP_POPULATION_COMP?GEO=COM-85081&maxResult=3'],
- ['imm','data/DS_RP_TD_IMMI_AGESEXEMPSTA_PRINC?GEO=COM-85081&maxResult=3'],
- ['epci','data/DS_RP_POPULATION_PRINC?GEO=EPCI-248500589&maxResult=3']
+ const jobs=[
+  ['p_meta','https://api.insee.fr/melodi/catalog/DS_RP_POPULATION_PRINC'],
+  ['c_meta','https://api.insee.fr/melodi/catalog/DS_RP_POPULATION_COMP'],
+  ['i_meta','https://api.insee.fr/melodi/catalog/DS_RP_TD_IMMI_AGESEXEMPSTA_PRINC'],
+  ['n_meta','https://api.insee.fr/melodi/catalog/DS_RP_TD_NAT_AGESEXEMPSTA_PRINC'],
+  ['p_all','https://api.insee.fr/melodi/data/DS_RP_POPULATION_PRINC?GEO=COM-85081&TIME_PERIOD=2023&maxResult=160'],
+  ['c_all','https://api.insee.fr/melodi/data/DS_RP_POPULATION_COMP?GEO=COM-85081&TIME_PERIOD=2023&maxResult=350'],
+  ['i_all','https://api.insee.fr/melodi/data/DS_RP_TD_IMMI_AGESEXEMPSTA_PRINC?GEO=COM-85081&TIME_PERIOD=2023&maxResult=250'],
+  ['n_all','https://api.insee.fr/melodi/data/DS_RP_TD_NAT_AGESEXEMPSTA_PRINC?GEO=COM-85081&TIME_PERIOD=2023&maxResult=250'],
+  ['h_epci','https://api.insee.fr/melodi/data/DS_POPULATIONS_HISTORIQUES?GEO=EPCI-248500589&maxResult=120'],
+  ['h_comm','https://api.insee.fr/melodi/data/DS_POPULATIONS_HISTORIQUES?GEO=COM-85081&maxResult=120']
  ];
- await Promise.all(requests.map(async([id,path])=>{
+ await Promise.all(jobs.map(async([id,url])=>{
   try{
-   const res=await fetch(root+path,{headers:{Accept:'application/json'},
-    signal:AbortSignal.timeout(12000)});
-   const raw=await res.text();
-   const data=JSON.parse(raw);
-   if(id.startsWith('catalog')){
-    const fields=(data?.dimensions||data?.structure?.dimensions||data?.data?.dimensions||[]);
-    console.log('MEL_PROBE',id,JSON.stringify({status:res.status,
-     keys:Object.keys(data),dims:Array.isArray(fields)?fields.slice(0,12).map(d=>({id:d.id,name:d.name,values:d.values?.slice?.(0,12),codes:d.codes?.slice?.(0,12)})):fields,
-     sample:JSON.stringify(data).slice(0,2000)}));
+   const r=await fetch(url,{headers:{Accept:'application/json'},signal:AbortSignal.timeout(16000)});
+   const d=await r.json();
+   if(id.endsWith('_meta')){
+    const st=d.structure||{};
+    console.log('MELODICHECK',id,'http',r.status,'STRUCTURE',JSON.stringify(st).slice(0,9500));
    }else{
-    const block=data.observations||{};
-    console.log('MEL_PROBE',id,JSON.stringify({status:res.status,
-     top:Object.keys(data),block:Object.keys(block),
-     dimensions:Array.isArray(block.dimensions)?block.dimensions.slice(0,3):[],
-     measures:block.measures?Object.fromEntries(Object.entries(block.measures).slice(0,3).map(([k,v])=>[k,Array.isArray(v)?v.slice(0,3):v])):null,
-     sample:JSON.stringify(data).slice(0,450)}));
+    const rows=Array.isArray(d.observations)?d.observations:[];
+    const dims=[...new Set(rows.flatMap(o=>Object.keys(o.dimensions||{})))];
+    const options=Object.fromEntries(dims.map(k=>[k,[...new Set(rows.map(o=>o.dimensions[k]))].slice(0,40)]));
+    console.log('MELODICHECK',id,'http',r.status,'PAGING',JSON.stringify(d.paging||{}),
+     'ROWS',rows.length,'OPTIONS',JSON.stringify(options).slice(0,5500),
+     'SAMPLE',JSON.stringify(rows.slice(0,3)).slice(0,950));
    }
-  }catch(e){console.log('MEL_PROBE',id,'ERROR',e.message)}
+  }catch(e){console.log('MELODICHECK',id,'ERR',e.message)}
  }));
-})().catch(e=>console.log('MEL_PROBE_FATAL',e.message));
+})();
