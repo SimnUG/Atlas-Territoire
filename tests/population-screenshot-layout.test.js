@@ -68,7 +68,7 @@ test('Population : deux territoires se personnalisent selon l’adresse sans don
 test('Population : seuls ses styles et son composant sont utilisés, la navigation reste à 21 onglets',()=>{
  assert.match(css,/\.app\.atlas-population-active/);
  assert.match(live,/selected\.id==='population'&&window\.AtlasPopulationPage/);
- assert.match(live,/!\['population','familles','emploi'\]\.includes\(selected\.id\)/);
+ assert.match(live,/!\['population','familles','emploi','salaires'\]\.includes\(selected\.id\)/);
  for(const path of ['public/dashboard.html','public/territory-study-preview.html']){
   const html=fs.readFileSync(path,'utf8');
   assert.match(html,/href="\/population-reference\.css"/);
