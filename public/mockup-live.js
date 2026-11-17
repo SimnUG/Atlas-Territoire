@@ -441,7 +441,7 @@ function redraw(){
  $('breadcrumb').textContent=selected.label;
  $('category').textContent=selected.group;
  $('subtitle').textContent=selected.id==='population'?'Population par échelle de territoire — recensement INSEE':selected.id==='familles'?'Composition des ménages et des familles — recensement INSEE':selected.id==='emploi'?'Activité, chômage et inactivité de la population — recensement INSEE':selected.id==='salaires'?'Salaire net mensuel moyen en équivalent temps plein — INSEE Base Tous salariés 2022':selected.id==='revenus'?'FiLoSoFi 2021 — lecture par profil de ménage et par décile, du revenu disponible mensuel à la capacité d’emprunt':(tabDescriptions[selected.id]||'Données territoriales vérifiées.');
- document.querySelector('.app')?.classList.toggle('atlas-population-active',['population','familles','emploi','salaires','revenus','migrations'].includes(selected.id));
+ document.querySelector('.app')?.classList.toggle('atlas-population-active',['population','familles','emploi','salaires','revenus'].includes(selected.id));
  document.querySelector('.app')?.classList.toggle('atlas-revenus-active',selected.id==='revenus');
  document.querySelector('.app')?.classList.toggle('atlas-migrations-active',selected.id==='migrations');
  document.querySelector('.app')?.classList.toggle('atlas-salaires-active',selected.id==='salaires');
