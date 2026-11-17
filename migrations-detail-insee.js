@@ -21,11 +21,12 @@ const GROUPS={
  menage:[['1','1 personne'],['2','2 personnes'],['3','3 personnes'],['4','4 personnes'],['5','5 personnes'],['6','6 personnes ou plus']]
 };
 const sum=(obj,key,v)=>{obj[key]=(obj[key]||0)+v};
-function profile(){return{total:0,csp:{},age:{},occupation:{},menage:{}}}
+function profile(cross=false){return{total:0,csp:{},age:{},occupation:{},menage:{},byCsp:cross?{}:null}}
 function addProfile(p,f,w){
  p.total+=w;
  const csp=f.TACTM==='12'?'12':f.TACTM==='21'?'21':/^[1-6]$/.test(f.GSM)?f.GSM:'autres';
  sum(p.csp,csp,w);
+ if(p.byCsp){if(!p.byCsp[csp])p.byCsp[csp]=profile(false);addProfile(p.byCsp[csp],f,w)}
  if(GROUPS.age.some(([c])=>c===f.AGEMEN8))sum(p.age,f.AGEMEN8,w);
  if(GROUPS.occupation.some(([c])=>c===f.STOCD))sum(p.occupation,f.STOCD,w);
  if(GROUPS.menage.some(([c])=>c===f.NPERR))sum(p.menage,f.NPERR,w);
@@ -36,7 +37,7 @@ function output(p){
   rows[kind]=groups.map(([code,label])=>({code,label,valeur:p[kind][code]||0}))
    .filter(x=>x.valeur>0);
  }
- return {total:p.total,distributions:rows};
+return {total:p.total,distributions:rows,...(p.byCsp?{parCsp:Object.fromEntries(Object.entries(p.byCsp).map(([k,v])=>[k,output(v)]))}:{})};
 }
 function openZip(file){
  return new Promise((resolve,reject)=>yauzl.open(file,{lazyEntries:true,autoClose:true},(e,zip)=>e?reject(e):resolve(zip)));
@@ -65,7 +66,7 @@ async function compileZip(filename,code){
   const stream=await csvEntry(zip);
   const lines=readline.createInterface({input:stream,crlfDelay:Infinity});
   let columns=null,checked=0,kept=0;
-  const all=profile(),movers=profile(),flows=new Map(),movement={};
+  const all=profile(),movers=profile(true),flows=new Map(),movement={};
   const validCode=/^(?:\d{5}|2[AB]\d{3})$/i;
   for await(const line of lines){
    if(!columns){
@@ -90,12 +91,14 @@ async function compileZip(filename,code){
    addProfile(movers,f,w);
    const origin=f.IRAN==='2'?code:f.DCRAN;
    if(!origin)continue;
-   if(!flows.has(origin))flows.set(origin,profile());
+   if(!flows.has(origin))flows.set(origin,profile(true));
    addProfile(flows.get(origin),f,w);
   }
   if(!columns||checked<10000)throw Error('MIGCOM tronqué ou schéma illisible');
   if(!kept)throw Error('Aucune observation pour la commune '+code);
-  const origins={};for(const [key,value] of flows)origins[key]=output(value);
+  const origins={};
+  const sorted=[...flows.entries()].sort((a,b)=>b[1].total-a[1].total);
+  for(const [key,value] of sorted.slice(0,120))origins[key]=output(value);
   return {statut:'disponible',source:SOURCE,code_insee:code,total:all.total,
     memeLogement:movement['1']||0,intra:movement['2']||0,
     horsOrdinaire:movement['0']||0,
