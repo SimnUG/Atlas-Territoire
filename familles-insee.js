@@ -25,7 +25,7 @@ const LABELS=Object.freeze({
 const CACHE=new Map();
 const PENDING=new Map();
 const YEARS=new Set([2012,2017,2023]);
-const validGeo=/^(?:COM-(?:[0-9]{5}|2[AB][0-9]{3})|EPCI-[0-9]{9}|FRANCE-1)$/i;
+const validGeo=/^(?:COM-(?:[0-9]{5}|2[AB][0-9]{3})|EPCI-[0-9]{9}|FRANCE-F)$/i;
 function number(v){
  if(typeof v==='number'&&Number.isFinite(v)&&v>=0)return v;
  if(typeof v==='string'&&v.trim()!==''&&Number.isFinite(Number(v))&&Number(v)>=0)return Number(v);
@@ -111,7 +111,7 @@ async function families({commune,epci}){
  if(epci && !/^[0-9]{9}$/.test(epci))throw Error('Code EPCI invalide');
  const output={source:SOURCE,code_insee:commune,code_epci:epci||null,
   sections:emptySections(),errors:[],generated_at:new Date().toISOString()};
- const geos=[['commune','COM-'+commune],['france','FRANCE-1']];
+ const geos=[['commune','COM-'+commune],['france','FRANCE-F']];
  if(epci)geos.push(['epci','EPCI-'+epci]);
  await Promise.all(geos.flatMap(([level,geo])=>Object.values(DATASETS).map(async dataset=>{
   try{
