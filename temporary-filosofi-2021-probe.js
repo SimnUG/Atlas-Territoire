@@ -18,23 +18,23 @@ function unzip(bytes){
  return out;
 }
 (async()=>{
- for(const [level,url] of [
-  ['communes','https://www.insee.fr/fr/statistiques/fichier/7756855/indic-struct-distrib-revenu-2021-COMMUNES_csv.zip'],
-  ['admin','https://www.insee.fr/fr/statistiques/fichier/7756855/indic-struct-distrib-revenu-2021-SUPRA_csv.zip']]){
-  try{
-   const res=await fetch(url,{signal:AbortSignal.timeout(35000),headers:{Accept:'application/zip'}});
-   const buf=Buffer.from(await res.arrayBuffer()),files=unzip(buf);
-   console.log('FILO2021_FILES',level,res.status,buf.length,JSON.stringify(files.map(x=>x.name)));
-   for(const item of files.filter(x=>/\.csv$/i.test(x.name))){
-    const data=item.read().toString('utf8');
-    const lines=data.split(/\r?\n/);
-    const found=lines.findIndex(x=>/^85081(?:;|,)/.test(x)||/^(?:2022-)?COM-85081(?:;|,)/.test(x));
-    const related=lines.find(x=>/^248500589(?:;|,)/.test(x));
-    console.log('FILO2021_FILE',level,item.name,'size',data.length,'lines',lines.length,
-      'HEAD',JSON.stringify(lines.slice(0,3)).slice(0,1600),
-      'DompierreIndex',found,'SAMPLE',found>=0?JSON.stringify(lines[found].slice(0,1400)):'',
-      'EPCI',related?.slice(0,300)||'');
-   }
-  }catch(e){console.log('FILO2021_DIAG_ERROR',level,e.message)}
+ const url='https://www.insee.fr/fr/statistiques/fichier/7756855/indic-struct-distrib-revenu-2021-COMMUNES_csv.zip';
+ const resp=await fetch(url,{signal:AbortSignal.timeout(35000)});
+ const items=unzip(Buffer.from(await resp.arrayBuffer()));
+ for(const filename of ['FILO2021_DISP_COM.csv','meta_FILO2021_DISP_COM.csv']){
+  const file=items.find(x=>x.name===filename);
+  const lines=file.read().toString('utf8').split(/\r?\n/);
+  if(filename.startsWith('meta_')){
+   console.log('FILO_GROUPS',JSON.stringify(lines.filter(l=>
+    /^((TME[1-5]|TYM[1-6]|OPR[1-6])(D321|D421|D621|PACT21|PPEN21|N[BPU]|Q221)|D321|NBMEN21|PACT21|PTSA21|PCHO21|PBEN21|PPEN21|PPAT21|PPSOC21|PPFAM21|PPMINI21|PPLOGT21|PIMPOT21);/.test(l))
+    .slice(0,95).map(l=>l.slice(0,250))).slice(0,15000));
+  }else{
+   const names=lines[0].split(';'),cells=lines.find(l=>l.startsWith('85081;'))?.split(';')||[];
+   const groups=['NBMEN21','Q221','D321','D421','D621','PACT21','PTSA21','PCHO21','PBEN21','PPEN21','PPAT21','PPSOC21','PPFAM21','PPMINI21','PPLOGT21','PIMPOT21',
+    ...['TME1','TME2','TME3','TME4','TME5','TYM1','TYM2','TYM3','TYM4','TYM5','TYM6','OPR1','OPR2','OPR3','OPR4','OPR5','OPR6']
+    .flatMap(pre=>['D321','D421','Q221','D621','PACT21','PPEN21'].map(k=>pre+k))];
+   const result=Object.fromEntries(groups.filter(x=>names.includes(x)).map(k=>[k,cells[names.indexOf(k)]]));
+   console.log('FILO_DOMPIERRE_FIELDS',JSON.stringify(result));
+  }
  }
-})();
+})().catch(e=>console.log('FILO_GROUPS_ERROR',e.message));
