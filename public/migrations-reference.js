@@ -1,140 +1,200 @@
 'use strict';
 (function(){
-const SOURCE='https://www.insee.fr/fr/statistiques/8998241';
-const integer=n=>new Intl.NumberFormat('fr-FR',{maximumFractionDigits:0}).format(n);
-const pct=(n,d)=>d>0?(n/d*100).toLocaleString('fr-FR',{maximumFractionDigits:1})+' %':'—';
-const el=(tag,cls,text)=>{const x=document.createElement(tag);if(cls)x.className=cls;if(text!==undefined)x.textContent=text;return x};
-const add=(parent,...nodes)=>{parent.append(...nodes);return parent};
-const mk=(tag,cls,text)=>el(tag,cls,text);
-function card(parent,title,desc){
- const c=mk('section','mig-card'),head=mk('div','mig-title',title);
- c.append(head);if(desc)c.append(mk('p','mig-desc',desc));parent.append(c);return c;
+const INSEE='https://www.insee.fr/fr/statistiques/8998241';
+const DETAILS='https://www.insee.fr/fr/statistiques/9004805';
+const nf=new Intl.NumberFormat('fr-FR',{maximumFractionDigits:0});
+const pf=new Intl.NumberFormat('fr-FR',{maximumFractionDigits:1});
+const mk=(tag,cls,content)=>{const x=document.createElement(tag);if(cls)x.className=cls;if(content!==undefined)x.textContent=String(content);return x};
+const add=(p,...children)=>(p.append(...children.filter(Boolean)),p);
+const valid=n=>typeof n==='number'&&Number.isFinite(n)&&n>=0;
+const num=n=>valid(n)?nf.format(Math.round(n)):'—';
+const percent=(n,d)=>valid(n)&&valid(d)&&d>0?pf.format(n/d*100)+' %':'—';
+function panel(parent,title,subtitle,klass=''){
+ const p=mk('section','mr-card '+klass),heading=mk('div','mr-card-heading');
+ heading.append(mk('h2','',title));
+ if(subtitle)heading.append(mk('p','',subtitle));
+ p.append(heading);parent.append(p);return p;
 }
-function rows(container,entries,total,maxItems){
- const all=entries.filter(x=>Number.isFinite(x.valeur)&&x.valeur>0);
- const wrap=mk('div','mig-bars');container.append(wrap);
- let showAll=false;
- const render=()=>{
-  wrap.replaceChildren();
-  const max=Math.max(1,...all.map(x=>x.valeur));
-  const items=showAll?all:all.slice(0,maxItems||10);
-  items.forEach(x=>{
-   const r=mk('div','mig-row'),track=mk('div','mig-track'),fill=mk('span','mig-fill');
-   fill.style.width=Math.max(1,x.valeur/max*100)+'%';track.append(fill);
-   add(r,mk('span','mig-lab',x.nom),track,mk('b','mig-num',integer(Math.round(x.valeur))),mk('small','mig-pct',pct(x.valeur,total)));
-   wrap.append(r);
+function button(label,cls,handler){const b=mk('button',cls,label);b.type='button';if(handler)b.onclick=handler;return b}
+function meter(parent,label,value,denom,max,color){
+ const r=mk('div','mr-bar-row'),track=mk('span','mr-bar-track'),fill=mk('span','mr-bar-fill');
+ fill.style.width=valid(value)?Math.max(2,100*value/Math.max(1,max))+'%':'0%';
+ if(color)fill.style.background=color;
+ track.append(fill);
+ add(r,mk('span','mr-bar-name',label),track,mk('b','mr-bar-count',num(value)),mk('span','mr-bar-share',percent(value,denom)));
+ parent.append(r);return r;
+}
+function profileGrid(parent){
+ const grid=mk('div','mr-profiles');
+ for(const title of ['Répartition par CSP de la personne de référence','Âge de la personne de référence du ménage','Statut d’occupation actuel du logement','Taille du ménage']){
+  const col=mk('div','mr-profile');
+  col.append(mk('h4',null,title));
+  const labels=title.startsWith('Répartition')?['Ouvriers','Professions intermédiaires','Employés','Chômeurs','Retraités','Cadres et prof. intellectuelles supérieures']:title.startsWith('Âge')?['25 à 39 ans','40 à 54 ans','55 à 64 ans']:title.startsWith('Statut')?['Propriétaire','Locataire du parc privé','Locataire du parc social']:['1 personne','2 personnes','3 personnes','4 personnes','5 personnes','6 personnes ou plus'];
+  for(const label of labels)meter(col,label,null,null,1);
+  grid.append(col);
+ }
+ parent.append(grid);
+}
+function placeholderLegend(parent){
+ const leg=mk('div','mr-legend');
+ const categories=[
+ ['Dans la même commune','#d4117b'],
+ ['Même département (hors commune)','#ee2b91'],
+ ['Autre département de la région','#ef7eb2'],
+ ['Autre région (métropole)','#f5b0d1'],
+ ['Étranger','#f9d9e9']
+ ];
+ for(const [label,color] of categories){const x=mk('span');const dot=mk('i');dot.style.background=color;x.append(dot,mk('span',null,label));leg.append(x)}
+ parent.append(leg);
+}
+function showRows(parent,items,denom,select){
+ let expanded=false,selected=0;
+ const holder=mk('div','mr-movements-list'),count=mk('div','mr-list-footer');
+ parent.append(holder,count);
+ const draw=()=>{
+  holder.replaceChildren();
+  holder.append(add(mk('div','mr-movements-header'),mk('span',null,'Territoire / mouvement'),mk('span',null,'Personnes'),mk('span',null,'Part')));
+  const visible=expanded?items:items.slice(0,10);
+  visible.forEach((o,i)=>{
+   const row=mk('button','mr-movement'+(selected===i?' active':''));
+   row.type='button';
+   add(row,mk('span','mr-move-name',(i+1)+'.　'+o.nom),mk('strong',null,num(o.valeur)),mk('b',null,percent(o.valeur,denom)));
+   row.onclick=()=>{selected=i;draw();select(o,denom)};
+   holder.append(row);
   });
-  if(all.length>maxItems){
-   const more=mk('button','mig-more',showAll?'Voir moins':'Voir les '+(all.length-maxItems)+' suivants');
-   more.type='button';more.onclick=()=>{showAll=!showAll;render()};wrap.append(more);
-  }
+  count.replaceChildren();
+  if(items.length>10)count.append(button(expanded?'Voir moins':'⊕  Voir les '+(items.length-10)+' suivantes','mr-see-more',()=>{expanded=!expanded;draw()}));
  };
- render();
+ draw();if(items.length)select(items[0],denom);
 }
-function marker(v,label,sub,active=false){
- return add(mk('div','mig-stat'+(active?' is-active':'')),mk('small',null,label),mk('strong',null,v),mk('span',null,sub));
+function infoChip(label,number,sub,active){
+ return add(mk('div','mr-kpi'+(active?' active':'')),mk('small',null,label),mk('strong',null,num(number)),mk('span',null,sub));
 }
-function profileUnavailable(section){
- section.append(mk('div','mig-explain','Les ventilations CSP, âge, statut d’occupation et taille du ménage nécessitent le fichier détail national INSEE MIGCOM 2023. Aucun profil n’est déduit des simples flux de communes.'));
- const select=mk('select','mig-select');
- ['CSP','Âge de la personne de référence','Statut d’occupation actuel','Taille du ménage'].forEach(s=>select.append(mk('option',null,s)));
- select.disabled=true;select.setAttribute('aria-label','Profils INSEE indisponibles');section.append(select);
- const info=mk('p','mig-hint','Le filtre sera activé dès que le fichier détail aura été relié et validé.');section.append(info);
-}
-function flowViz(panel,info){
- const items=info.origines.slice(0,10);
- if(!items.length)return;
- const box=mk('div','mig-diagram'),svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
- svg.setAttribute('viewBox','0 0 720 480');svg.setAttribute('role','img');
- svg.setAttribute('aria-label','Diagramme des flux résidentiels vers '+info.commune);
- const n=items.length,center={x:360,y:230};
- const point=(i)=>({x:center.x+280*Math.cos(2*Math.PI*i/n-Math.PI/2),y:center.y+168*Math.sin(2*Math.PI*i/n-Math.PI/2)});
- const max=Math.max(...items.map(x=>x.valeur),1);
- items.forEach((o,i)=>{
-  const p=point(i),angle=Math.atan2(center.y-p.y,center.x-p.x);
-  const x1=p.x+Math.cos(angle)*55,y1=p.y+Math.sin(angle)*18;
-  const x2=center.x-Math.cos(angle)*27,y2=center.y-Math.sin(angle)*27;
-  const line=document.createElementNS('http://www.w3.org/2000/svg','line');
-  [['x1',x1],['y1',y1],['x2',x2],['y2',y2],['stroke','#e31381'],['stroke-width',String(1.5+7*o.valeur/max)],['stroke-linecap','round'],['marker-end','url(#mig-arrow)']].forEach(([k,v])=>line.setAttribute(k,v));svg.append(line);
+function arrowChart(parent,city,items){
+ const wrap=mk('div','mr-flux-canvas');
+ const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+ svg.setAttribute('viewBox','0 0 820 555');
+ svg.setAttribute('role','img');svg.setAttribute('aria-label','Diagramme de flux entrants vers '+city);
+ const ns='http://www.w3.org/2000/svg',s=(tag,props,text)=>{
+  const n=document.createElementNS(ns,tag);Object.entries(props||{}).forEach(([k,v])=>n.setAttribute(k,String(v)));
+  if(text!==undefined)n.textContent=text;return n;
+ };
+ const real=items.length>0,list=real?items.slice(0,10):Array.from({length:10},(_,i)=>({nom:'Commune d’origine',valeur:null}));
+ const center=[410,260],positions=[
+ [410,46],[580,78],[713,183],[716,323],[579,442],
+ [410,480],[237,442],[103,323],[106,183],[237,78]
+ ];
+ const defs=s('defs');defs.append(s('marker',{id:'mr-end',viewBox:'0 0 10 10',refX:8,refY:5,markerWidth:5,markerHeight:5,orient:'auto-start-reverse'}));
+ defs.firstChild.append(s('path',{d:'M0 0 L10 5 L0 10 Z',fill:'#e01883'}));svg.append(defs);
+ const mx=Math.max(1,...list.map(x=>x.valeur||0));
+ list.forEach((o,i)=>{
+  const p=positions[i],dx=center[0]-p[0],dy=center[1]-p[1],dist=Math.hypot(dx,dy),ux=dx/dist,uy=dy/dist;
+  svg.append(s('line',{x1:p[0]+ux*53,y1:p[1]+uy*25,x2:center[0]-ux*38,y2:center[1]-uy*38,
+   stroke:real?'#e01883':'#f5bfdc','stroke-width':real?Math.max(2,7*(o.valeur||0)/mx):2,'stroke-linecap':'round','marker-end':'url(#mr-end)'}));
  });
- const defs=document.createElementNS('http://www.w3.org/2000/svg','defs');
- defs.innerHTML='<marker id="mig-arrow" markerWidth="6" markerHeight="6" refX="5.5" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6 Z" fill="#e31381"/></marker>';svg.prepend(defs);
- const circle=document.createElementNS('http://www.w3.org/2000/svg','circle');
- [['cx',center.x],['cy',center.y],['r','43'],['fill','#e31381']].forEach(([k,v])=>circle.setAttribute(k,v));svg.append(circle);
- const t=document.createElementNS('http://www.w3.org/2000/svg','text');
- t.setAttribute('x',center.x);t.setAttribute('y',center.y+5);t.setAttribute('text-anchor','middle');t.setAttribute('fill','white');
- t.setAttribute('font-size','12');t.setAttribute('font-weight','700');t.textContent=info.commune.length>20?info.commune.slice(0,18)+'…':info.commune;svg.append(t);
- items.forEach((o,i)=>{
-  const p=point(i),g=document.createElementNS('http://www.w3.org/2000/svg','g');
-  const rect=document.createElementNS('http://www.w3.org/2000/svg','rect');
-  [['x',p.x-73],['y',p.y-22],['width',146],['height',45],['rx',10],['fill','#fff'],['stroke','#e8eaf1']].forEach(([k,v])=>rect.setAttribute(k,v));g.append(rect);
-  const name=document.createElementNS('http://www.w3.org/2000/svg','text');
-  [['x',p.x],['y',p.y-4],['text-anchor','middle'],['font-size','11'],['fill','#293654']].forEach(([k,v])=>name.setAttribute(k,v));
-  name.textContent=o.nom.length>22?o.nom.slice(0,20)+'…':o.nom;g.append(name);
-  const value=document.createElementNS('http://www.w3.org/2000/svg','text');
-  [['x',p.x],['y',p.y+13],['text-anchor','middle'],['font-size','15'],['font-weight','700'],['fill','#d70b7b']].forEach(([k,v])=>value.setAttribute(k,v));
-  value.textContent=integer(Math.round(o.valeur));g.append(value);svg.append(g);
+ svg.append(s('circle',{cx:center[0],cy:center[1],r:43,fill:'#df0a77'}));
+ svg.append(s('text',{x:center[0],y:center[1],fill:'#fff','font-size':13,'font-weight':800,'text-anchor':'middle','dominant-baseline':'middle'},city.length>19?city.slice(0,18)+'…':city));
+ list.forEach((o,i)=>{
+  const [x,y]=positions[i];
+  const group=s('g');
+  group.append(s('rect',{x:x-72,y:y-22,width:144,height:44,rx:9,fill:'#fff',stroke:'#e4e7ef'}));
+  group.append(s('text',{x,y:y-5,'text-anchor':'middle',fill:'#324160','font-size':11,'font-weight':700},real?(o.nom.length>23?o.nom.slice(0,21)+'…':o.nom):'—'));
+  group.append(s('text',{x,y:y+13,'text-anchor':'middle',fill:'#d90d79','font-size':16,'font-weight':800},num(o.valeur)));
+  svg.append(group);
  });
- box.append(svg);panel.append(box);
+ wrap.append(svg);parent.append(wrap);
+ const l=mk('div','mr-flux-legend');l.append(mk('b',null,'Légende'),mk('p',null,'Largeur des flèches : nombre de personnes'));
+ for(const thickness of [2,4,8]){const item=mk('div');const line=mk('i');line.style.height=thickness+'px';item.append(line,mk('span',null,real?'Flux proportionnels aux valeurs observées':'Données à compléter'));l.append(item)}
+ parent.append(l);
 }
 function render(root,state){
- const data=state.migrationsData;
  root.classList.add('migration-root');
- if(!state.loc?.code_insee){root.append(mk('p','mig-hint','Choisissez une adresse pour afficher les migrations de sa commune.'));return true}
- if(!data){
-  const c=card(root,'Migrations résidentielles','Recensement INSEE 2023 · recherche des flux de la commune');
-  c.append(mk('p','mig-hint',state.migrationsRequest?'Chargement des données officielles en cours…':'Connexion à la base INSEE en attente.'));
-  return true;
- }
- if(data.statut!=='disponible'){
-  const c=card(root,'Données de migrations indisponibles');
-  c.append(mk('p','mig-hint',data.raison||'Le fichier officiel INSEE n’a pas pu être exploité pour cette commune.'));
-  return true;
- }
- const total=data.total,internal=data.mobiliteIntra,incoming=data.entrants;
- const moved=internal+incoming,stay=Number.isFinite(total)?Math.max(0,total-moved):null;
- const top=mk('div','mig-grid');
- const a=card(top,'Mobilité résidentielle des habitants de '+data.commune,'Personnes âgées de 1 an ou plus · Recensement 2023');
- const stats=mk('div','mig-stats');
- if(Number.isFinite(total))stats.append(marker(integer(Math.round(total)),'Population étudiée','100 %'));
- if(stay!==null)stats.append(marker(integer(Math.round(stay)),'Sans changement de logement',pct(stay,total)));
- stats.append(marker(integer(Math.round(moved)),'Ayant changé de logement',pct(moved,total),true));
- stats.append(marker(integer(Math.round(incoming)),'Entrants extra-communaux',pct(incoming,total)));
- a.append(stats);
- const bands=mk('div','mig-band');
- if(internal>0){const x=mk('span','mig-band-intra');x.style.flex=String(internal);bands.append(x)}
- if(incoming>0){const x=mk('span','mig-band-outer');x.style.flex=String(incoming);bands.append(x)}
- a.append(mk('h3','mig-minititle','Répartition des mobilités identifiées'),bands,mk('p','mig-hint','Dans la commune : '+integer(Math.round(internal))+' · Depuis une autre commune : '+integer(Math.round(incoming))+'.'));
- const b=card(top,'Qui sont les personnes ayant changé de logement ?','Filtres de profil — fichier détail national INSEE');
- profileUnavailable(b);
- root.append(top);
- const middle=card(root,'Quels sont les mouvements résidentiels et quel est leur profil ?','Mouvements intra-communaux et provenances extra-communales vers '+data.commune);
- const cols=mk('div','mig-grid');
- const ranking=card(cols,'Top des communes de provenance','Cliquez une commune pour mettre en valeur sa contribution aux entrées');
- const ordered=[{code:data.code_insee,nom:data.commune+' — intra-communal',valeur:internal},...data.origines];
- rows(ranking,ordered,moved,10);
- const selected=card(cols,'Profil selon le mouvement sélectionné','Analyse par provenance : données de flux 2023');
- const selectedText=mk('div','mig-selection','Sélectionnez une commune dans le classement.');selected.append(selectedText);
- const list=ranking.querySelector('.mig-bars');
- list.addEventListener('click',ev=>{
-  const row=ev.target.closest('.mig-row');if(!row)return;
-  const index=[...row.parentElement.children].filter(x=>x.classList.contains('mig-row')).indexOf(row);
-  const chosen=ordered[index];if(!chosen)return;
-  selectedText.textContent=chosen.nom+' : '+integer(Math.round(chosen.valeur))+' personnes · '+pct(chosen.valeur,moved)+' des mobilités identifiées.';
+ const city=state.loc?.commune||'Commune étudiée',data=state.migrationsData?.statut==='disponible'?state.migrationsData:null;
+ const origins=Array.isArray(data?.origines)?data.origines.filter(x=>valid(x.valeur)&&x.valeur>0):[];
+ const incoming=valid(data?.entrants)?data.entrants:null;
+ const intra=valid(data?.mobiliteIntra)?data.mobiliteIntra:null;
+ const moved=valid(intra)&&valid(incoming)?intra+incoming:null;
+ const total=valid(data?.total)?data.total:null;
+ const stable=valid(total)&&valid(moved)?Math.max(0,total-moved):null;
+ const intro=mk('div','mr-intro');
+ add(intro,mk('span','mr-kicker','INSEE — Licence Ouverte 2.0 (page du jeu)'),mk('h1',null,'Migrations résidentielles'),
+  mk('p',null,'Mobilité résidentielle sur un an — '+city+' · INSEE, recensement 2023'));
+ const method=button('ⓘ  Informations méthodologiques','mr-method',()=>{
+  const element=root.querySelector('.mr-footer');element?.scrollIntoView({behavior:'smooth'});
  });
- selected.append(mk('p','mig-hint','La ventilation des profils individuels n’est pas fournie par la seule base des flux.'));
- cols.append(ranking,selected);middle.append(cols);
- const lower=mk('div','mig-grid mig-flow-grid');
- const map=card(lower,'Carte des flux entrants vers '+data.commune,'Diagramme des 10 principales provenances · largeur des flèches proportionnelle aux flux');
- flowViz(map,data);
- const right=card(lower,'Analyse des flux entrants','Origines d’un autre territoire de destination : '+data.commune);
- const top10=data.origines.slice(0,10);rows(right,top10,incoming,10);
- right.append(mk('p','mig-hint','Origines affichées : '+integer(Math.round(top10.reduce((s,x)=>s+x.valeur,0)))+' sur '+integer(Math.round(incoming))+' entrants.'));
- lower.append(map,right);root.append(lower);
- const foot=mk('p','mig-foot');
- foot.textContent='Source : INSEE — recensement de la population 2023, base flux des migrations résidentielles. Estimations pondérées ; la résidence antérieure est celle d’un an avant le recensement. Source Ville-Data non nécessaire pour ces flux.';
- const link=mk('a',null,' Consulter les données INSEE');link.href=SOURCE;link.target='_blank';link.rel='noopener noreferrer';foot.append(link);
- root.append(foot);
+ intro.append(method);root.append(intro);
+ const first=mk('div','mr-top-grid'),left=panel(first,'Mobilité résidentielle des habitants de '+city,'','mr-overview'),
+ right=panel(first,'Qui sont les personnes ayant changé de logement ?','Lecture selon les caractéristiques de la personne de référence du ménage','mr-persons');
+ const kpis=mk('div','mr-kpis');
+ kpis.append(infoChip('Population étudiée',total,'100,0 %'),infoChip('Même logement',stable,percent(stable,total)),
+   infoChip('A changé de logement',moved,percent(moved,total),true),infoChip('Rattaché hors logement ordinaire',null,'—'));
+ left.append(kpis);
+ left.append(mk('h3','mr-section-label','Répartition des mobilités résidentielles identifiables'));
+ const band=mk('div','mr-band');
+ const color=['#d20b78','#e72c8c','#ee79b1','#f3acd0','#f9d7e8'];
+ if(valid(intra)&&valid(incoming)&&moved>0){
+  for(const [n,v] of [intra,incoming].entries()){const seg=mk('span');seg.style.background=color[n];seg.style.width=100*v/moved+'%';band.append(seg)}
+ }else for(const [i,w] of [42,20,17,13,8].entries()){const seg=mk('span');seg.style.width=w+'%';seg.style.background=color[i];seg.className='mr-empty-seg';band.append(seg)}
+ left.append(band);placeholderLegend(left);
+ const small=mk('div','mr-inline-summary');
+ add(small,mk('strong',null,'Mobilité intra-communale : '+num(intra)+' personnes'),mk('strong',null,'Entrants extra-communaux : '+num(incoming)+' personnes'));
+ left.append(small);
+ const chips=mk('div','mr-choice-chips');let current='CSP';
+ for(const label of ['CSP','Âge de la personne de référence','Statut d’occupation actuel','Taille du ménage']){
+  const b=button(label,'mr-pill'+(label===current?' selected':''),()=>{
+   current=label;chips.querySelectorAll('button').forEach(x=>x.classList.toggle('selected',x===b));
+   const title=right.querySelector('.mr-profile-heading');if(title)title.textContent='Répartition par '+label.toLowerCase();
+  });chips.append(b);
+ }
+ right.append(chips,mk('h3','mr-profile-heading','Répartition par CSP'));
+ const defaults=['Ouvriers','Professions intermédiaires','Employés','Chômeurs','Retraités','Cadres et prof. intellectuelles supérieures','Artisans, commerçants, chefs d’entreprise','Hors logement ordinaire'];
+ const profile=mk('div','mr-profile-bars');for(const label of defaults)meter(profile,label,null,null,1);right.append(profile);
+ right.append(add(mk('div','mr-profile-total'),mk('strong',null,'Total personnes mobiles : '+num(moved))));
+ first.append(left,right);root.append(first);
+ const movements=panel(root,'Quels sont les mouvements résidentiels et quel est leur profil ?',
+  'Analyse des mobilités intra-communales et des provenances extra-communales vers '+city,'mr-movement-section');
+ const contents=mk('div','mr-movement-grid'),ranking=mk('div','mr-sub-card'),selected=mk('div','mr-sub-card');
+ ranking.append(mk('h3',null,'Top Ten Mouvements intra et extra communaux'),
+  mk('p','mr-sub-caption','Personnes mobiles : '+num(moved)),mk('p','mr-pink-caption','Cliquez sur la commune que vous souhaitez explorer.'));
+ const selectArea=mk('div','mr-selected'),title=mk('h3',null,'Profil selon le mouvement sélectionné'),
+ heading=mk('p','mr-selected-label','Mouvement sélectionné : —'),
+ count=mk('p','mr-sub-caption','— personnes · — % des personnes mobiles');
+ selected.append(title,heading,count,mk('label','mr-select-label','1. Choisissez une CSP'));
+ const select=document.createElement('select');select.className='mr-select';
+ for(const label of ['Ensemble des CSP','Ouvriers','Professions intermédiaires','Employés','Cadres','Artisans, commerçants et chefs d’entreprise','Retraités','Autres'])select.append(mk('option',null,label));
+ select.disabled=true;selected.append(select,mk('p','mr-muted','Les profils détaillés seront renseignés avec le fichier détail INSEE. Aucun chiffre simulé.'));
+ profileGrid(selected);
+ selected.append(mk('p','mr-muted','Dénominateur : personnes concernées par le mouvement sélectionné.'));
+ const selectMovement=(o,d)=>{heading.textContent='Mouvement sélectionné : '+o.nom;count.textContent=num(o.valeur)+' personnes · '+percent(o.valeur,d)+' des personnes mobiles'};
+ const list=[{nom:city+' – intra-communal',valeur:intra},...origins];
+ if(list.length===1&&!valid(intra))for(let i=1;i<11;i++)list.push({nom:'Commune à renseigner',valeur:null});
+ showRows(ranking,list,moved,selectMovement);
+ ranking.append(add(mk('div','mr-inline-summary'),mk('strong',null,'Mobilité intra-communale : '+num(intra)+' personnes'),mk('strong',null,'Entrants extra-communaux : '+num(incoming)+' personnes')));
+ contents.append(ranking,selected);movements.append(contents);
+ const view=button('Voir la carte des flux ↓','mr-map-button',()=>root.querySelector('.mr-flow-section')?.scrollIntoView({behavior:'smooth'}));
+ movements.append(add(mk('div','mr-map-button-wrap'),view));
+ const lower=mk('div','mr-flow-section'),flowMap=mk('div','mr-flow-graphic'),side=mk('div','mr-flow-side');
+ arrowChart(flowMap,city,origins);
+ const sideTitle=mk('h2',null,'Analyse des flux entrants vers '+city);
+ side.append(sideTitle,mk('p','mr-muted','Arrivées venues d’un autre territoire à destination de '+city));
+ const statrow=mk('div','mr-flow-stats');
+ const shown=origins.slice(0,10).reduce((s,x)=>s+x.valeur,0);
+ statrow.append(infoChip('Arrivées d’un autre territoire',incoming,'personnes'),
+ infoChip('Origines affichées',origins.length?Math.min(10,origins.length):null,'TOP 10'),
+ infoChip('Flux représentés',origins.length?shown:null,percent(shown,incoming)));
+ side.append(statrow,mk('h3','mr-section-label','Principales provenances'));
+ const rankRows=mk('div','mr-flux-bars');if(origins.length)for(const o of origins.slice(0,10))meter(rankRows,o.nom,o.valeur,incoming,Math.max(1,origins[0].valeur));
+ else for(let i=0;i<10;i++)meter(rankRows,'Commune d’origine',null,null,1);
+ side.append(rankRows);
+ const link=button('⊕  Voir les provenances suivantes','mr-see-more',()=>{const last=side.querySelector('.mr-more-origins');if(last){last.remove();return}
+ const more=mk('div','mr-more-origins');for(const o of origins.slice(10))meter(more,o.nom,o.valeur,incoming,Math.max(1,origins[0].valeur));side.append(more)});
+ side.append(link,mk('p','mr-flow-note','Les 10 origines affichées représentent '+num(origins.length?shown:null)+' personnes, soit '+percent(origins.length?shown:null,incoming)+' des entrants.'));
+ lower.append(flowMap,side);root.append(lower);
+ const foot=mk('div','mr-footer');
+ foot.append(mk('p',null,'ⓘ Source : INSEE, Recensement de la population 2023 — flux de migrations résidentielles. Les valeurs sont des estimations pondérées. Les indicateurs affichent « — » lorsqu’aucune donnée vérifiée n’est disponible.'));
+ const refs=mk('div');for(const [name,url] of [['Base de flux INSEE',INSEE],['Fichier détail INSEE',DETAILS],['Ville-Data (référence complémentaire)', 'https://ville-data.com/']]){
+ const a=mk('a',null,name);a.href=url;a.target='_blank';a.rel='noopener noreferrer';refs.append(a)}
+ foot.append(refs);root.append(foot);
  return true;
 }
 window.AtlasMigrationsPage={render};
