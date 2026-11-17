@@ -1,7 +1,7 @@
 'use strict';
 const $ = id=>document.getElementById(id);
 const requested=new URLSearchParams(location.search).get('adresse')||'';
-const state={loc:null,analysis:null,housing:null,rent:null,planning:null,risk:null,admin:null,extras:null,populationData:null,populationRequest:null,tab:new URLSearchParams(location.search).get('onglet')==='population'?'population':'programmation'};
+const state={loc:null,analysis:null,housing:null,rent:null,planning:null,risk:null,admin:null,extras:null,populationData:null,populationRequest:null,familiesData:null,familiesRequest:null,tab:['population','familles'].includes(new URLSearchParams(location.search).get('onglet'))?new URLSearchParams(location.search).get('onglet'):'programmation'};
 const fmt=new Intl.NumberFormat('fr-FR',{maximumFractionDigits:1});
 const elem=(tag,cls,value)=>{const a=document.createElement(tag);if(cls)a.className=cls;if(value!==undefined&&value!==null)a.textContent=String(value);return a};
 const append=(parent,...children)=>(parent.append(...children.filter(Boolean)),parent);
@@ -439,8 +439,8 @@ function redraw(){
  $('title').textContent=selected.label;
  $('breadcrumb').textContent=selected.label;
  $('category').textContent=selected.group;
- $('subtitle').textContent=selected.id==='population'?'Population par échelle de territoire — recensement INSEE':(tabDescriptions[selected.id]||'Données territoriales vérifiées.');
- document.querySelector('.app')?.classList.toggle('atlas-population-active',selected.id==='population');
+ $('subtitle').textContent=selected.id==='population'?'Population par échelle de territoire — recensement INSEE':selected.id==='familles'?'Composition des ménages et des familles — recensement INSEE':(tabDescriptions[selected.id]||'Données territoriales vérifiées.');
+ document.querySelector('.app')?.classList.toggle('atlas-population-active',selected.id==='population'||selected.id==='familles');
  $('addressLine1').textContent=state.loc?.adresse||requested||'Adresse';
  $('addressLine2').textContent=[state.loc?.commune,state.loc?.code_insee].filter(Boolean).join(' · ')||'Étude territoriale';
  $('crumbCity').textContent=state.loc?.commune||'Territoire';
@@ -452,6 +452,7 @@ function redraw(){
  }
  const root=$('body');root.replaceChildren();
  const matched=(selected.id==='population'&&window.AtlasPopulationPage?.render?.(root,state)===true)
+  ||(selected.id==='familles'&&window.AtlasFamiliesPage?.render?.(root,state)===true)
   ||window.AtlasPanels?.render?.(root,selected.id,state)===true;
  if(!matched){
   selected.render(root);
@@ -460,7 +461,7 @@ function redraw(){
   realInsight(root);
  }
  // La grille, les marges et les cartes sont définies par les styles de la maquette.
- if(compact&&selected.id!=='population'){
+ if(compact&&!['population','familles'].includes(selected.id)){
   // Même comportement que dans la maquette : KPI + première rangée,
   // aucune suppression définitive des panneaux de la vue détaillée.
   const children=[...root.children];
@@ -491,9 +492,23 @@ function ensurePopulation(){
   }).finally(()=>{state.populationRequest=null});
 }
 
+function ensureFamilies(){
+ if(!state.loc?.code_insee||!state.admin||state.familiesData||state.familiesRequest)return;
+ const params=new URLSearchParams({code_insee:state.loc.code_insee});
+ if(/^[0-9]{9}$/.test(state.admin?.epci?.code||''))params.set('code_epci',state.admin.epci.code);
+ state.familiesRequest=get('/api/familles-insee?'+params,60000)
+  .then(data=>{
+   if(data?.sections?.menages&&data?.sections?.familles&&data?.sections?.enfants){
+    state.familiesData=data;
+    if(state.tab==='familles')redraw();
+   }
+  })
+  .finally(()=>{state.familiesRequest=null});
+}
+
 function pick(id){
  if(!tabs.some(t=>t.id===id))return;
- state.tab=id;redraw();if(id==='population')ensurePopulation();$('sidebar').classList.remove('open');
+ state.tab=id;redraw();if(id==='population')ensurePopulation();if(id==='familles')ensureFamilies();$('sidebar').classList.remove('open');
  window.scrollTo({top:0,behavior:'smooth'});
 }
 
@@ -506,14 +521,14 @@ async function get(url,ms=65000){
 }
 async function load(){
  // Étape 1 : autoriser l'aperçu de Population sans recherche ni statistiques.
- if(!requested){if(state.tab!=='population')location.assign('/');return}
+ if(!requested){if(!['population','familles'].includes(state.tab))location.assign('/');return}
  const geo=await get('/api/analyse?adresse='+encodeURIComponent(requested),13000);
  if(!geo?.localisation){location.assign('/');return}
  state.loc=geo.localisation;redraw();
  const l=state.loc,q=new URLSearchParams({code_insee:l.code_insee,adresse:l.adresse||requested,code_postal:l.code_postal||'',ban_id:l.ban_id||''});
  await Promise.all([
   (async()=>{state.analysis=await get('/api/indicateurs?'+q,93000);redraw()})(),
-  (async()=>{state.admin=await get('/api/profil-administratif?code_insee='+encodeURIComponent(l.code_insee),18000)||{};redraw();if(state.tab==='population')ensurePopulation()})(),
+  (async()=>{state.admin=await get('/api/profil-administratif?code_insee='+encodeURIComponent(l.code_insee),18000)||{};redraw();if(state.tab==='population')ensurePopulation();if(state.tab==='familles')ensureFamilies()})(),
   (async()=>{state.extras=await get('/api/etude-complements?code_insee='+encodeURIComponent(l.code_insee),33000);redraw()})(),
   (async()=>{state.housing=await get('/api/logements-detail?code_insee='+encodeURIComponent(l.code_insee),65000);redraw()})(),
   (async()=>{state.rent=await get('/api/loyers?code_insee='+encodeURIComponent(l.code_insee),60000);redraw()})(),
