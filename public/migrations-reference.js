@@ -116,8 +116,13 @@ function render(root,state){
  root.classList.add('migration-root');
  const city=state.loc?.commune||'Commune étudiée',data=state.migrationsData?.statut==='disponible'?state.migrationsData:null;
  const detail=state.migrationsDetail?.statut==='disponible'?state.migrationsDetail:null;
- const origins=Array.isArray(data?.origines)?data.origines.filter(x=>valid(x.valeur)&&x.valeur>0):[];
- const incoming=valid(data?.entrants)?data.entrants:null;
+ const baseOrigins=Array.isArray(data?.origines)?data.origines.filter(x=>valid(x.valeur)&&x.valeur>0):[];
+ const origins=baseOrigins.length?baseOrigins:
+   Object.entries(detail?.profilsParOrigine||{}).filter(([code])=>code!==state.loc?.code_insee)
+    .map(([code,p])=>({code,nom:code==='99999'?'Étranger':'Commune '+code,valeur:p.total}))
+    .sort((a,b)=>b.valeur-a.valeur);
+ const incoming=valid(data?.entrants)?data.entrants:
+ detail?Object.entries(detail.repartition).filter(([k])=>['3','4','5','6','7','8','9'].includes(k)).reduce((s,[,v])=>s+v,0):null;
  const intra=valid(detail?.intra)?detail.intra:valid(data?.mobiliteIntra)?data.mobiliteIntra:null;
  const moved=valid(detail?.mobiles?.total)?detail.mobiles.total:valid(intra)&&valid(incoming)?intra+incoming:null;
  const total=valid(detail?.total)?detail.total:valid(data?.total)?data.total:null;
@@ -180,18 +185,20 @@ function render(root,state){
  count=mk('p','mr-sub-caption','— personnes · — % des personnes mobiles');
  selected.append(title,heading,count,mk('label','mr-select-label','1. Choisissez une CSP'));
  const select=document.createElement('select');select.className='mr-select';
- for(const label of ['Ensemble des CSP','Ouvriers','Professions intermédiaires','Employés','Cadres','Artisans, commerçants et chefs d’entreprise','Retraités','Autres'])select.append(mk('option',null,label));
+ const cspOptions=[['_T','Ensemble des CSP'],['6','Ouvriers'],['4','Professions intermédiaires'],['5','Employés'],['12','Chômeurs'],['3','Cadres'],['2','Artisans, commerçants et chefs d’entreprise'],['1','Agriculteurs exploitants'],['21','Retraités'],['autres','Autres personnes']];
+ for(const [value,label] of cspOptions){const o=mk('option',null,label);o.value=value;select.append(o)}
  select.disabled=true;selected.append(select,mk('p','mr-muted','Profil pondéré par IPONDI — données du recensement 2023.'));
  const selectedGrid=mk('div');selected.append(selectedGrid);
  selected.append(mk('p','mr-muted','Dénominateur : personnes concernées par le mouvement sélectionné.'));
  const selectMovement=(o,d)=>{
   heading.textContent='Mouvement sélectionné : '+o.nom;
-  const detailProfile=detail?.profilsParOrigine?.[o.code];selectedGrid.dataset.origin=o.code||'';
+  const detailProfile=detail?.profilsParOrigine?.[o.code];selectedGrid.dataset.origin=o.code||'';select.value='_T';
   count.textContent=num(detailProfile?.total??o.valeur)+' personnes · '+percent(detailProfile?.total??o.valeur,d)+' des personnes mobiles';
   selectGridUpdate(detailProfile);
  };
  function selectGridUpdate(data){
-   selectedGrid.replaceChildren();profileGrid(selectedGrid,data||null);
+   const selectedProfile=select.value==='_T'?data:data?.parCsp?.[select.value];
+   selectedGrid.replaceChildren();profileGrid(selectedGrid,selectedProfile||null);
    select.disabled=!data;
  }
  select.onchange=()=>{const chosen=selectedGrid.dataset.origin;
