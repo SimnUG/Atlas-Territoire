@@ -38,7 +38,7 @@ function profileUnavailable(section){
  section.append(mk('div','mig-explain','Les ventilations CSP, âge, statut d’occupation et taille du ménage nécessitent le fichier détail national INSEE MIGCOM 2023. Aucun profil n’est déduit des simples flux de communes.'));
  const select=mk('select','mig-select');
  ['CSP','Âge de la personne de référence','Statut d’occupation actuel','Taille du ménage'].forEach(s=>select.append(mk('option',null,s)));
- section.append(select);
+ select.disabled=true;select.setAttribute('aria-label','Profils INSEE indisponibles');section.append(select);
  const info=mk('p','mig-hint','Le filtre sera activé dès que le fichier détail aura été relié et validé.');section.append(info);
 }
 function flowViz(panel,info){
