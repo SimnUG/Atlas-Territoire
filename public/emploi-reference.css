@@ -1,0 +1,33 @@
+/*
+ * Emploi et activité — styles uniquement dans la page Emploi.
+ * La grille, les matrices et les barres partagent les composants figés
+ * de Population / Familles, sans modifier leurs fichiers.
+ */
+.atlas-population-active #body .atlas-emploi-concentration{
+ margin-top:0;
+ margin-bottom:12px;
+}
+.atlas-emploi-concentration .atlas-pop-matrix-top{margin-bottom:8px}
+.atlas-emploi-concentration .atlas-pop-section-subtitle{max-width:1080px}
+.atlas-emploi-concentration .atlas-pop-matrix-heading{height:36px}
+.atlas-emploi-concentration .atlas-pop-matrix-row{min-height:30px}
+.atlas-emploi-concentration .atlas-pop-rowtitle{font-size:10px}
+.atlas-emploi-concentration-value{
+ display:flex;align-items:center;gap:7px;padding:3px 8px 3px 5px;
+ min-height:30px;font-size:10px;
+}
+.atlas-emploi-concentration-value strong{
+ color:#252e3b;font-weight:840;font-size:11px;
+}
+.atlas-emploi-concentration-value .atlas-pop-change{
+ color:#728497;
+}
+.atlas-emploi-concentration-value .atlas-pop-change.atlas-pop-up{
+ color:#2c9874;
+}
+.atlas-emploi-concentration-value .atlas-pop-change.atlas-pop-down{
+ color:#d84d52;
+}
+@media(max-width:720px){
+ .atlas-emploi-concentration .atlas-pop-matrix-data{min-width:720px}
+}
