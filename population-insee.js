@@ -29,7 +29,7 @@ function rowsFrom(payload,geo){
   const rawGeo=String(d.GEO||'').toUpperCase();
   if(n===null||(!rawGeo.endsWith(suffix)&&rawGeo!==geo.toUpperCase())||!(Number(d.TIME_PERIOD)>=1968&&Number(d.TIME_PERIOD)<=2026))return null;
   if(d.RP_MEASURE && d.RP_MEASURE!=='POP')return null;
-  if(d.POPREF_MEASURE&&d.POPREF_MEASURE!=='PMUN')return null;
+  if(d.POPREF_MEASURE&&d.POPREF_MEASURE!=='PMUN'&&!(d.POPREF_MEASURE==='PSDC'&&Number(d.TIME_PERIOD)<=1999))return null;
   return {d,value:n,year:Number(d.TIME_PERIOD)};
  }).filter(Boolean);
 }
@@ -82,7 +82,7 @@ function shortHistory(princ){
 function historic(historical,princ){
  const map=new Map();
  for(const x of historical){
-  if(x.d.POPREF_MEASURE==='PMUN'&&x.value>=0)map.set(x.year,{year:x.year,value:Math.round(x.value)});
+  if((x.d.POPREF_MEASURE==='PMUN'||(x.d.POPREF_MEASURE==='PSDC'&&x.year<=1999))&&x.value>=0)map.set(x.year,{year:x.year,value:Math.round(x.value)});
  }
  for(const p of shortHistory(princ))if(!map.has(p.year))map.set(p.year,{year:p.year,value:Math.round(p.value)});
  return [...map.values()].sort((a,b)=>a.year-b.year);
