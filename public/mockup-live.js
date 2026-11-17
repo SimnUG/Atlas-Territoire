@@ -469,7 +469,7 @@ function redraw(){
   realInsight(root);
  }
  // La grille, les marges et les cartes sont définies par les styles de la maquette.
- if(compact&&!['population','familles','emploi','salaires','revenus','migrations'].includes(selected.id)){
+ if(compact&&!['population','familles','emploi','salaires','revenus'].includes(selected.id)&&selected.id!=='migrations'){
   // Même comportement que dans la maquette : KPI + première rangée,
   // aucune suppression définitive des panneaux de la vue détaillée.
   const children=[...root.children];
