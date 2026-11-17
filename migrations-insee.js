@@ -39,7 +39,7 @@ function parse(csv){
  const old=idx('C23_POP01P_IRAN012'),changed=idx('C23_POP01P_IRANAUT');
  if([target,prev,flux].some(i=>i<0))throw Error('Colonnes essentielles absentes');
  const map=new Map();
- const number=s=>{const n=Number(String(s||'').replace(/\s/g,'').replace(',','.'));return Number.isFinite(n)&&n>=0?n:null};
+ const number=s=>{const t=String(s??'').trim().replace(/\s/g,'').replace(',','.');if(!t)return null;const n=Number(t);return Number.isFinite(n)&&n>=0?n:null};
  for(let i=headerIndex+1;i<lines.length;i++){
   const l=lines[i];if(!l)continue;
   const fields=l.split(';').map(s=>s.replace(/^"|"$/g,'').trim());
@@ -78,11 +78,12 @@ async function migrations(code){
  if(!data)return{source:META,code_insee:code,statut:'indisponible',raison:'Commune absente du fichier des flux 2023'};
  const origins=data.flux.filter(f=>f.code!==code&&f.valeur>0)
    .sort((a,b)=>b.valeur-a.valeur);
- const internal=data.flux.filter(f=>f.code===code).reduce((a,b)=>a+b.valeur,0);
+ // Un flux « même commune » ne distingue pas même logement / déménagement intra-communal.
+ // Il est donc exclu de l'indicateur de mobilité intra-communale.
  const incoming=origins.reduce((a,b)=>a+b.valeur,0);
  return {source:META,code_insee:code,commune:data.nom,statut:'disponible',
   total:data.total,conserveCommune:data.unchangedCommune,changeCommune:data.changedCommune,
-  mobiliteIntra:internal,entrants:incoming,origines:origins,
-  note:'Estimations pondérées du recensement INSEE ; le total des flux peut différer des chiffres de population principale. Les profils CSP/âge/ménage ne sont pas présents dans cette base.'};
+  mobiliteIntra:null,entrants:incoming,origines:origins,
+  note:'Estimations pondérées du recensement INSEE ; le total des flux peut différer des chiffres de population principale. La base de flux ne distingue pas déménagement au sein de la commune et maintien dans le même logement ; profils CSP/âge/ménage absents.'};
 }
 module.exports={migrations,parse,unzipCsv,META};
