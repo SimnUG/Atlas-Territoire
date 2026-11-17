@@ -1,7 +1,7 @@
 'use strict';
 const $ = id=>document.getElementById(id);
 const requested=new URLSearchParams(location.search).get('adresse')||'';
-const state={loc:null,analysis:null,housing:null,rent:null,planning:null,risk:null,admin:null,extras:null,tab:new URLSearchParams(location.search).get('onglet')==='population'?'population':'programmation'};
+const state={loc:null,analysis:null,housing:null,rent:null,planning:null,risk:null,admin:null,extras:null,populationData:null,populationRequest:null,tab:new URLSearchParams(location.search).get('onglet')==='population'?'population':'programmation'};
 const fmt=new Intl.NumberFormat('fr-FR',{maximumFractionDigits:1});
 const elem=(tag,cls,value)=>{const a=document.createElement(tag);if(cls)a.className=cls;if(value!==undefined&&value!==null)a.textContent=String(value);return a};
 const append=(parent,...children)=>(parent.append(...children.filter(Boolean)),parent);
@@ -476,9 +476,24 @@ function redraw(){
  $('viewAll').classList.toggle('active',!compact);
  $('viewCompact').classList.toggle('active',compact);
 }
+function ensurePopulation(){
+ if(!state.loc?.code_insee||!state.admin||state.populationData||state.populationRequest)return;
+ const query=new URLSearchParams({code_insee:state.loc.code_insee});
+ if(/^[0-9]{9}$/.test(state.admin?.epci?.code||'')){
+  query.set('code_epci',state.admin.epci.code);
+ }
+ state.populationRequest=get('/api/population-insee?'+query,48000)
+  .then(data=>{
+   if(data?.sections?.ages||data?.sections?.csp||data?.sections?.origines){
+    state.populationData=data;
+    if(state.tab==='population')redraw();
+   }
+  }).finally(()=>{state.populationRequest=null});
+}
+
 function pick(id){
  if(!tabs.some(t=>t.id===id))return;
- state.tab=id;redraw();$('sidebar').classList.remove('open');
+ state.tab=id;redraw();if(id==='population')ensurePopulation();$('sidebar').classList.remove('open');
  window.scrollTo({top:0,behavior:'smooth'});
 }
 
@@ -498,7 +513,7 @@ async function load(){
  const l=state.loc,q=new URLSearchParams({code_insee:l.code_insee,adresse:l.adresse||requested,code_postal:l.code_postal||'',ban_id:l.ban_id||''});
  await Promise.all([
   (async()=>{state.analysis=await get('/api/indicateurs?'+q,93000);redraw()})(),
-  (async()=>{state.admin=await get('/api/profil-administratif?code_insee='+encodeURIComponent(l.code_insee),18000);redraw()})(),
+  (async()=>{state.admin=await get('/api/profil-administratif?code_insee='+encodeURIComponent(l.code_insee),18000)||{};redraw();if(state.tab==='population')ensurePopulation()})(),
   (async()=>{state.extras=await get('/api/etude-complements?code_insee='+encodeURIComponent(l.code_insee),33000);redraw()})(),
   (async()=>{state.housing=await get('/api/logements-detail?code_insee='+encodeURIComponent(l.code_insee),65000);redraw()})(),
   (async()=>{state.rent=await get('/api/loyers?code_insee='+encodeURIComponent(l.code_insee),60000);redraw()})(),
