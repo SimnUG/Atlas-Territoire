@@ -20,6 +20,12 @@ test('Melodi : filtrage strict commune/année et conservation des séries de 196
  assert.equal(rows.length,2);
  assert.equal(rows[0].year,1968);
  assert.equal(rows[1].value,915.26188);
+ const older={observations:[{
+  dimensions:{GEO:'2025-COM-85081',TIME_PERIOD:'1968',POPREF_MEASURE:'PSDC'},
+  measures:{OBS_VALUE_NIVEAU:{value:1539}}
+ }]};
+ const long=rowsFrom(older,'COM-85081');
+ assert.equal(historic(long,[])[0].year,1968);
  assert.throws(()=>rowsFrom({observations:[],paging:{next:'https://example.com'}},'COM-85081'),
   /Pagination/);
 });
