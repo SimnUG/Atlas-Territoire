@@ -232,7 +232,7 @@
   panel.append(E('span','atlas-pop-info-icon','ⓘ'));
   const details=E('div'),ready=Boolean(state.populationData);
   details.append(E('p',null,
-   'Source : INSEE — Recensement de la population, API Melodi. Séries historiques de population municipale et caractéristiques des habitants selon le sexe, l’âge, la CSP, la nationalité et le statut d’immigré.'));
+   'Source : INSEE — Recensement de la population, API Melodi. Séries historiques : population sans doubles comptes de 1968 à 1999, puis population municipale depuis 2006 (concepts précisés par l’INSEE). Catégories par âge, CSP, nationalité et statut d’immigré : RP 2023.'));
   details.append(E('p',null,ready?
    'Effectifs et pourcentages calculés à partir des observations officielles non arrondies ; évolutions fondées sur deux millésimes comparables uniquement. Référence nationale : France métropolitaine. Valeurs indisponibles : —.':
    'Les cases restent vides tant que les observations officielles ne sont pas récupérées.'));
