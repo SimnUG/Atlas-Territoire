@@ -47,7 +47,7 @@ function info(state){
  const box=E('section','atlas-rev-context');
  const left=E('div');
  left.append(E('h2',null,'FiLoSoFi · Revenus disponibles'),
-  E('p',null,"Chaque ligne relie un niveau de revenu à la mensualité maximale et au capital empruntable correspondants. Les revenus sont ceux publiés par l'INSEE ; seules les hypothèses de financement sont modifiables."));
+  E('p',null,"Chaque ligne relie un niveau de revenu à la mensualité maximale et au capital empruntable correspondants. Les niveaux de vie proviennent de l’INSEE ; les revenus mensuels et la capacité d’emprunt sont des simulations selon les hypothèses affichées."));
  const right=E('div','atlas-rev-context-right');
  right.append(E('p',null,'Commune : '+(state?.loc?.commune||state?.admin?.commune?.nom||'—')),
   E('p',null,'Source : FiLoSoFi INSEE 2021'),
