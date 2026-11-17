@@ -490,7 +490,8 @@ async function get(url,ms=65000){
  finally{clearTimeout(timer)}
 }
 async function load(){
- if(!requested){location.assign('/');return}
+ // Étape 1 : autoriser l'aperçu de Population sans recherche ni statistiques.
+ if(!requested){if(state.tab!=='population')location.assign('/');return}
  const geo=await get('/api/analyse?adresse='+encodeURIComponent(requested),13000);
  if(!geo?.localisation){location.assign('/');return}
  state.loc=geo.localisation;redraw();
