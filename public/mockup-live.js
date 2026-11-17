@@ -495,7 +495,8 @@ function ensurePopulation(){
 function ensureFamilies(){
  if(!state.loc?.code_insee||!state.admin||state.familiesData||state.familiesRequest)return;
  const params=new URLSearchParams({code_insee:state.loc.code_insee});
- if(/^[0-9]{9}$/.test(state.admin?.epci?.code||''))params.set('code_epci',state.admin.epci.code);
+ const familyEpci=state.admin?.epci?.code||state.admin?.commune?.code_epci||'';
+ if(/^[0-9]{9}$/.test(familyEpci))params.set('code_epci',familyEpci);
  state.familiesRequest=get('/api/familles-insee?'+params,60000)
   .then(data=>{
    if(data?.sections?.menages&&data?.sections?.familles&&data?.sections?.enfants){
