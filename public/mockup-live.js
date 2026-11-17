@@ -1,7 +1,7 @@
 'use strict';
 const $ = id=>document.getElementById(id);
 const requested=new URLSearchParams(location.search).get('adresse')||'';
-const state={loc:null,analysis:null,housing:null,rent:null,planning:null,risk:null,admin:null,extras:null,populationData:null,populationRequest:null,familiesData:null,familiesRequest:null,employmentData:null,employmentRequest:null,salariesData:null,salariesRequest:null,revenusData:null,revenusRequest:null,tab:['population','familles','emploi','salaires','revenus'].includes(new URLSearchParams(location.search).get('onglet'))?new URLSearchParams(location.search).get('onglet'):'programmation'};
+const state={loc:null,analysis:null,housing:null,rent:null,planning:null,risk:null,admin:null,extras:null,populationData:null,populationRequest:null,familiesData:null,familiesRequest:null,employmentData:null,employmentRequest:null,salariesData:null,salariesRequest:null,revenusData:null,revenusRequest:null,migrationsData:null,migrationsRequest:null,tab:['population','familles','emploi','salaires','revenus','migrations'].includes(new URLSearchParams(location.search).get('onglet'))?new URLSearchParams(location.search).get('onglet'):'programmation'};
 const fmt=new Intl.NumberFormat('fr-FR',{maximumFractionDigits:1});
 const elem=(tag,cls,value)=>{const a=document.createElement(tag);if(cls)a.className=cls;if(value!==undefined&&value!==null)a.textContent=String(value);return a};
 const append=(parent,...children)=>(parent.append(...children.filter(Boolean)),parent);
@@ -356,6 +356,7 @@ const available=()=>tabs.filter(t=>{
   case 'focus':return !!state.loc;
   case 'population':return cat('population').length+ages().length+arr(state.analysis?.categories?.population_historique).length>0;
   case 'emploi':return cat('emploi').length>0;
+  case 'migrations':return !!state.migrationsData?.origines?.length;
   case 'revenus':return cat('revenus').length>0;
   case 'logements':return cat('logements').length+homes().length+rooms().length>0;
   case 'permis':return cat('permis').length>0;
@@ -440,7 +441,7 @@ function redraw(){
  $('breadcrumb').textContent=selected.label;
  $('category').textContent=selected.group;
  $('subtitle').textContent=selected.id==='population'?'Population par échelle de territoire — recensement INSEE':selected.id==='familles'?'Composition des ménages et des familles — recensement INSEE':selected.id==='emploi'?'Activité, chômage et inactivité de la population — recensement INSEE':selected.id==='salaires'?'Salaire net mensuel moyen en équivalent temps plein — INSEE Base Tous salariés 2022':selected.id==='revenus'?'FiLoSoFi 2021 — lecture par profil de ménage et par décile, du revenu disponible mensuel à la capacité d’emprunt':(tabDescriptions[selected.id]||'Données territoriales vérifiées.');
- document.querySelector('.app')?.classList.toggle('atlas-population-active',['population','familles','emploi','salaires','revenus'].includes(selected.id));
+ document.querySelector('.app')?.classList.toggle('atlas-population-active',['population','familles','emploi','salaires','revenus','migrations'].includes(selected.id));
  document.querySelector('.app')?.classList.toggle('atlas-revenus-active',selected.id==='revenus');
  document.querySelector('.app')?.classList.toggle('atlas-salaires-active',selected.id==='salaires');
  $('addressLine1').textContent=state.loc?.adresse||requested||'Adresse';
@@ -458,6 +459,7 @@ function redraw(){
   ||(selected.id==='emploi'&&window.AtlasEmploymentPage?.render?.(root,state)===true)
   ||(selected.id==='salaires'&&window.AtlasSalariesPage?.render?.(root,state)===true)
   ||(selected.id==='revenus'&&window.AtlasRevenusPage?.render?.(root,state)===true)
+  ||(selected.id==='migrations'&&window.AtlasMigrationsPage?.render?.(root,state)===true)
   ||window.AtlasPanels?.render?.(root,selected.id,state)===true;
  if(!matched){
   selected.render(root);
@@ -466,7 +468,7 @@ function redraw(){
   realInsight(root);
  }
  // La grille, les marges et les cartes sont définies par les styles de la maquette.
- if(compact&&!['population','familles','emploi','salaires','revenus'].includes(selected.id)){
+ if(compact&&!['population','familles','emploi','salaires','revenus','migrations'].includes(selected.id)){
   // Même comportement que dans la maquette : KPI + première rangée,
   // aucune suppression définitive des panneaux de la vue détaillée.
   const children=[...root.children];
@@ -556,9 +558,17 @@ function ensureRevenus(){
   }).finally(()=>{state.revenusRequest=null});
 }
 
+function ensureMigrations(){
+ if(!state.loc?.code_insee||state.migrationsData||state.migrationsRequest)return;
+ state.migrationsRequest=get('/api/migrations-insee?code_insee='+encodeURIComponent(state.loc.code_insee),90000)
+  .then(data=>{
+   state.migrationsData=data||{statut:'indisponible',raison:'La récupération du fichier INSEE 2023 a échoué.'};
+   if(state.tab==='migrations')redraw();
+  }).finally(()=>{state.migrationsRequest=null});
+}
 function pick(id){
  if(!tabs.some(t=>t.id===id))return;
- state.tab=id;redraw();if(id==='population')ensurePopulation();if(id==='familles')ensureFamilies();if(id==='emploi')ensureEmployment();if(id==='salaires')ensureSalaries();if(id==='revenus')ensureRevenus();$('sidebar').classList.remove('open');
+ state.tab=id;redraw();if(id==='population')ensurePopulation();if(id==='familles')ensureFamilies();if(id==='emploi')ensureEmployment();if(id==='salaires')ensureSalaries();if(id==='revenus')ensureRevenus();if(id==='migrations')ensureMigrations();$('sidebar').classList.remove('open');
  window.scrollTo({top:0,behavior:'smooth'});
 }
 
@@ -571,14 +581,14 @@ async function get(url,ms=65000){
 }
 async function load(){
  // Étape 1 : autoriser l'aperçu de Population sans recherche ni statistiques.
- if(!requested){if(!['population','familles','emploi','salaires','revenus'].includes(state.tab))location.assign('/');return}
+ if(!requested){if(!['population','familles','emploi','salaires','revenus','migrations'].includes(state.tab))location.assign('/');return}
  const geo=await get('/api/analyse?adresse='+encodeURIComponent(requested),13000);
  if(!geo?.localisation){location.assign('/');return}
  state.loc=geo.localisation;redraw();
  const l=state.loc,q=new URLSearchParams({code_insee:l.code_insee,adresse:l.adresse||requested,code_postal:l.code_postal||'',ban_id:l.ban_id||''});
  await Promise.all([
   (async()=>{state.analysis=await get('/api/indicateurs?'+q,93000);redraw()})(),
-  (async()=>{state.admin=await get('/api/profil-administratif?code_insee='+encodeURIComponent(l.code_insee),18000)||{};redraw();if(state.tab==='population')ensurePopulation();if(state.tab==='familles')ensureFamilies();if(state.tab==='emploi')ensureEmployment();if(state.tab==='salaires')ensureSalaries();if(state.tab==='revenus')ensureRevenus()})(),
+  (async()=>{state.admin=await get('/api/profil-administratif?code_insee='+encodeURIComponent(l.code_insee),18000)||{};redraw();if(state.tab==='population')ensurePopulation();if(state.tab==='familles')ensureFamilies();if(state.tab==='emploi')ensureEmployment();if(state.tab==='salaires')ensureSalaries();if(state.tab==='revenus')ensureRevenus();if(state.tab==='migrations')ensureMigrations()})(),
   (async()=>{state.extras=await get('/api/etude-complements?code_insee='+encodeURIComponent(l.code_insee),33000);redraw()})(),
   (async()=>{state.housing=await get('/api/logements-detail?code_insee='+encodeURIComponent(l.code_insee),65000);redraw()})(),
   (async()=>{state.rent=await get('/api/loyers?code_insee='+encodeURIComponent(l.code_insee),60000);redraw()})(),
