@@ -209,7 +209,7 @@ function fixedSummary(state,redraw){
  }
  return layout;
 }
-function median(state){
+function median(state,redraw){
  const wrapper=E('div','atlas-rev-median-wrap');
  const control=E('div','atlas-pop-viewstrip atlas-rev-median-view');
  const options=E('div','atlas-pop-viewcontrols');
@@ -217,7 +217,7 @@ function median(state){
  for(const [k,title] of [['matrice','▦ Matrice'],['graphique','▥ Graphique']]){
   const btn=E('button','atlas-pop-viewbutton'+(chartMode===k?' is-active':''),title);
   btn.type='button';btn.addEventListener('click',()=>{
-   if(chartMode===k)return;chartMode=k;render(wrapper.parentNode,state);
+   if(chartMode===k)return;chartMode=k;redraw();
   });
   options.append(btn);
  }
@@ -273,7 +273,7 @@ function render(root,state){
  const sets=filters(state,rerender);root.append(...sets);
  const main=E('div','atlas-rev-body');
  main.append(mainTable(state),financeBox());
- root.append(main,fixedSummary(state,rerender),median(state),footnote(state));
+ root.append(main,fixedSummary(state,rerender),median(state,rerender),footnote(state));
  return true;
 }
 window.AtlasRevenusPage={render};
