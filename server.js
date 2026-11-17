@@ -12,6 +12,7 @@ const officialExtras = require('./official-extras');
 const inseePopulation = require('./population-insee');
 const inseeFamilies = require('./familles-insee');
 const inseeEmployment = require('./emploi-insee');
+const inseeSalaries = require('./salaires-insee');
 
 const PORT = Number(process.env.PORT || 3000);
 const PUBLIC = path.join(__dirname, 'public');
@@ -54,6 +55,18 @@ http.createServer(async(req,res)=>{
     if(!/^(?:[0-9]{5}|2[AB][0-9]{3})$/i.test(code))return send(res,400,{erreur:'Code INSEE invalide'});
     try{return send(res,200,await officialExtras.all(code));}
     catch(_){return send(res,200,{zonage:null,ecoles:null,eau:null});}
+  }
+  if(url.pathname==='/api/salaires-insee'){
+    const commune=(url.searchParams.get('code_insee')||'').trim();
+    const epci=(url.searchParams.get('code_epci')||'').trim();
+    const departement=(url.searchParams.get('code_departement')||'').trim();
+    if(!/^(?:[0-9]{5}|2[AB][0-9]{3})$/i.test(commune)
+     ||(epci&&!/^[0-9]{9}$/.test(epci))
+     ||(departement&&!/^(?:[0-9]{2,3}|2[AB])$/i.test(departement)))
+       return send(res,400,{erreur:'Code INSEE invalide'});
+    try{return send(res,200,await inseeSalaries.salaries({
+      commune,epci:epci||null,departement:departement||null}));}
+    catch(_){return send(res,503,{erreur:'Données INSEE momentanément indisponibles'});}
   }
   if(url.pathname==='/api/emploi-insee'){
     const code=(url.searchParams.get('code_insee')||'').trim();
