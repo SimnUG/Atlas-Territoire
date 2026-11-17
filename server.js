@@ -13,6 +13,7 @@ const inseePopulation = require('./population-insee');
 const inseeFamilies = require('./familles-insee');
 const inseeEmployment = require('./emploi-insee');
 const inseeSalaries = require('./salaires-insee');
+const inseeRevenus = require('./revenus-insee');
 
 const PORT = Number(process.env.PORT || 3000);
 const PUBLIC = path.join(__dirname, 'public');
@@ -55,6 +56,13 @@ http.createServer(async(req,res)=>{
     if(!/^(?:[0-9]{5}|2[AB][0-9]{3})$/i.test(code))return send(res,400,{erreur:'Code INSEE invalide'});
     try{return send(res,200,await officialExtras.all(code));}
     catch(_){return send(res,200,{zonage:null,ecoles:null,eau:null});}
+  }
+  if(url.pathname==='/api/revenus-insee'){
+    const code=(url.searchParams.get('code_insee')||'').trim();
+    if(!/^(?:[0-9]{5}|2[AB][0-9]{3})$/i.test(code))
+      return send(res,400,{erreur:'Code INSEE invalide'});
+    try{return send(res,200,await inseeRevenus.revenues({commune:code}));}
+    catch(_){return send(res,503,{erreur:'Données INSEE FiLoSoFi temporairement indisponibles'});}
   }
   if(url.pathname==='/api/salaires-insee'){
     const commune=(url.searchParams.get('code_insee')||'').trim();
