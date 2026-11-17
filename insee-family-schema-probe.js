@@ -1,20 +1,16 @@
 'use strict';
-(async()=>{
- const names=['FRANCE-F','FRANCE-FE','FRANCE-FM'];
- await Promise.all(names.flatMap(geo=>['DS_RP_MENAGES_COMP','DS_RP_FAMILLE_COMP'].map(async ds=>{
-  try{
-   const u=new URL('https://api.insee.fr/melodi/data/'+ds);
-   u.searchParams.set('GEO',geo);u.searchParams.set('TIME_PERIOD','2023');u.searchParams.set('maxResult','150');
-   const r=await fetch(u,{headers:{Accept:'application/json'},signal:AbortSignal.timeout(13000)});
-   const text=await r.text();
-   if(!r.ok){console.log('FAMILY_FRCODE',geo,ds,'HTTP',r.status,'BODY',text.slice(0,120));return}
-   const d=JSON.parse(text);
-   const rows=Array.isArray(d.observations)?d.observations:[];
-   const cols=rows.filter(x=>ds==='DS_RP_MENAGES_COMP'
-    ?(x.dimensions?.TPH==='2'||x.dimensions?.TPH==='_T')&&x.dimensions?.RP_MEASURE==='DWELLINGS':
-    x.dimensions?.NCH==='_T'&&['21','22','1','_T'].includes(x.dimensions?.TFN));
-   console.log('FAMILY_FRCODE',geo,ds,'HTTP',r.status,'ROWS',rows.length,
-    'VALUES',JSON.stringify(cols.map(x=>[x.dimensions.TPH||x.dimensions.TFN,x.measures?.OBS_VALUE_NIVEAU?.value])));
-  }catch(e){console.log('FAMILY_FRCODE_ERROR',geo,ds,e.message)}
- })));
-})();
+// Vérification ponctuelle des valeurs officielles retournées par le module de production.
+const {families}=require('./familles-insee');
+families({commune:'85081',epci:'248500589'})
+ .then(result=>{
+  const summaries={};
+  for(const [key,data] of Object.entries(result.sections)){
+   summaries[key]=Object.fromEntries(['commune','epci','france'].map(area=>
+    [area,{valeurs:data[area]?.rows?.map(row=>row.value)||[],
+      parts:data[area]?.rows?.map(row=>row.share)||[],
+      taux:data[area]?.rows?.map(row=>row.change)||[]}]));
+  }
+  console.log('FAMILY_PRODUCTION_CHECK',JSON.stringify({code:result.code_insee,
+   epci:result.code_epci,sections:summaries,errors:result.errors}).slice(0,7000));
+ })
+ .catch(error=>console.log('FAMILY_PRODUCTION_CHECK_ERROR',error.message));
