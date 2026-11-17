@@ -88,7 +88,7 @@
 .atlas-pop-change{border-radius:20px;background:#eef1f3;color:#7b8694;font-size:9px;padding:2px 7px;font-weight:780;min-width:23px;text-align:center;line-height:1.2}
 .atlas-pop-share{margin-left:auto;font-size:10px;color:#6a7483;font-weight:680}
 .atlas-pop-track{width:calc(100% - 1px);height:4px;background:#eef0f3;border-radius:5px;overflow:hidden}
-.atlas-pop-fill{height:100%;width:0!important;display:block;border-radius:5px;background:#477da2}
+.atlas-pop-fill{height:100%;width:0;display:block;border-radius:5px;background:#477da2}
 .atlas-pop-commune-fill{background:#202951}
 .atlas-pop-national{margin:11px 0 12px;border:1px solid #e2e5e9;border-radius:3px;overflow:hidden}
 .atlas-pop-national-header{height:25px;display:flex;align-items:center;gap:7px;background:#6d7483;color:#fff;padding:5px 10px;font-size:9px}
@@ -127,3 +127,6 @@
  .atlas-pop-matrix,.atlas-pop-chartcard,.atlas-pop-overview{break-inside:avoid}
  .atlas-pop-viewstrip{display:none}
 }
+/* Valeurs réelles : styles des pastilles comme sur les captures. */
+.atlas-pop-change.atlas-pop-up,.atlas-pop-neutral-pill.atlas-pop-up{background:#e7f6ee;color:#25925e}
+.atlas-pop-change.atlas-pop-down,.atlas-pop-neutral-pill.atlas-pop-down{background:#ffedeb;color:#e04d49}
