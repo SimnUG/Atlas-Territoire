@@ -1,35 +1,38 @@
 'use strict';
 const zlib=require('node:zlib');
-function files(b){
- const v=Buffer.from(b);let i=0;const entries=[];
- while(i<v.length-30){
-  if(v.readUInt32LE(i)!==0x04034b50){i++;continue}
-  const flag=v.readUInt16LE(i+6),method=v.readUInt16LE(i+8),
-   csize=v.readUInt32LE(i+18),namelen=v.readUInt16LE(i+26),extra=v.readUInt16LE(i+28),
-   name=v.subarray(i+30,i+30+namelen).toString('utf8'),offset=i+30+namelen+extra;
-  if(flag&8){break}
-  let raw=v.subarray(offset,offset+csize);
-  if(method===8)raw=zlib.inflateRawSync(raw);
-  entries.push({name,size:raw.length,buffer:raw});
-  i=offset+csize;
+function unzip(b){
+ const buf=Buffer.from(b),out=[],len=buf.length;
+ let dir=-1;
+ for(let i=len-22;i>=Math.max(0,len-66000);i--){
+  if(buf.readUInt32LE(i)===0x06054b50){dir=buf.readUInt32LE(i+16);break}
  }
- return entries;
+ if(dir<0)throw Error('ZIP dir missing');
+ let pos=dir;
+ while(pos+46<len&&buf.readUInt32LE(pos)===0x02014b50){
+  const method=buf.readUInt16LE(pos+10),compressed=buf.readUInt32LE(pos+20),
+   namelen=buf.readUInt16LE(pos+28),extra=buf.readUInt16LE(pos+30),
+   comment=buf.readUInt16LE(pos+32),local=buf.readUInt32LE(pos+42),
+   name=buf.subarray(pos+46,pos+46+namelen).toString('utf8');
+  const data=local+30+buf.readUInt16LE(local+26)+buf.readUInt16LE(local+28);
+  const raw=buf.subarray(data,data+compressed);
+  const extract=()=>method===8?zlib.inflateRawSync(raw):Buffer.from(raw);
+  out.push({name,extract});
+  pos+=46+namelen+extra+comment;
+ }
+ return out;
 }
 (async()=>{
- for(const [id,url] of [
-  ['2022','https://www.insee.fr/fr/statistiques/fichier/8629963/base-cc-bases-tous-salaries-2022_csv.zip'],
-  ['2016','https://www.insee.fr/fr/statistiques/fichier/8629963/base-cc-dads-2016-geo-2019.zip']
- ]){
-  try{
-   const res=await fetch(url,{signal:AbortSignal.timeout(20000)});
-   const b=Buffer.from(await res.arrayBuffer());
-   const entries=files(b);
-   console.log('ZIP_STRUCTURE',id,'HTTP',res.status,'files',JSON.stringify(entries.map(x=>({name:x.name,size:x.size}))).slice(0,2700));
-   for(const row of entries.slice(0,6)){
-    const sample=row.name.endsWith('.csv')||row.name.endsWith('.txt')||row.name.endsWith('.xml')?
-      row.buffer.toString('utf8',0,1600):'';
-    console.log('ZIP_SAMPLE',id,row.name,JSON.stringify(sample).slice(0,1900));
-   }
-  }catch(e){console.log('ZIP_ERROR',id,e.message)}
+ const url='https://www.insee.fr/fr/statistiques/fichier/8629963/base-cc-dads-2016-geo-2019.zip';
+ const res=await fetch(url,{signal:AbortSignal.timeout(25000)});
+ const zip=unzip(await res.arrayBuffer());
+ const nested=unzip(zip.find(x=>x.name.endsWith('.xlsx')).extract());
+ console.log('2016_XLSX_ENTRIES',JSON.stringify(nested.map(x=>({name:x.name}))).slice(0,1800));
+ for(const x of nested.filter(x=>['xl/workbook.xml','xl/_rels/workbook.xml.rels',
+     'xl/sharedStrings.xml'].includes(x.name)||/^xl\/worksheets\/sheet[0-9]+\.xml$/.test(x.name)).slice(0,15)){
+  const raw=x.extract(),s=raw.toString('utf8');
+  const first=s.indexOf('<row');
+  const text=x.name.includes('worksheets')?s.slice(first,first+1400):s.slice(0,1200);
+  console.log('XLSX_SHEET',x.name,'size',raw.length,
+   'first',JSON.stringify(text).slice(0,1700));
  }
-})().catch(e=>console.log('ZIP_FATAL',e.message));
+})().catch(e=>console.log('XLSX_PROBE_ERROR',e.message));
