@@ -1,33 +1,27 @@
 'use strict';
-// Temporary Melodi metadata sanity checks; no secrets or user data logged.
+// Final probe of exact official dimension combinations, not private data.
 (async()=>{
- const jobs=[
-  ['p_meta','https://api.insee.fr/melodi/catalog/DS_RP_POPULATION_PRINC'],
-  ['c_meta','https://api.insee.fr/melodi/catalog/DS_RP_POPULATION_COMP'],
-  ['i_meta','https://api.insee.fr/melodi/catalog/DS_RP_TD_IMMI_AGESEXEMPSTA_PRINC'],
-  ['n_meta','https://api.insee.fr/melodi/catalog/DS_RP_TD_NAT_AGESEXEMPSTA_PRINC'],
-  ['p_all','https://api.insee.fr/melodi/data/DS_RP_POPULATION_PRINC?GEO=COM-85081&TIME_PERIOD=2023&maxResult=160'],
-  ['c_all','https://api.insee.fr/melodi/data/DS_RP_POPULATION_COMP?GEO=COM-85081&TIME_PERIOD=2023&maxResult=350'],
-  ['i_all','https://api.insee.fr/melodi/data/DS_RP_TD_IMMI_AGESEXEMPSTA_PRINC?GEO=COM-85081&TIME_PERIOD=2023&maxResult=250'],
-  ['n_all','https://api.insee.fr/melodi/data/DS_RP_TD_NAT_AGESEXEMPSTA_PRINC?GEO=COM-85081&TIME_PERIOD=2023&maxResult=250'],
-  ['h_epci','https://api.insee.fr/melodi/data/DS_POPULATIONS_HISTORIQUES?GEO=EPCI-248500589&maxResult=120'],
-  ['h_comm','https://api.insee.fr/melodi/data/DS_POPULATIONS_HISTORIQUES?GEO=COM-85081&maxResult=120']
+ const params=[
+ ['nat1','DS_RP_TD_NAT_AGESEX_PRINC','COM-85081','TIME_PERIOD=2023',150],
+ ['imm_agg','DS_RP_TD_IMMI_AGESEXEMPSTA_PRINC','COM-85081','TIME_PERIOD=2023&SEX=_T&EMPSTA_ENQ=_T',120],
+ ['pcs_vals','DS_RP_POPULATION_COMP','COM-85081','TIME_PERIOD=2023&SEX=_T&AGE=Y_GE15',120],
+ ['n_fr','DS_RP_TD_NAT_AGESEX_PRINC','FRANCE-FM','TIME_PERIOD=2023&SEX=_T',150],
+ ['age_fr','DS_RP_POPULATION_PRINC','FRANCE-FM','TIME_PERIOD=2023&SEX=_T',100],
+ ['age_epci','DS_RP_POPULATION_PRINC','EPCI-248500589','TIME_PERIOD=2023&SEX=_T',100],
+ ['i_fr','DS_RP_TD_IMMI_AGESEXEMPSTA_PRINC','FRANCE-FM','TIME_PERIOD=2023&SEX=_T&EMPSTA_ENQ=_T',120]
  ];
- await Promise.all(jobs.map(async([id,url])=>{
+ await Promise.all(params.map(async([tag,ds,geo,query,max])=>{
   try{
-   const r=await fetch(url,{headers:{Accept:'application/json'},signal:AbortSignal.timeout(16000)});
+   const u='https://api.insee.fr/melodi/data/'+ds+'?GEO='+geo+'&'+query+'&maxResult='+max;
+   const r=await fetch(u,{headers:{Accept:'application/json'},signal:AbortSignal.timeout(17000)});
    const d=await r.json();
-   if(id.endsWith('_meta')){
-    const st=d.structure||{};
-    console.log('MELODICHECK',id,'http',r.status,'STRUCTURE',JSON.stringify(st).slice(0,9500));
-   }else{
-    const rows=Array.isArray(d.observations)?d.observations:[];
-    const dims=[...new Set(rows.flatMap(o=>Object.keys(o.dimensions||{})))];
-    const options=Object.fromEntries(dims.map(k=>[k,[...new Set(rows.map(o=>o.dimensions[k]))].slice(0,40)]));
-    console.log('MELODICHECK',id,'http',r.status,'PAGING',JSON.stringify(d.paging||{}),
-     'ROWS',rows.length,'OPTIONS',JSON.stringify(options).slice(0,5500),
-     'SAMPLE',JSON.stringify(rows.slice(0,3)).slice(0,950));
-   }
-  }catch(e){console.log('MELODICHECK',id,'ERR',e.message)}
+   const rows=Array.isArray(d.observations)?d.observations:[];
+   const dims=[...new Set(rows.flatMap(o=>Object.keys(o.dimensions||{})))];
+   const vals=Object.fromEntries(dims.map(k=>[k,[...new Set(rows.map(o=>o.dimensions[k]))].slice(0,30)]));
+   const summary=rows.filter(o=>o.dimensions?.SEX==='_T').slice(0,32)
+    .map(o=>({dimensions:Object.fromEntries(Object.entries(o.dimensions).filter(([k])=>!['FREQ','GEO','TIME_PERIOD','RP_MEASURE'].includes(k))),val:o.measures?.OBS_VALUE_NIVEAU?.value}));
+   console.log('MELOFINAL',tag,'http',r.status,'COUNT',rows.length,'PAGING',JSON.stringify(d.paging||{}),
+    'DIMS',JSON.stringify(vals),'SAMPLE',JSON.stringify(summary).slice(0,4600));
+  }catch(e){console.log('MELOFINAL',tag,'ERR',e.message)}
  }));
 })();
