@@ -1,7 +1,7 @@
 'use strict';
 const $ = id=>document.getElementById(id);
 const requested=new URLSearchParams(location.search).get('adresse')||'';
-const state={loc:null,analysis:null,housing:null,rent:null,planning:null,risk:null,admin:null,extras:null,populationData:null,populationRequest:null,familiesData:null,familiesRequest:null,employmentData:null,employmentRequest:null,salariesData:null,salariesRequest:null,revenusData:null,revenusRequest:null,migrationsData:null,migrationsRequest:null,tab:['population','familles','emploi','salaires','revenus','migrations'].includes(new URLSearchParams(location.search).get('onglet'))?new URLSearchParams(location.search).get('onglet'):'programmation'};
+const state={loc:null,analysis:null,housing:null,rent:null,planning:null,risk:null,admin:null,extras:null,populationData:null,populationRequest:null,familiesData:null,familiesRequest:null,employmentData:null,employmentRequest:null,salariesData:null,salariesRequest:null,revenusData:null,revenusRequest:null,migrationsData:null,migrationsRequest:null,migrationsDetail:null,migrationsDetailRequest:null,tab:['population','familles','emploi','salaires','revenus','migrations'].includes(new URLSearchParams(location.search).get('onglet'))?new URLSearchParams(location.search).get('onglet'):'programmation'};
 const fmt=new Intl.NumberFormat('fr-FR',{maximumFractionDigits:1});
 const elem=(tag,cls,value)=>{const a=document.createElement(tag);if(cls)a.className=cls;if(value!==undefined&&value!==null)a.textContent=String(value);return a};
 const append=(parent,...children)=>(parent.append(...children.filter(Boolean)),parent);
@@ -356,7 +356,7 @@ const available=()=>tabs.filter(t=>{
   case 'focus':return !!state.loc;
   case 'population':return cat('population').length+ages().length+arr(state.analysis?.categories?.population_historique).length>0;
   case 'emploi':return cat('emploi').length>0;
-  case 'migrations':return !!state.migrationsData?.origines?.length;
+  case 'migrations':return !!state.migrationsData?.origines?.length||state.migrationsDetail?.statut==='disponible';
   case 'revenus':return cat('revenus').length>0;
   case 'logements':return cat('logements').length+homes().length+rooms().length>0;
   case 'permis':return cat('permis').length>0;
@@ -567,9 +567,18 @@ function ensureMigrations(){
    if(state.tab==='migrations')redraw();
   }).finally(()=>{state.migrationsRequest=null});
 }
+function ensureMigrationsDetail(){
+ if(!state.loc?.code_insee||state.migrationsDetail||state.migrationsDetailRequest)return;
+ const code=encodeURIComponent(state.loc.code_insee);
+ state.migrationsDetailRequest=get('/api/migrations-detail-insee?code_insee='+code,245000)
+  .then(data=>{
+   state.migrationsDetail=data?.statut==='disponible'?data:{statut:'indisponible',raison:data?.erreur||'L’INSEE ne répond pas pour le moment'};
+   if(state.tab==='migrations')redraw();
+  }).finally(()=>{state.migrationsDetailRequest=null});
+}
 function pick(id){
  if(!tabs.some(t=>t.id===id))return;
- state.tab=id;redraw();if(id==='population')ensurePopulation();if(id==='familles')ensureFamilies();if(id==='emploi')ensureEmployment();if(id==='salaires')ensureSalaries();if(id==='revenus')ensureRevenus();if(id==='migrations')ensureMigrations();$('sidebar').classList.remove('open');
+ state.tab=id;redraw();if(id==='population')ensurePopulation();if(id==='familles')ensureFamilies();if(id==='emploi')ensureEmployment();if(id==='salaires')ensureSalaries();if(id==='revenus')ensureRevenus();if(id==='migrations'){ensureMigrations();ensureMigrationsDetail()}$('sidebar').classList.remove('open');
  window.scrollTo({top:0,behavior:'smooth'});
 }
 
@@ -589,7 +598,7 @@ async function load(){
  const l=state.loc,q=new URLSearchParams({code_insee:l.code_insee,adresse:l.adresse||requested,code_postal:l.code_postal||'',ban_id:l.ban_id||''});
  await Promise.all([
   (async()=>{state.analysis=await get('/api/indicateurs?'+q,93000);redraw()})(),
-  (async()=>{state.admin=await get('/api/profil-administratif?code_insee='+encodeURIComponent(l.code_insee),18000)||{};redraw();if(state.tab==='population')ensurePopulation();if(state.tab==='familles')ensureFamilies();if(state.tab==='emploi')ensureEmployment();if(state.tab==='salaires')ensureSalaries();if(state.tab==='revenus')ensureRevenus();if(state.tab==='migrations')ensureMigrations()})(),
+  (async()=>{state.admin=await get('/api/profil-administratif?code_insee='+encodeURIComponent(l.code_insee),18000)||{};redraw();if(state.tab==='population')ensurePopulation();if(state.tab==='familles')ensureFamilies();if(state.tab==='emploi')ensureEmployment();if(state.tab==='salaires')ensureSalaries();if(state.tab==='revenus')ensureRevenus();if(state.tab==='migrations'){ensureMigrations();ensureMigrationsDetail()}})(),
   (async()=>{state.extras=await get('/api/etude-complements?code_insee='+encodeURIComponent(l.code_insee),33000);redraw()})(),
   (async()=>{state.housing=await get('/api/logements-detail?code_insee='+encodeURIComponent(l.code_insee),65000);redraw()})(),
   (async()=>{state.rent=await get('/api/loyers?code_insee='+encodeURIComponent(l.code_insee),60000);redraw()})(),
