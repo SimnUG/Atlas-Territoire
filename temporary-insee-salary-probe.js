@@ -1,30 +1,35 @@
 'use strict';
-// Temporary INSEE salary source diagnostic: prints headers and dimension codes only.
+const zlib=require('node:zlib');
+function files(b){
+ const v=Buffer.from(b);let i=0;const entries=[];
+ while(i<v.length-30){
+  if(v.readUInt32LE(i)!==0x04034b50){i++;continue}
+  const flag=v.readUInt16LE(i+6),method=v.readUInt16LE(i+8),
+   csize=v.readUInt32LE(i+18),namelen=v.readUInt16LE(i+26),extra=v.readUInt16LE(i+28),
+   name=v.subarray(i+30,i+30+namelen).toString('utf8'),offset=i+30+namelen+extra;
+  if(flag&8){break}
+  let raw=v.subarray(offset,offset+csize);
+  if(method===8)raw=zlib.inflateRawSync(raw);
+  entries.push({name,size:raw.length,buffer:raw});
+  i=offset+csize;
+ }
+ return entries;
+}
 (async()=>{
- const resources=[
- ['2022_csv','https://www.insee.fr/fr/statistiques/fichier/8629963/base-cc-bases-tous-salaries-2022_csv.zip'],
- ['2016_zip','https://www.insee.fr/fr/statistiques/fichier/8629963/base-cc-dads-2016-geo-2019.zip'],
- ['sal_eqtp_pcs','https://api.insee.fr/melodi/data/DS_BTS_SAL_EQTP_SEX_PCS?GEO=COM-85081&TIME_PERIOD=2022&maxResult=80'],
- ['sal_eqtp_age','https://api.insee.fr/melodi/data/DS_BTS_SAL_EQTP_SEX_AGE?GEO=COM-85081&TIME_PERIOD=2022&maxResult=80'],
- ['sal_horaire','https://api.insee.fr/melodi/data/DS_BTS_SAL_HORAIRE_SEX_PCS?GEO=COM-85081&TIME_PERIOD=2022&maxResult=80'],
- ['sal_hour','https://api.insee.fr/melodi/data/DS_BTS_SAL_HOUR_SEX_PCS?GEO=COM-85081&TIME_PERIOD=2022&maxResult=80'],
- ['catalog','https://api.insee.fr/melodi/catalog']
- ];
- await Promise.all(resources.map(async([id,url])=>{
+ for(const [id,url] of [
+  ['2022','https://www.insee.fr/fr/statistiques/fichier/8629963/base-cc-bases-tous-salaries-2022_csv.zip'],
+  ['2016','https://www.insee.fr/fr/statistiques/fichier/8629963/base-cc-dads-2016-geo-2019.zip']
+ ]){
   try{
-   const res=await fetch(url,{signal:AbortSignal.timeout(18000),headers:{Accept:'application/json, text/csv, application/zip, */*'}});
-   if(id.endsWith('zip')||id.endsWith('csv')){
-    let b=await res.arrayBuffer();
-    console.log('SAL_PROBE',id,'HTTP',res.status,'length',b.byteLength,'contentType',res.headers.get('content-type'),
-      'first8',Buffer.from(b).subarray(0,8).toString('hex'));
-   }else{
-    const raw=await res.text();
-    let data;try{data=JSON.parse(raw)}catch(e){}
-    const rows=data?.observations||[];
-    const vals=Object.fromEntries([...new Set(rows.flatMap(o=>Object.keys(o.dimensions||{})))].map(k=>[k,[...new Set(rows.map(o=>o.dimensions[k]))].slice(0,12)]));
-    console.log('SAL_PROBE',id,'HTTP',res.status,'length',raw.length,'keys',Object.keys(data||{}),
-      'rows',rows.length,'dims',JSON.stringify(vals).slice(0,1200),'sample',raw.slice(0,300));
+   const res=await fetch(url,{signal:AbortSignal.timeout(20000)});
+   const b=Buffer.from(await res.arrayBuffer());
+   const entries=files(b);
+   console.log('ZIP_STRUCTURE',id,'HTTP',res.status,'files',JSON.stringify(entries.map(x=>({name:x.name,size:x.size}))).slice(0,2700));
+   for(const row of entries.slice(0,6)){
+    const sample=row.name.endsWith('.csv')||row.name.endsWith('.txt')||row.name.endsWith('.xml')?
+      row.buffer.toString('utf8',0,1600):'';
+    console.log('ZIP_SAMPLE',id,row.name,JSON.stringify(sample).slice(0,1900));
    }
-  }catch(e){console.log('SAL_PROBE',id,'ERROR',e.message)}
- }));
-})();
+  }catch(e){console.log('ZIP_ERROR',id,e.message)}
+ }
+})().catch(e=>console.log('ZIP_FATAL',e.message));
