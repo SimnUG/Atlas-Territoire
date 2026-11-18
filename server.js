@@ -94,7 +94,7 @@ http.createServer(async(req,res)=>{
   if(url.pathname==='/api/logements-insee-complet'){
     const code=(url.searchParams.get('code_insee')||'').trim();
     const epci=(url.searchParams.get('code_epci')||'').trim();
-    if(!/^(?:[0-9]{5}|2[AB][0-9]{3})$/i.test(code)||!/^[0-9]{9}$/.test(epci))
+    if(!/^(?:[0-9]{5}|2[AB][0-9]{3})$/i.test(code)||!/^(?:[0-9]{9}|DEP-(?:44|85))$/.test(epci))
       return send(res,400,{statut:'invalide',erreur:'Code commune ou EPCI invalide'});
     try{return send(res,200,await fullHousingInsee.logement({
       commune:code,epci,
