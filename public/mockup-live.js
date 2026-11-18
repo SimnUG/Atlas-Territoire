@@ -1,7 +1,7 @@
 'use strict';
 const $ = id=>document.getElementById(id);
 const requested=new URLSearchParams(location.search).get('adresse')||'';
-const state={loc:null,analysis:null,housing:null,rent:null,planning:null,risk:null,admin:null,extras:null,populationData:null,populationRequest:null,familiesData:null,familiesRequest:null,employmentData:null,employmentRequest:null,salariesData:null,salariesRequest:null,revenusData:null,revenusRequest:null,migrationsData:null,migrationsRequest:null,migrationsDetail:null,migrationsDetailRequest:null,migrationsMelodi:null,migrationsMelodiRequest:null,electionsData:null,electionsRequest:null,tab:['population','familles','emploi','salaires','revenus','migrations','elections'].includes(new URLSearchParams(location.search).get('onglet'))?new URLSearchParams(location.search).get('onglet'):'programmation'};
+const state={loc:null,analysis:null,housing:null,rent:null,planning:null,risk:null,admin:null,extras:null,populationData:null,populationRequest:null,familiesData:null,familiesRequest:null,employmentData:null,employmentRequest:null,salariesData:null,salariesRequest:null,revenusData:null,revenusRequest:null,migrationsData:null,migrationsRequest:null,migrationsDetail:null,migrationsDetailRequest:null,migrationsMelodi:null,migrationsMelodiRequest:null,electionsData:null,electionsRequest:null,electionsPersona:null,electionsPersonaRequest:null,tab:['population','familles','emploi','salaires','revenus','migrations','elections'].includes(new URLSearchParams(location.search).get('onglet'))?new URLSearchParams(location.search).get('onglet'):'programmation'};
 const fmt=new Intl.NumberFormat('fr-FR',{maximumFractionDigits:1});
 const elem=(tag,cls,value)=>{const a=document.createElement(tag);if(cls)a.className=cls;if(value!==undefined&&value!==null)a.textContent=String(value);return a};
 const append=(parent,...children)=>(parent.append(...children.filter(Boolean)),parent);
@@ -584,6 +584,12 @@ function ensureMigrationsDetail(){
    if(state.tab==='migrations')redraw();
   }).finally(()=>{state.migrationsDetailRequest=null});
 }
+function ensureElectionsPersona(){
+ if(!state.loc?.code_insee||state.electionsPersona||state.electionsPersonaRequest)return;
+ state.electionsPersonaRequest=get('/api/elections-persona-insee?code_insee='+encodeURIComponent(state.loc.code_insee),39000)
+  .then(x=>{state.electionsPersona=x||{statut:'indisponible'};if(state.tab==='elections')redraw()})
+  .finally(()=>{state.electionsPersonaRequest=null});
+}
 function ensureElections(){
  if(!state.loc?.code_insee||state.electionsData||state.electionsRequest)return;
  state.electionsRequest=get('/api/elections-officielles?code_insee='+encodeURIComponent(state.loc.code_insee),28000)
@@ -592,7 +598,7 @@ function ensureElections(){
 }
 function pick(id){
  if(!tabs.some(t=>t.id===id))return;
- state.tab=id;redraw();if(id==='population')ensurePopulation();if(id==='familles')ensureFamilies();if(id==='emploi')ensureEmployment();if(id==='salaires')ensureSalaries();if(id==='revenus')ensureRevenus();if(id==='migrations'){ensureMigrations();ensureMigrationsMelodi();ensureMigrationsDetail()}if(id==='elections'){ensureElections();ensurePopulation();ensureEmployment();}$('sidebar').classList.remove('open');
+ state.tab=id;redraw();if(id==='population')ensurePopulation();if(id==='familles')ensureFamilies();if(id==='emploi')ensureEmployment();if(id==='salaires')ensureSalaries();if(id==='revenus')ensureRevenus();if(id==='migrations'){ensureMigrations();ensureMigrationsMelodi();ensureMigrationsDetail()}if(id==='elections'){ensureElections();ensureElectionsPersona();ensurePopulation();ensureEmployment();}$('sidebar').classList.remove('open');
  window.scrollTo({top:0,behavior:'smooth'});
 }
 
