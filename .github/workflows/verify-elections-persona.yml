@@ -1,0 +1,18 @@
+name: Contrôle INSEE portrait élections
+on:
+  push:
+    paths:
+      - 'scripts/verify-elections-persona.js'
+      - 'elections-persona-insee.js'
+      - '.github/workflows/verify-elections-persona.yml'
+permissions: {contents: read}
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node scripts/verify-elections-persona.js
