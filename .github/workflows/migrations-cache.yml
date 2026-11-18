@@ -29,11 +29,11 @@ jobs:
         run: |
           set -euo pipefail
           URL="https://www.insee.fr/fr/statistiques/fichier/9004805/RP2023_migcom.zip"
-          for attempt in $(seq 1 20); do
+          for attempt in $(seq 1 8); do
             echo "Téléchargement tentative $attempt"
-            curl --fail --location --connect-timeout 30 --max-time 240 --retry 2 --retry-all-errors --retry-delay 3 --continue-at - --output /tmp/RP2023_migcom.zip "$URL" || true
+            curl --http1.1 --fail --location --connect-timeout 45 --max-time 600 --retry 1 --retry-delay 3 --output /tmp/RP2023_migcom.zip "$URL" || true
             if unzip -tq /tmp/RP2023_migcom.zip >/dev/null 2>&1; then echo "Archive valide";break;fi
-            if [ "$attempt" -eq 20 ]; then echo "Archive INSEE impossible à récupérer intégralement";exit 1;fi
+            if [ "$attempt" -eq 8 ]; then echo "Archive INSEE impossible à récupérer intégralement";exit 1;fi
             sleep 4
           done
       - name: Agréger les observations par commune
