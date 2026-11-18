@@ -41,6 +41,18 @@ test('cohérence logement: catégories et types < 2 logements d’arrondi',()=>{
  }
  assert.equal(d.tableaux.find(t=>t.id==='occupation').lignes[0].commune['2023'],1541);
 });
+test('les évolutions d’ancienneté INSEE 2017→2023 sont entièrement calculées',()=>{
+ const table=d.tableaux.find(x=>x.id==='anciennete');
+ assert.equal(table.lignes.length,4);
+ for(const row of table.lignes){
+  for(const area of ['commune','epci']){
+   assert.ok(Number.isInteger(row[area]['2017']));
+   assert.ok(Number.isFinite(row[area].variation));
+   assert.ok(Math.abs(row[area].variation-100*(row[area]['2023']/row[area]['2017']-1))<.1);
+  }
+ }
+ assert.match(d.source.url_millesime_2017,/insee\.fr/);
+});
 test('JS et HTML de l’onglet Logements intégrés',()=>{
  const content=fs.readFileSync('public/logements-reference.js','utf8');
  new vm.Script(content,{filename:'logements-reference.js'});
