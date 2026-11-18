@@ -15,7 +15,8 @@
   root.classList.add('sru-root');
   const d=state.sruData,has=d?.statut==='disponible';
   const city=state.loc?.commune||d?.commune||'Commune recherchée';
-  const rate=has?d.taux_sru:null,goal=has?d.taux_cible:null,paid=has?d.prelevement_net:null;
+  const rate=has?d.taux_sru:null,goal=has?d.taux_cible:null;
+  const paid=has&&d.prelevement_avec_majoration!==false?d.prelevement_net:null;
   const progress=typeof rate==='number'&&typeof goal==='number'&&goal>0
    ?Math.max(0,Math.min(100,rate/goal*100)):null;
 
@@ -80,7 +81,12 @@
   const description=el('p');
   description.append(document.createTextNode('Source : Inventaire SRU (loi Solidarité et Renouvellement Urbain, art. 55) — Ministère chargé du Logement, périmètre des communes suivies en 2026 (bilan au 1er janvier 2025). Le taux cible dépend du régime applicable à la commune (20 % ou 25 %). Le prélèvement net inclut la majoration lorsqu’elle est publiée. Les communes absentes du fichier ne sont pas automatiquement considérées comme conformes. Publication : août 2026. Traitement : Atlas Territoires. '));
   const link=el('a',null,'Consulter le jeu officiel');link.href=SOURCE;link.target='_blank';link.rel='noopener noreferrer';
-  description.append(link,document.createTextNode('. Le prélèvement est celui de l’exercice '+(d?.prelevement_annee||'non indiqué')+' et peut différer du bilan du parc au 1er janvier 2025. Licence : Ministère du Logement — Licence Ouverte 2.0.'));
+  description.append(link,document.createTextNode(' · '));
+  if(d?.source?.fichier&&/^https:\/\//.test(d.source.fichier)){
+   const csv=el('a',null,'Télécharger le CSV officiel');csv.href=d.source.fichier;
+   csv.target='_blank';csv.rel='noopener noreferrer';description.append(csv,document.createTextNode('. '));
+  }
+  description.append(document.createTextNode('Le prélèvement est celui de l’exercice '+(d?.prelevement_annee||'non indiqué')+' et peut différer du bilan du parc au 1er janvier 2025. Licence : Ministère du Logement — Licence Ouverte 2.0.'));
   foot.append(description);root.append(foot);
   return true;
  }
