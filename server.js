@@ -21,6 +21,7 @@ const electionsPersona = require('./elections-persona-insee');
 const socialRpls = require('./social-rpls');
 const socialRplsGeo = require('./social-rpls-geo');
 const sruInventaire = require('./sru-inventaire');
+const zonageABC2026 = require('./zonage-abc-2026');
 const fullHousingInsee = require('./logements-insee-complet');
 const fullElections = require('./elections-officielles-44-85');
 
@@ -82,6 +83,13 @@ http.createServer(async(req,res)=>{
     try{return send(res,200,fullElections.get(code));}
     catch(_){return send(res,503,{statut:'indisponible',code_insee:code,scrutins:[],
       raison:'Répertoire national des municipales temporairement inaccessible'});}
+  }
+  if(url.pathname==='/api/zonage-abc'){
+    const code=(url.searchParams.get('code_insee')||'').trim();
+    if(!/^(?:[0-9]{5}|2[AB][0-9]{3})$/i.test(code))
+      return send(res,400,{statut:'invalide',erreur:'Code INSEE invalide'});
+    try{return send(res,200,await zonageABC2026.zonage(code))}
+    catch(e){return send(res,e.status||503,{statut:'indisponible',erreur:'Zonage ABC officiel momentanément indisponible'});}
   }
   if(url.pathname==='/api/loi-sru'){
     const code=(url.searchParams.get('code_insee')||'').trim();
