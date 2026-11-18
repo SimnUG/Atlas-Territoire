@@ -185,7 +185,9 @@
     (med?'Médiane : '+decimal(med)+' €/m².':'Médiane non disponible.')),tabs);
   const max=Math.max(1,...rows.map(x=>x.value));
   const chosen=rows.find(x=>x.code===target);
-  const shown=state.showAll?rows:(chosen&&!rows.slice(0,13).includes(chosen)?[...rows.slice(0,12),chosen]:rows.slice(0,13));
+  const major=rows.length<=13?rows:rows.slice().sort((a,b)=>(b.population||0)-(a.population||0)).slice(0,12);
+  const choices=new Set([...major.map(x=>x.code),...(chosen?[chosen.code]:[])]);
+  const shown=state.showAll?rows:rows.filter(x=>choices.has(x.code));
   for(const c of shown){
    const selected=c.code===target,line=el('div','rp-ranking-row'+(selected?' selected':''));
    const name=el('span','rp-rank-name',c.nom),track=el('div','rp-track');
@@ -196,7 +198,7 @@
    const more=el('button','rp-more',state.showAll?'Réduire la liste':'Afficher les '+rows.length+' communes');
    more.type='button';more.onclick=()=>{state.showAll=!state.showAll;draw()};p.append(more);
   }
-  p.append(el('p','rp-small','Classement sur '+rows.length+' communes disposant d’un indicateur, parmi '+(epci.communes_total||rows.length)+' communes de l’EPCI. L’indicateur d’une petite commune peut provenir d’une maille réunissant plusieurs communes.'));
+  p.append(el('p','rp-small','Classement sur '+rows.length+' communes disposant d’un indicateur, parmi '+(epci.communes_total||rows.length)+' communes de l’EPCI. Présentation : 12 communes les plus peuplées et commune étudiée (ou toutes les communes si moins de 14). L’indicateur d’une petite commune peut provenir d’une maille réunissant plusieurs communes.'));
   root.append(p);
  }
  function bottom(root){
