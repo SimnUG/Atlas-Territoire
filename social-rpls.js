@@ -35,12 +35,11 @@ function social(code){
   const val=get(i);return {label,nombre:val,part:val!==null&&denom>0?round(100*val/denom):null}
  };
  const years=Array.from({length:13},(_,i)=>2013+i);
- const history=(type,idx)=>years.map(year=>({annee:year,valeur:get(year===2025&&type==='parc'?9:idx+2025-year)}));
+ const history=(type,idx)=>years.map(year=>({annee:year,valeur:get(type==='parc'?(year===2025?9:idx+2024-year):idx+2025-year)}));
  const historyPark=history('parc',27);
  const vacancy=history('rate',104);
  const mobility=history('rate',130);
  const rentals=history('rate',143);
- const occupied=(get(3)??0)+(get(7)??0)+(get(8)??0)+(get(6)??0);
  const occupiedCounter=(get(3)??0)+(get(7)??0)+(get(8)??0);
  const vacant=(get(4)??0)+(get(5)??0);
  const formatRows=[
