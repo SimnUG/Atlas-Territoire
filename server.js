@@ -21,6 +21,7 @@ const electionsPersona = require('./elections-persona-insee');
 const socialRpls = require('./social-rpls');
 const socialRplsGeo = require('./social-rpls-geo');
 const fullHousingInsee = require('./logements-insee-complet');
+const fullElections = require('./elections-officielles-44-85');
 
 const PORT = Number(process.env.PORT || 3000);
 const PUBLIC = path.join(__dirname, 'public');
@@ -77,13 +78,9 @@ http.createServer(async(req,res)=>{
   if(url.pathname==='/api/elections-officielles'){
     const code=(url.searchParams.get('code_insee')||'').trim();
     if(!/^(?:[0-9]{5}|2[AB][0-9]{3})$/i.test(code))return send(res,400,{erreur:'Code INSEE invalide'});
-    try{
-      const file=path.join(PUBLIC,'data','elections-'+code+'.json');
-      const data=JSON.parse(fs.readFileSync(file,'utf8'));
-      return send(res,200,data);
-    }catch(_){
-      return send(res,200,{statut:'indisponible',code_insee:code,scrutins:[],raison:'Les données officielles de cette commune ne sont pas encore indexées'});
-    }
+    try{return send(res,200,fullElections.get(code));}
+    catch(_){return send(res,503,{statut:'indisponible',code_insee:code,scrutins:[],
+      raison:'Répertoire national des municipales temporairement inaccessible'});}
   }
   if(url.pathname==='/api/parc-social-rpls-points'){
     const code=(url.searchParams.get('code_insee')||'').trim();
