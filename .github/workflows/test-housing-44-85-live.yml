@@ -1,0 +1,18 @@
+name: Test réel INSEE logements 44 et 85
+on:
+  push:
+    paths:
+      - scripts/test-housing-44-85-live.js
+      - .github/workflows/test-housing-44-85-live.yml
+      - logements-insee-complet.js
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - run: node scripts/test-housing-44-85-live.js
