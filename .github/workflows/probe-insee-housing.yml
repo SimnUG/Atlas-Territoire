@@ -1,0 +1,14 @@
+name: Probe INSEE 2023 logements multi-territoires
+on:
+  push:
+    paths: [scripts/probe-insee-housing.py,.github/workflows/probe-insee-housing.yml]
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - run: python -m pip install requests -q
+      - run: python scripts/probe-insee-housing.py
