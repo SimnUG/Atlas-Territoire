@@ -62,5 +62,5 @@ test('JS et HTML de l’onglet Logements intégrés',()=>{
  const startup=fs.readFileSync('public/mockup-live.js','utf8');
  assert.match(startup,/AtlasLogementsPage/);
  assert.match(startup,/ensureLogementsReference/);
- assert.match(startup,/'logements'\]\.includes/);
+ assert.match(startup,/'logements','social'\]\.includes/);
 });
