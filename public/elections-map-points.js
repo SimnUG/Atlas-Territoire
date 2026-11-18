@@ -132,5 +132,116 @@
     'Impossible de charger le fond de plan : '+e.message)}
   }
  }
- window.AtlasElectionPointMaps={render};
+
+ async function renderEpci(root,options={}){
+  const code=options.code,city=options.city||'Commune',colorByNuance=options.colorByNuance||{};
+  const wrapper=add(root,'div','atlas-point-map atlas-epci-roadmap');
+  const heading=add(wrapper,'div','atlas-point-map-toolbar');
+  add(heading,'strong',null,'Situation de la commune au sein de son EPCI');
+  add(heading,'small',null,'Fond « Plan » et contours communaux');
+  const div=add(wrapper,'div','atlas-point-map-canvas');
+  const legend=add(wrapper,'div','atlas-epci-map-legend');
+  const palette=[['Divers gauche','#ed88bd'],['Divers droite','#4e91d5'],
+   ['Centre','#e5ac15'],['Autres / non renseignées','#c6c8cc']];
+  for(const [label,color] of palette){
+   const span=add(legend,'span',null);
+   const i=add(span,'i',null);i.style.background=color;
+   add(span,'small',null,label);
+  }
+  add(wrapper,'div','atlas-point-map-disclaimer',
+   'Couleurs : nuance de la liste arrivée en tête aux municipales de 2026 (ministère de l’Intérieur). '+
+   'Points : adresses BAN non nominatives, pas des électeurs. Aucun vote n’est attribué à une adresse.');
+  function nuColor(code){
+   const s=(code||'').toUpperCase();
+   if(/DVG|SOC|UG|EXG|VEC/.test(s))return '#ed88bd';
+   if(/DVR|DVD|LR|UD|EXD/.test(s))return '#4e91d5';
+   if(/MDM|ENS|CEN/.test(s))return '#e5ac15';
+   return '#c6c8cc';
+  }
+  try{
+   let epci=options.epci;
+   if(!epci){
+    const res=await fetch('https://geo.api.gouv.fr/communes/'+encodeURIComponent(code)+'?fields=codeEpci,nom');
+    if(!res.ok)throw Error('EPCI indisponible');
+    epci=(await res.json()).codeEpci;
+   }
+   if(!/^\d{9}$/.test(epci||''))throw Error('Code EPCI indisponible');
+   const response=await fetch('https://geo.api.gouv.fr/epcis/'+epci+'/communes?geometry=contour&format=geojson');
+   if(!response.ok)throw Error('Contours indisponibles');
+   const featureCollection=await response.json();
+   const features=featureCollection.features||[];
+   if(!features.length)throw Error('Absence de contours');
+   const addressPoints=await getPoints(code);
+   if(!wrapper.isConnected)return;
+   const cfg=await getConfig(),key=cfg?.key?.trim?.()||'';
+   const districtInfo=feature=>{
+    const id=feature?.properties?.code||'',win=colorByNuance[id]||null;
+    return (feature?.properties?.nom||'Commune')+' : '+(win?win.liste+' ('+win.nuance+')':'résultat non indexé');
+   };
+   const polygonColor=feature=>nuColor(colorByNuance[feature?.properties?.code]?.nuance);
+   async function googleMap(){
+    const google=await getGoogle(key);
+    const map=new google.maps.Map(div,{center:{lat:options.lat||46.73,lng:options.lng||-1.4},
+     zoom:10,mapTypeId:'roadmap',mapTypeControl:true,streetViewControl:false,fullscreenControl:true});
+    const bounds=new google.maps.LatLngBounds();
+    const data=featureCollection.features.filter(f=>f.geometry&&f.properties);
+    map.data.addGeoJson({type:'FeatureCollection',features:data});
+    map.data.setStyle(f=>({fillColor:polygonColor({properties:{code:f.getProperty('code')}}),
+     fillOpacity:.55,strokeColor:f.getProperty('code')===code?'#26395e':'#fff',
+     strokeWeight:f.getProperty('code')===code?3:1.3}));
+    const popup=new google.maps.InfoWindow();
+    map.data.addListener('click',ev=>{
+     const message=document.createElement('span');
+     message.textContent=districtInfo({properties:{code:ev.feature.getProperty('code'),nom:ev.feature.getProperty('nom')}});
+     popup.setContent(message);popup.setPosition(ev.latLng);popup.open({map});
+    });
+    const overlay=map.data.toGeoJson; // polygons drawn natively by Google Maps
+    for(const f of features){
+     const each=coords=>{if(Array.isArray(coords)&&coords.length===2&&num(coords[0])&&num(coords[1]))bounds.extend({lat:coords[1],lng:coords[0]});
+       else if(Array.isArray(coords))coords.forEach(each)};
+     each(f.geometry.coordinates);
+    }
+    map.fitBounds(bounds);
+    if(addressPoints.length){
+     const dots=new google.maps.Data({map});
+     dots.addGeoJson({type:'FeatureCollection',features:addressPoints.map((p,i)=>({
+      type:'Feature',id:String(i),geometry:{type:'Point',coordinates:[p.lng,p.lat]},
+      properties:{adresse:p.adresse}}))});
+     dots.setStyle({icon:{path:google.maps.SymbolPath.CIRCLE,scale:1.9,fillColor:'#ec8cba',
+      fillOpacity:.8,strokeOpacity:0}});
+     dots.addListener('click',ev=>{
+      const text=document.createElement('span');text.textContent=(ev.feature.getProperty('adresse')||'Adresse BAN')+
+       ' — adresse géographique, pas un électeur';
+      popup.setContent(text);popup.setPosition(ev.latLng);popup.open({map});
+     });
+    }
+   }
+   async function leafletMap(){
+    const L=await loadLeaflet();
+    if(!wrapper.isConnected)return;
+    const map=L.map(div,{preferCanvas:true,scrollWheelZoom:false}).setView([options.lat||46.73,options.lng||-1.4],10);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+     attribution:'© OpenStreetMap contributors',maxZoom:19
+    }).addTo(map);
+    const polygons=L.geoJSON(featureCollection,{style:f=>({
+     color:f.properties?.code===code?'#283b61':'#fdfdfd',weight:f.properties?.code===code?3:1.2,
+     fillColor:polygonColor(f),fillOpacity:.55
+    }),onEachFeature:(f,l)=>l.bindPopup(districtInfo(f))}).addTo(map);
+    map.fitBounds(polygons.getBounds().pad(.04));
+    const renderer=L.canvas({padding:.5});
+    for(const p of addressPoints){
+     L.circleMarker([p.lat,p.lng],{renderer,radius:2,color:'#fff',weight:.25,
+      fillColor:'#eb87b9',fillOpacity:.85}).bindPopup((p.adresse||'Adresse BAN')+
+       ' — adresse géographique, pas un électeur').addTo(map);
+    }
+    requestAnimationFrame(()=>map.invalidateSize());
+   }
+   try{if(key)await googleMap();else await leafletMap()}
+   catch(e){if(!key)throw e;div.replaceChildren();await leafletMap()}
+  }catch(error){
+   div.replaceChildren();add(div,'p','atlas-map-unavailable','Carte des communes indisponible : '+error.message);
+  }
+ }
+
+ window.AtlasElectionPointMaps={render,renderEpci};
 })();
