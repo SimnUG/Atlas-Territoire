@@ -38,3 +38,11 @@ for endpoint in ['rows','json','csv']:
   u=f'{BASE}/datafiles/{RID}/{endpoint}?'+urllib.parse.urlencode(args)
   raw=get(u)
   print('RPLS FILTER',endpoint,args,raw[:2500],flush=True)
+
+for q in [
+ {'millesime':'2025-01','DEPCOM':'eq:85081','pageSize':'100','page':'1','columns':'X,Y,EPSG,CONSTRUCT,DISTANCE_PRECISION'},
+ {'millesime':'2025-01','DEPCOM':'eq:85081','pageSize':'100','page':'2','columns':'X,Y,EPSG,CONSTRUCT,DISTANCE_PRECISION'}]:
+ raw=get(f'{BASE}/datafiles/{RID}/rows?'+urllib.parse.urlencode(q))
+ try:
+  d=json.loads(raw);print('COORDS SAMPLE',q,'total',d.get('total'),'count',len(d.get('data',[])),'first',str(d.get('data',[])[:2])[:700],flush=True)
+ except:print('COORDS FAIL',q,raw[:500],flush=True)
