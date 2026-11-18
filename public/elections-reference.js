@@ -156,8 +156,8 @@ function behavioral(root,rs){
  ['Exprimés',...rounds.map(r=>n(r.exprimes))]]);
  root.append(el('h3',null,'Évolution du nombre de bulletins blancs et nuls'));
  for(const r of rounds)lineBar(root,r.annee+' · T'+r.tour,
-  r.blancs!=null&&r.nuls!=null?r.blancs+r.nuls:null,
-  r.blancs!=null&&r.nuls!=null?ratio(r.blancs+r.nuls,r.votants):null);
+  typeof r.blancs_nuls==='number'?r.blancs_nuls:r.blancs!=null&&r.nuls!=null?r.blancs+r.nuls:null,
+  typeof r.blancs_nuls==='number'?ratio(r.blancs_nuls,r.votants):r.blancs!=null&&r.nuls!=null?ratio(r.blancs+r.nuls,r.votants):null);
  root.append(el('p','el-muted','Les élections législatives et les bureaux dont les bulletins blancs et nuls ne sont pas distincts ne sont pas artificiellement complétés.'));
 }
 function candidateHistory(root,rs){
