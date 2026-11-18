@@ -2,14 +2,8 @@
   "schema": "ATLAS-RP-LOGEMENT-2023-44-85-v1",
   "date": "2026-11-18",
   "communes_attendues": 460,
-  "communes_indexees": 459,
-  "erreurs": [
-    {
-      "code": "85113",
-      "commune": "L'Île-d'Yeu",
-      "erreur": "Codes INSEE commune / EPCI invalides"
-    }
-  ],
+  "communes_indexees": 460,
+  "erreurs": [],
   "alertes_de_donnees_manquantes": [
     {
       "code": "85165",
