@@ -36,7 +36,7 @@ test('inventaire SRU 2026 : montant net officiel, majoration, année et taux en 
  const tab=sru.readTable([
   'Région;Code Département;Code_INSEE de la commune;Nom de la commune;Nombre de logements locatifs sociaux Inventaire au 1er janvier 2025;Taux SRU au 1er janvier 2025;Taux cible de la commune 2023-2025;Commune déficitaire 2026;Prélèvement net 2026 (dont majoration)',
   'Pays de la Loire;85;85081;Dompierre-sur-Yon;159;0,0832;0,25;Oui;71 261'
- ].join('\\n').replace(/\\n/g,'\n'));
+ ].join('\n'));
  const row=sru.extractRecord(tab,'85081');
  assert.equal(row.taux_sru,8.32);
  assert.equal(row.taux_cible,25);
@@ -52,5 +52,5 @@ test('normaliser sans confondre taux et prélèvement',()=>{
  assert.equal(sru.percentage('0,084'),8.4);
  assert.equal(sru.percentage('8,4'),8.4);
  assert.equal(sru.percentage('0,25'),25);
- assert.equal(sru.number('71\\u202f261,00 €'),71261);
+ assert.equal(sru.number('71\u202f261,00 €'),71261);
 });
