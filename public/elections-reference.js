@@ -62,6 +62,73 @@ function mapFrame(root,city,lat,lon,caption){
  }else box.append(el('div','el-map-placeholder','Localisation cartographique non disponible'));
  box.append(el('p','el-map-note',caption));root.append(box);
 }
+async function renderEpciMap(root,state){
+ const holder=el('div','el-epci-map');root.append(holder);
+ holder.append(el('p','el-muted','Chargement des contours communaux officiels et des nuances municipales 2026…'));
+ try{
+  const code=state.loc?.code_insee;
+  let epci=state.admin?.epci?.code||state.admin?.commune?.code_epci;
+  if(!epci){
+   const req=await fetch('https://geo.api.gouv.fr/communes/'+encodeURIComponent(code)+'?fields=codeEpci,nom');
+   if(!req.ok)throw Error('Référentiel communal indisponible');
+   epci=(await req.json()).codeEpci;
+  }
+  if(!/^[0-9]{9}$/.test(epci||''))throw Error('Périmètre EPCI introuvable');
+  const req=await fetch('https://geo.api.gouv.fr/epcis/'+encodeURIComponent(epci)+'/communes?geometry=contour&format=geojson');
+  if(!req.ok)throw Error('Contours communaux indisponibles');
+  const json=await req.json(),features=Array.isArray(json?.features)?json.features:[];
+  if(!features.length)throw Error('Géométries communales indisponibles');
+  const vertices=[];
+  const rings=geometry=>{
+   if(geometry?.type==='Polygon')return geometry.coordinates||[];
+   if(geometry?.type==='MultiPolygon')return(geometry.coordinates||[]).flat();
+   return [];
+  };
+  for(const feature of features)for(const ring of rings(feature.geometry))
+   for(const [x,y] of ring)if(Number.isFinite(x)&&Number.isFinite(y))vertices.push([x,y]);
+  if(!vertices.length)throw Error('Coordonnées communales absentes');
+  const minX=Math.min(...vertices.map(x=>x[0])),maxX=Math.max(...vertices.map(x=>x[0]));
+  const minY=Math.min(...vertices.map(x=>x[1])),maxY=Math.max(...vertices.map(x=>x[1]));
+  const w=850,h=420,scale=Math.min((w-35)/Math.max(.001,maxX-minX),(h-35)/Math.max(.001,maxY-minY));
+  const px=x=>(x-minX)*scale+(w-(maxX-minX)*scale)/2;
+  const py=y=>h-((y-minY)*scale+(h-(maxY-minY)*scale)/2);
+  const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.setAttribute('viewBox','0 0 '+w+' '+h);svg.setAttribute('role','img');
+  svg.setAttribute('aria-label','Carte des communes de l’EPCI et nuances municipales 2026');
+  const votes=state.electionsData?.nuances_departement_2026||{};
+  const selected=el('div','el-map-detail','Sélectionnez une commune pour voir sa nuance municipale officielle');
+  for(const feature of features){
+   const code=feature.properties?.code||feature.id||'';
+   const name=feature.properties?.nom||code;
+   const winner=votes[code];
+   const fill=winner?nuanceColor(winner.nuance):'#d8dadd';
+   let d='';
+   for(const ring of rings(feature.geometry)){ring.forEach(([x,y],i)=>{
+    d+=(i?' L':' M')+px(x).toFixed(1)+' '+py(y).toFixed(1);
+   });d+=' Z'}
+   const shape=document.createElementNS('http://www.w3.org/2000/svg','path');
+   shape.setAttribute('d',d);shape.setAttribute('fill',fill);
+   shape.setAttribute('stroke',code===state.loc?.code_insee?'#25395e':'#fff');
+   shape.setAttribute('stroke-width',code===state.loc?.code_insee?'3':'1.5');
+   shape.setAttribute('tabindex','0');shape.setAttribute('role','button');
+   const content=name+' · '+(winner?winner.nuance+' · '+winner.liste:'Résultat 2026 non indexé');
+   const title=document.createElementNS('http://www.w3.org/2000/svg','title');title.textContent=content;shape.append(title);
+   shape.addEventListener('click',()=>{selected.textContent=content});
+   shape.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();selected.textContent=content}});
+   svg.append(shape);
+  }
+  const leg=el('div','el-epci-legend');
+  for(const [lab,color] of [['Divers gauche','#ed88bd'],['Divers droite','#4e91d5'],['Centre','#e5ac15'],['Autre / non indexé','#c6c8cc']]){
+   const block=el('span');const dot=el('i');dot.style.background=color;block.append(dot,el('span',null,lab));leg.append(block);
+  }
+  holder.replaceChildren(svg,leg,selected,
+   el('p','el-muted','Contours : API Géo du gouvernement. Couleurs : nuance de la liste arrivée en tête au premier tour des municipales 2026 selon le ministère de l’Intérieur ; gris lorsque le code ou la nuance n’est pas disponible.'));
+ }catch(_){
+  holder.replaceChildren();
+  mapFrame(holder,state.loc?.commune||'',state.loc?.latitude,state.loc?.longitude,
+   'Fond OpenStreetMap. Le coloriage électoral des communes n’est pas disponible pour ce périmètre.');
+ }
+}
 function r2026(data){return data.find(x=>x.annee===2026&&x.tour===1)}
 function commune(root,state,rs){
  const p=panel(root,'Résumé des résultats des dernières élections municipales','Commune · Municipales');
@@ -70,8 +137,7 @@ function commune(root,state,rs){
    w?w.nom+' ('+pct(ratio(w.voix,x.exprimes))+')':'—',w?nuance(w):'—',pct(ratio(x.abstentions,x.inscrits))];
  }));
  const map=panel(root,'Situation de la commune au sein de son EPCI','Fond cartographique officiel OSM ; la couleur électorale n’est appliquée qu’aux territoires dont les résultats sont établis.');
- mapFrame(map,state.loc?.commune||'Commune',state.loc?.latitude,state.loc?.longitude,
- 'Fond OpenStreetMap : localisation de la commune recherchée. Sans résultats vérifiés des communes voisines, aucune nuance politique n’est attribuée à ces territoires.');
+ renderEpciMap(map,state);
  const behavior=section(root,'Comportements électoraux',b=>behavioral(b,rs),false);
  const candidates=section(root,'Résultats par candidats/nuances',b=>candidateHistory(b,rs),false);
  const persona=section(root,'Personae — portrait de la commune',b=>personaContent(b,state),false);
