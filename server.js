@@ -47,6 +47,17 @@ http.createServer(async(req,res)=>{
   if(!privateAccess.allow(req,res))return;
   const url = new URL(req.url,'http://localhost');
   if(req.method!=='GET')return send(res,405,{erreur:'Méthode non autorisée'});
+  if(url.pathname==='/api/elections-officielles'){
+    const code=(url.searchParams.get('code_insee')||'').trim();
+    if(!/^(?:[0-9]{5}|2[AB][0-9]{3})$/i.test(code))return send(res,400,{erreur:'Code INSEE invalide'});
+    try{
+      const file=path.join(PUBLIC,'data','elections-'+code+'.json');
+      const data=JSON.parse(fs.readFileSync(file,'utf8'));
+      return send(res,200,data);
+    }catch(_){
+      return send(res,200,{statut:'indisponible',code_insee:code,scrutins:[],raison:'Les données officielles de cette commune ne sont pas encore indexées'});
+    }
+  }
   if(url.pathname==='/api/catalogue'){
     return send(res,200,catalog.catalogue(url.searchParams.get('categorie')||''));
   }
