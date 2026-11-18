@@ -649,7 +649,7 @@ function ensureSru(){
 }
 function ensureZonageABC(){
  if(!state.loc?.code_insee||state.zonageData||state.zonageRequest)return;
- state.zonageRequest=get('/api/zonage-abc?code_insee='+encodeURIComponent(state.loc.code_insee),30000)
+ state.zonageRequest=get('/api/zonage-abc?code_insee='+encodeURIComponent(state.loc.code_insee),45000)
   .then(data=>{
    state.zonageData=data||{statut:'indisponible'};
    if(state.tab==='zonage')redraw();
