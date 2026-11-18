@@ -1,0 +1,27 @@
+name: Actualiser points cartographiques BAN
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - scripts/build-election-address-points.py
+      - .github/workflows/elections-address-points.yml
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - run: python scripts/build-election-address-points.py
+      - name: Commit validated points
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/data/elections-address-points-85081.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Actualisation des points BAN de Dompierre-sur-Yon"
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
