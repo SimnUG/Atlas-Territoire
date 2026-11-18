@@ -65,10 +65,12 @@ function indexFields(headers){
    h=>/taux/.test(h)&&/(?:cible|legal|objectif|obligation|applicable|a atteindre)/.test(h),
    h=>/^(?:objectif 20 25|objectif en pourcentage)$/.test(h)
   ]),
+  // Colonne officielle : « Prélèvement net 2026 (dont majoration) ».
+  // Préférer impérativement le montant net MAJORATION COMPRISE.
   prelevement:locate(headers,[
    h=>/prelevement/.test(h)&&/net/.test(h)&&/majoration/.test(h),
-   h=>/prelevement/.test(h)&&/net/.test(h),
-   h=>/montant/.test(h)&&/prelevement/.test(h)&&!/brut/.test(h)
+   h=>/prelevement/.test(h)&&/net/.test(h)&&!/hors majoration/.test(h),
+   h=>/montant/.test(h)&&/prelevement/.test(h)&&/net/.test(h)&&!/brut/.test(h)
   ]),
   situation:locate(headers,[
    h=>/^(?:situation de la commune|situation commune|statut commune|statut sru|situation sru)$/.test(h),
@@ -96,7 +98,11 @@ function readTable(csv){
  const headers=rows[first]||[];
  const index=indexFields(headers);
  if(index.code<0)throw Error('Colonne du code INSEE absente de l’inventaire SRU');
- return {headers,index,rows:rows.slice(first+1)};
+ // Ne jamais présenter un prélèvement brut comme un prélèvement net.
+ if(index.prelevement<0)throw Error('Colonne « Prélèvement net (dont majoration) » introuvable dans le CSV officiel');
+ const titrePrelevement=headers[index.prelevement];
+ const anneePrelevement=/\b20\d{2}\b/.exec(titrePrelevement)?.[0]||null;
+ return {headers,index,anneePrelevement,rows:rows.slice(first+1)};
 }
 function select(row,idx){return idx>=0?String(row[idx]??'').trim():''}
 function extractRecord(table,code){
@@ -122,7 +128,10 @@ function extractRecord(table,code){
    situation=taux<objectif?'Commune déficitaire':'Taux cible atteint';
  return {
   statut:'disponible',code_insee:code,commune:select(row,index.commune)||null,
-  taux_sru:taux, taux_cible:objectif, prelevement_net:number(select(row,index.prelevement)),
+  taux_sru:taux, taux_cible:objectif,
+  prelevement_net:number(select(row,index.prelevement)),
+  prelevement_annee:table.anneePrelevement,
+  prelevement_avec_majoration:/majoration/.test(clean(table.headers[index.prelevement])) ,
   situation, exemptee:exempt, carencee:/(?:oui|carencee)/.test(clean(rawCarence))||/carencee/.test(normStatus),
   bilan:'2025-01-01',annee_publication:2026,
   source:{nom:'Inventaire SRU — DGALN/DHUP, ministère du Logement',url:SOURCE,
@@ -135,8 +144,13 @@ async function download(){
   try{
    const r=await fetch(url,{signal:AbortSignal.timeout(20000),headers:{Accept:'text/csv,text/plain;q=0.9,*/*;q=0.1'}});
    if(!r.ok)throw Error('HTTP '+r.status);
-   const text=await r.text();
-   if(text.length<30000||text.length>2000000)throw Error('Taille du fichier SRU inattendue');
+   // Fichiers CSV officiels : parfois ISO-8859-1/Windows-1252 (accents).
+   // Une lecture UTF-8 forcée remplace « Prélèvement » par des caractères invalides.
+   const buffer=await r.arrayBuffer();
+   if(buffer.byteLength<30000||buffer.byteLength>2000000)throw Error('Taille du fichier SRU inattendue');
+   let text;
+   try{text=new TextDecoder('utf-8',{fatal:true}).decode(buffer)}
+   catch(_){text=new TextDecoder('windows-1252').decode(buffer)}
    const table=readTable(text);
    if(table.rows.length<1500)throw Error('Inventaire SRU incomplet');
    return table;
