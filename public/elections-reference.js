@@ -236,8 +236,9 @@ function bureauOverview(root,state,rs){
  filter.append(options,status);
  const best=panel(root,'Où '+(selected||'le candidat sélectionné')+' fait ses meilleurs scores','Bureaux classés par score réel, sans interpolation des adresses des électeurs.');
  const holder=el('div','el-bureau-columns'),map=el('div'),ranking=el('div');
- mapFrame(map,state.loc?.commune||'',state.loc?.latitude,state.loc?.longitude,
- 'Point central de la commune ; les électeurs ne sont pas géolocalisés.');
+ window.AtlasElectionPointMaps?.render(map,{
+  code:state.loc?.code_insee,lat:state.loc?.latitude,lng:state.loc?.longitude,color:'#ee86b9'
+ });
  holder.append(map,ranking);best.append(holder);
  function renderRanking(){
   ranking.replaceChildren();status.textContent='Candidat étudié : '+selected;
@@ -303,8 +304,9 @@ function typologies(root,state,rs){
  const candidates=latest?.candidats||[];
  for(const candidate of candidates.slice(0,3)){
   section(root,candidate.nom+' — résultats par bureau',body=>{
-   mapFrame(body,state.loc?.commune||'',state.loc?.latitude,state.loc?.longitude,
-    'Les cartes géographiques correspondent à la localisation de la commune, pas aux adresses des électeurs.');
+   window.AtlasElectionPointMaps?.render(body,{
+    code:state.loc?.code_insee,lat:state.loc?.latitude,lng:state.loc?.longitude,color:'#16a05d'
+   });
    const rows=offices.map(b=>({b,score:ratio(b.candidats.find(x=>x.nom===candidate.nom)?.voix,b.exprimes)}));
    createTable(body,['Bureau de vote','Score du candidat','Typologie'],rows.map(({b,score})=>[
     b.code,pct(score),candidates.length===1?'Sans opposition':score>=60?'Large victoire':score>=50?'Victoire disputée':score>=40?'Courte défaite':'Large défaite'
