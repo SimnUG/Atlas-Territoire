@@ -1,0 +1,14 @@
+name: Vérifier SDES RPLS 2025 communes archive
+on:
+  push:
+    paths: [scripts/probe-rpls-national.py,.github/workflows/probe-rpls-national.yml]
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - run: python -m pip install openpyxl -q
+      - run: python scripts/probe-rpls-national.py
