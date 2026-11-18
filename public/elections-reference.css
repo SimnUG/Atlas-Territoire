@@ -90,3 +90,9 @@
 .election-root .atlas-map-point-label{font-size:10px;background:#ffffffed;color:#64738a;padding:5px 8px;border-radius:5px;width:max-content}
 .election-root .atlas-map-unavailable{padding:80px 20px;text-align:center;font-size:12px;color:#748099}
 .election-root .atlas-point-map .leaflet-container{font:inherit}
+
+.election-root .atlas-epci-roadmap .atlas-point-map-canvas{height:500px}
+.election-root .atlas-epci-map-legend{display:flex;gap:16px;flex-wrap:wrap;align-items:center;padding:12px 15px;background:#fff;border-top:1px solid #e4e8ed}
+.election-root .atlas-epci-map-legend span{display:inline-flex;align-items:center;gap:6px}
+.election-root .atlas-epci-map-legend span i{width:12px;height:12px;border-radius:50%;display:inline-block}
+.election-root .atlas-epci-map-legend span small{font-size:10px;color:#56647d}
