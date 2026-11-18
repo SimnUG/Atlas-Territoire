@@ -176,16 +176,48 @@ function candidateHistory(root,rs){
   root.append(box);
  }
 }
-function personaContent(root,state){
- const data=state.analysis;
- root.append(el('p','el-muted','Portrait de la commune établi exclusivement à partir des statistiques INSEE disponibles, sans profil électoral individuel déduit.'));
- const age=data?.demographie_detail?.tranches_age||[];
- if(Array.isArray(age)&&age.length){
-  root.append(el('h3',null,'Population par tranche d’âge — INSEE'));
-  const max=Math.max(1,...age.map(x=>x.valeur||0));
-  for(const x of age)lineBar(root,x.libelle||x.label||'Tranche d’âge',x.valeur,ratio(x.valeur,max),'#f2d300');
- }else root.append(el('p','el-muted','Les tableaux INSEE du portrait ne sont pas encore disponibles pour cette adresse.'));
+function personaCards(root,title,items,unit='habitants'){
+ const good=(items||[]).filter(x=>typeof x?.value==='number'&&Number.isFinite(x.value));
+ if(!good.length)return;
+ const section=el('section','el-persona-section');section.append(el('h3',null,title));
+ const grid=el('div','el-persona-grid'),groups=[
+  ['Populations les plus représentées',[...good].sort((a,b)=>b.value-a.value).slice(0,2)],
+  ['Populations les plus dynamiques',[...good].filter(x=>typeof x.change==='number').sort((a,b)=>b.change-a.change).slice(0,2)]
+ ];
+ for(const [label,arr] of groups){
+  const container=el('div','el-persona-group');container.append(el('h4',null,label));
+  const cards=el('div','el-persona-cards');
+  for(const item of arr){
+   const card=el('div','el-persona-card');const circle=el('div','el-persona-circle',pct(item.share));
+   circle.style.setProperty('--share',(typeof item.share==='number'?Math.max(0,Math.min(100,item.share)):0)+'%');
+   card.append(el('h5',null,item.label),el('p',null,n(item.value)+' '+unit),circle,
+    el('small',null,typeof item.change==='number'?'Évolution : '+(item.change>0?'+':'')+pct(item.change):'Évolution non disponible'));
+   cards.append(card);
+  }
+  container.append(cards);grid.append(container);
+ }
+ section.append(grid);root.append(section);
 }
+function personaContent(root,state){
+ root.append(el('p','el-muted','Portrait sociodémographique issu exclusivement du recensement INSEE 2023. Ce sont des caractéristiques communales : elles ne permettent pas d’inférer le vote d’un ménage ou d’un électeur.'));
+ const ages=['Moins de 15 ans','15 à 24 ans','25 à 39 ans','40 à 54 ans','55 à 64 ans','65 à 79 ans','80 ans et plus'];
+ const pcs=['Agriculteurs exploitants','Artisans, commerçants, chefs d’entreprise','Cadres et prof. intellectuelles supérieures','Professions intermédiaires','Employés','Ouvriers','Retraités','Autres personnes sans activité'];
+ const education=state.electionsPersona?.diplomes||null;
+ const pop=state.populationData?.sections||{};
+ const employment=state.employmentData?.sections||{};
+ const mapRows=(source,labels)=>source?.rows?.map((x,i)=>({...x,label:labels[i]||'Catégorie '+(i+1)}))||[];
+ personaCards(root,'Population par tranche d’âge',mapRows(pop.ages?.commune,ages));
+ personaCards(root,'Population par catégorie socioprofessionnelle',mapRows(pop.csp?.commune,pcs));
+ if(education?.rows?.length)personaCards(root,'Population par niveau de diplôme',education.rows,'personnes');
+ personaCards(root,'Actifs occupés, chômeurs, inactifs — 15 à 64 ans',
+  mapRows(employment.activite?.commune,['Actifs occupés','Chômeurs','Inactifs']));
+ const tenure=state.electionsPersona?.occupation||null;
+ if(tenure?.rows?.length)personaCards(root,'Résidences principales / statut d’occupation',tenure.rows,'résidences principales');
+ const move=state.electionsPersona?.anciennete||null;
+ if(move?.rows?.length)personaCards(root,'Résidences principales / ancienneté d’emménagement',move.rows,'résidences principales');
+ if(!root.querySelector('.el-persona-section'))root.append(el('p','el-muted','Récupération des tableaux sociodémographiques INSEE en cours.'));
+}
+
 function bureauOverview(root,state,rs){
  const latest=r2026(rs)||rs[0];
  const offices=latest?.bureaux||[];
@@ -268,6 +300,7 @@ function typologies(root,state,rs){
   },candidate===candidates[0]);
  }
 }
+let selectedTab='commune';
 function render(root,state){
  root.classList.add('election-root');
  const data=state.electionsData,rs=Array.isArray(data?.scrutins)?sorted(data.scrutins):[];
@@ -275,7 +308,7 @@ function render(root,state){
  const layout=el('div','el-layout'),nav=el('aside','el-local-nav'),body=el('div','el-election-content');
  const title=el('div','el-local-city','⌖  '+(state.loc?.commune||'Commune étudiée'));nav.append(title,el('h4',null,'COMMUNE'));
  const links=[['commune',"Résultats de l'élection municipale"],['vision',"Vision d'ensemble"],['details','Résultats détaillés'],['typologies','Résultats détaillés typologies de score']];
- let active='commune';
+ let active=selectedTab;
  const area=el('div');
  function draw(){
   area.replaceChildren();
@@ -292,7 +325,7 @@ function render(root,state){
  for(const [id,name] of links){
   if(id==='vision')nav.append(el('h4',null,'BUREAU DE VOTE'));
   const b=makeBtn(name,'el-local-button'+(id===active?' active':''));
-  b.onclick=()=>{active=id;nav.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===b));draw()};
+  b.onclick=()=>{active=id;selectedTab=id;nav.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===b));draw()};
   nav.append(b);
  }
  body.append(area);layout.append(nav,body);root.append(layout);
