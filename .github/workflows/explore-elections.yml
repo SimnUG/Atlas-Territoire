@@ -1,0 +1,15 @@
+name: Explorer sources électorales officielles
+on:
+  push:
+    paths:
+      - 'scripts/explore-elections.py'
+      - '.github/workflows/explore-elections.yml'
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - run: python scripts/explore-elections.py
