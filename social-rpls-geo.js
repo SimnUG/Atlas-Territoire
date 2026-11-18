@@ -7,7 +7,7 @@ const DATA=path.join(__dirname,'public','data');
 const BASE='https://data.statistiques.developpement-durable.gouv.fr/dido/api/v1/datafiles/f3c2f2cb-8fb1-40fd-8733-964247744c9a/rows';
 const MAX_RECORDS=2500;
 const CACHE=new Map();
-const n=x=>{const v=Number(x);return Number.isFinite(v)?v:null};
+const n=x=>{if(x===null||x===undefined||x==='')return null;const v=Number(x);return Number.isFinite(v)?v:null};
 const round=(v,p=6)=>+v.toFixed(p);
 const RAD=Math.PI/180;
 function lambert93(x,y){
