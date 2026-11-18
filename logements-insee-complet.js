@@ -34,7 +34,7 @@ function getIndexed(commune,epci){
   }catch(_){REGIONAL_INDEX=null}
  }
  const value=REGIONAL_INDEX?.[commune];
- return value?.statut==='disponible'&&value.epci?.code===epci?value:null;
+ return value?.statut==='disponible'&&(!epci||value.epci?.code===epci)?value:null;
 }
 
 const MELODI_CACHE=new Map();
@@ -231,9 +231,13 @@ async function loadRemote({commune,epci,nomCommune,nomEpci}){
 }
 async function logement(args){
  const code=String(args?.commune||''),epci=String(args?.epci||'');
- if(!VALID_COMMUNE.test(code)||!VALID_EPCI.test(epci))throw Object.assign(new Error('Codes INSEE commune / EPCI invalides'),{status:400});
- const indexed=getIndexed(code,epci);
+ if(!VALID_COMMUNE.test(code)||(epci&&!VALID_EPCI.test(epci)))throw Object.assign(new Error('Codes INSEE commune / EPCI invalides'),{status:400});
+ // Dans les départements 44 et 85, l'index officiel est identifié PAR COMMUNE.
+ // Ne jamais écarter les données si le profil administratif renvoie un autre EPCI
+ // (retard de synchronisation, fusion communale ou indisponibilité du service).
+ const indexed=getIndexed(code);
  if(indexed)return indexed;
+ if(!epci)throw Object.assign(new Error('Commune non disponible dans la base locale INSEE. Code EPCI requis pour le repli en ligne.'),{status:404});
  const id=code+'/'+epci;
  const cached=DATA_CACHE.get(id);
  if(cached&&cached.expire>Date.now())return cached.promise;
