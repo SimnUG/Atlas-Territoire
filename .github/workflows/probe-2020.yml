@@ -1,0 +1,12 @@
+name: Schéma officiel bureaux municipales 2020
+on:
+  push:
+    paths: ['scripts/probe-2020.py','.github/workflows/probe-2020.yml']
+permissions: {contents: read}
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - run: python scripts/probe-2020.py
