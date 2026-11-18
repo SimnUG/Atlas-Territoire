@@ -8,6 +8,8 @@ def get(url):
    b=r.read(350000)
    print('HTTP',r.status,'LEN',len(b),'TYPE',r.headers.get('Content-Type'),'URL',r.geturl(),flush=True)
    return b.decode('utf-8-sig','replace')
+ except urllib.error.HTTPError as e:
+  print('HTTP ERROR',e.code,'DETAIL',e.read(1800).decode('utf8','replace'),'URL',url,flush=True);return ''
  except Exception as e:
   print('ERROR',repr(e),'URL',url,flush=True);return ''
 u=f'{BASE}/datafiles/{RID}'
@@ -27,3 +29,12 @@ for q in [{'pageSize':'1'}, {'pageSize':'5','CODE_COMMUNE':'85081'}, {'pageSize'
 # Optional catalogue API
 raw=get(f'{BASE}/datasets/6390f7cb84f0679b04942fc2')
 print('CATALOGUE',raw[:3500],flush=True)
+
+for endpoint in ['rows','json','csv']:
+ for args in [
+  {'millesime':'2025-01','DEPCOM':'eq:85081','page':1,'pageSize':5},
+  {'millesime':'2025-01','DEPCOM':'eq:85081'},
+ ]:
+  u=f'{BASE}/datafiles/{RID}/{endpoint}?'+urllib.parse.urlencode(args)
+  raw=get(u)
+  print('RPLS FILTER',endpoint,args,raw[:2500],flush=True)
