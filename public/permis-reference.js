@@ -20,7 +20,7 @@
   if(state.period==='recent10')yrmin=2017;
   if(state.period==='until2025')yrmax=2025;
   return rows.map(r=>({record:r,qty:entryNum(r)})).filter(x=>x.record.annee>=yrmin&&x.record.annee<=yrmax&&
-   typeof x.qty==='number'&&x.qty>0&&x.qty>=state.size);
+   typeof x.qty==='number'&&x.qty>0&&x.record.nombre>=state.size);
  }
  function yearRange(){return state.period==='recent5'?[2022,2026]:state.period==='recent10'?[2017,2026]:state.period==='until2025'?[2013,2025]:[2013,2026]}
  function cumulative(rows){return rows.reduce((sum,r)=>sum+r.qty,0)}
@@ -90,8 +90,9 @@
  }
  function kpiSet(rows){
   const sum=cumulative(rows),total=rows.length;
-  const med=median(rows.map(x=>x.qty));
+  const med=median(rows.map(x=>x.record.nombre));
   const apartment=rows.reduce((s,x)=>s+(x.record.col||0),0);
+  const totalAll=rows.reduce((s,x)=>s+x.record.nombre,0);
   const known=rows.filter(x=>duration(x.record)!==null).map(x=>duration(x.record));
   const noDoc=rows.filter(x=>!x.record.date_doc);
   const lost=cumulative(noDoc);
@@ -99,7 +100,7 @@
   block.append(kpi('Logements autorisés',f(sum),f(total)+' opérations retenues',true));
   block.append(kpi('Opérations',f(total),'permis de construire (PC)'));
   block.append(kpi('Taille médiane',f(med),'logements par opération'));
-  block.append(kpi('Poids des appartements',pct(sum?apartment/sum*100:null),'des logements retenus'));
+  block.append(kpi('Poids des appartements',pct(totalAll?apartment/totalAll*100:null),'des logements retenus'));
   block.append(kpi('Délai médian d’ouverture',known.length?decimal.format(median(known))+' mois':'—','Base : '+f(known.length)+' opérations'));
   block.append(kpi('Sans ouverture renseignée',f(lost),f(noDoc.length)+' opérations concernées',true));
   return block;
@@ -410,7 +411,7 @@
   const known=data.map(x=>duration(x.record)).filter(x=>x!==null);
   summary.append(kpi('Logements',f(cumulative(data)),'sur le périmètre filtré',true));
   summary.append(kpi('Opérations',f(data.length),'permis retenus'));
-  summary.append(kpi('Taille médiane',f(median(data.map(x=>x.qty))),'logements par opération'));
+  summary.append(kpi('Taille médiane',f(median(data.map(x=>x.record.nombre))),'logements par opération'));
   summary.append(kpi('Sans ouverture renseignée',f(cumulative(data.filter(x=>!x.record.date_doc))),f(data.filter(x=>!x.record.date_doc).length)+' opérations',true));
   rootRef.append(summary,mapBox(data,loc),table(data),footnote());
  }
