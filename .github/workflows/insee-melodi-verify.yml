@@ -1,0 +1,17 @@
+name: Inspecter API INSEE Melodi migrations
+on:
+  push:
+    paths:
+      - '.github/workflows/insee-melodi-verify.yml'
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node scripts/inspect-insee-melodi.js
