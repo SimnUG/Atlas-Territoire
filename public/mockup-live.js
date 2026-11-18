@@ -1,7 +1,7 @@
 'use strict';
 const $ = id=>document.getElementById(id);
 const requested=new URLSearchParams(location.search).get('adresse')||'';
-const state={loc:null,analysis:null,housing:null,rent:null,planning:null,risk:null,admin:null,extras:null,populationData:null,populationRequest:null,familiesData:null,familiesRequest:null,employmentData:null,employmentRequest:null,salariesData:null,salariesRequest:null,revenusData:null,revenusRequest:null,migrationsData:null,migrationsRequest:null,migrationsDetail:null,migrationsDetailRequest:null,migrationsMelodi:null,migrationsMelodiRequest:null,electionsData:null,electionsRequest:null,electionsPersona:null,electionsPersonaRequest:null,logementsReference:null,logementsReferenceRequest:null,socialData:null,socialRequest:null,socialGeoRequest:null,socialGeoDone:false,tab:['population','familles','emploi','salaires','revenus','migrations','elections','logements','social'].includes(new URLSearchParams(location.search).get('onglet'))?new URLSearchParams(location.search).get('onglet'):'programmation'};
+const state={loc:null,analysis:null,housing:null,rent:null,planning:null,risk:null,admin:null,extras:null,populationData:null,populationRequest:null,familiesData:null,familiesRequest:null,employmentData:null,employmentRequest:null,salariesData:null,salariesRequest:null,revenusData:null,revenusRequest:null,migrationsData:null,migrationsRequest:null,migrationsDetail:null,migrationsDetailRequest:null,migrationsMelodi:null,migrationsMelodiRequest:null,electionsData:null,electionsRequest:null,electionsPersona:null,electionsPersonaRequest:null,logementsReference:null,logementsReferenceRequest:null,logementsError:null,socialData:null,socialRequest:null,socialGeoRequest:null,socialGeoDone:false,tab:['population','familles','emploi','salaires','revenus','migrations','elections','logements','social'].includes(new URLSearchParams(location.search).get('onglet'))?new URLSearchParams(location.search).get('onglet'):'programmation'};
 const fmt=new Intl.NumberFormat('fr-FR',{maximumFractionDigits:1});
 const elem=(tag,cls,value)=>{const a=document.createElement(tag);if(cls)a.className=cls;if(value!==undefined&&value!==null)a.textContent=String(value);return a};
 const append=(parent,...children)=>(parent.append(...children.filter(Boolean)),parent);
@@ -601,15 +601,31 @@ function ensureElections(){
  .finally(()=>{state.electionsRequest=null});
 }
 function ensureLogementsReference(){
- if(!state.loc?.code_insee||state.logementsReference||state.logementsReferenceRequest)return;
- const code=state.loc.code_insee;
- if(code!=='85081')return; // Pas de réutilisation de chiffres communaux sur un autre territoire.
- state.logementsReferenceRequest=get('/data/logements-'+code+'.json',18000)
- .then(data=>{if(data?.historique?.total&&data?.tableaux?.length===5){
-   state.logementsReference=data;
+ if(!state.loc?.code_insee||!state.admin||state.logementsReference||state.logementsReferenceRequest)return;
+ const epci=state.admin?.epci?.code||state.admin?.commune?.code_epci||'';
+ if(!/^[0-9]{9}$/.test(epci)){
+   state.logementsError="Le code de l'intercommunalité n'a pas pu être identifié pour cette adresse.";
    if(state.tab==='logements')redraw();
- }})
- .finally(()=>{state.logementsReferenceRequest=null});
+   return;
+ }
+ const params=new URLSearchParams({
+   code_insee:state.loc.code_insee,
+   code_epci:epci,
+   nom_commune:state.loc.commune||'',
+   nom_epci:state.admin?.epci?.nom||''
+ });
+ state.logementsError=null;
+ state.logementsReferenceRequest=get('/api/logements-insee-complet?'+params,100000)
+  .then(data=>{
+   if(data?.statut==='disponible'&&data?.historique?.total?.commune?.length===9&&data?.tableaux?.length===5){
+     state.logementsReference=data;
+     state.logementsError=null;
+   }else{
+     state.logementsError=data?.erreur||'Les séries officielles INSEE sont temporairement indisponibles pour ce territoire.';
+   }
+   if(state.tab==='logements')redraw();
+  })
+  .finally(()=>{state.logementsReferenceRequest=null});
 }
 function ensureSocialGeo(){
  if(!state.loc?.code_insee||!state.socialData||state.socialGeoRequest||state.socialGeoDone)return;
@@ -650,7 +666,7 @@ async function load(){
  const l=state.loc,q=new URLSearchParams({code_insee:l.code_insee,adresse:l.adresse||requested,code_postal:l.code_postal||'',ban_id:l.ban_id||''});
  await Promise.all([
   (async()=>{state.analysis=await get('/api/indicateurs?'+q,93000);redraw()})(),
-  (async()=>{state.admin=await get('/api/profil-administratif?code_insee='+encodeURIComponent(l.code_insee),18000)||{};redraw();if(state.tab==='population')ensurePopulation();if(state.tab==='familles')ensureFamilies();if(state.tab==='emploi')ensureEmployment();if(state.tab==='salaires')ensureSalaries();if(state.tab==='revenus')ensureRevenus();if(state.tab==='migrations'){ensureMigrations();ensureMigrationsMelodi();ensureMigrationsDetail()}if(state.tab==='elections'){ensureElections();ensurePopulation();ensureEmployment()}})(),
+  (async()=>{state.admin=await get('/api/profil-administratif?code_insee='+encodeURIComponent(l.code_insee),18000)||{};redraw();if(state.tab==='logements')ensureLogementsReference();if(state.tab==='population')ensurePopulation();if(state.tab==='familles')ensureFamilies();if(state.tab==='emploi')ensureEmployment();if(state.tab==='salaires')ensureSalaries();if(state.tab==='revenus')ensureRevenus();if(state.tab==='migrations'){ensureMigrations();ensureMigrationsMelodi();ensureMigrationsDetail()}if(state.tab==='elections'){ensureElections();ensurePopulation();ensureEmployment()}})(),
   (async()=>{state.extras=await get('/api/etude-complements?code_insee='+encodeURIComponent(l.code_insee),33000);redraw()})(),
   (async()=>{state.housing=await get('/api/logements-detail?code_insee='+encodeURIComponent(l.code_insee),65000);redraw()})(),
   (async()=>{state.rent=await get('/api/loyers?code_insee='+encodeURIComponent(l.code_insee),60000);redraw()})(),
