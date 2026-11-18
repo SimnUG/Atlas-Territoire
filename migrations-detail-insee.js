@@ -120,6 +120,8 @@ async function detail(code){
  const hit=CACHE.get(code);
  if(hit&&hit.until>Date.now())return hit.value;
  const promise=(async()=>{
+  const predownloaded=process.env.MIGCOM_ZIP;
+  if(predownloaded&&fs.existsSync(predownloaded))return compileZip(predownloaded,code);
   const dir=await fs.promises.mkdtemp(path.join(os.tmpdir(),'atlas-insee-mig-'));
   const target=path.join(dir,'RP2023_migcom.zip');
   try{
@@ -143,4 +145,4 @@ async function detail(code){
   return result;
  }catch(e){CACHE.delete(code);throw e}
 }
-module.exports={detail,GROUPS,SOURCE,precomputed};
+module.exports={detail,GROUPS,SOURCE,precomputed,compileZip};
