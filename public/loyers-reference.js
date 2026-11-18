@@ -124,7 +124,7 @@
   const data=years.map(y=>current?.rentYield?.annees?.[y]?.[kind.id]||null);
   const found=data.map(r=>r?.rendement).filter(any);
   if(!found.length){
-   p.append(el('p','rp-missing','Aucune année ne réunit un loyer et un prix de vente au m² vérifiés (au moins 5 ventes du segment).'));
+   p.append(el('p','rp-missing',!current?.rentYield?'Vérification des prix DVF+ en cours…':'Aucune année ne réunit un loyer et un prix de vente au m² vérifiés (au moins 5 ventes du segment).'));
    return p;
   }
   const last=[...data].reverse().find(x=>any(x?.rendement));
@@ -183,7 +183,9 @@
   const med=comparison(state.ranking,2025);
   p.insertBefore(el('p','rp-rank-note',(rank?current.loc.commune+' se classe '+rank+'e sur '+rows.length+' communes. ':'')+
     (med?'Médiane : '+decimal(med)+' €/m².':'Médiane non disponible.')),tabs);
-  const max=Math.max(1,...rows.map(x=>x.value)),shown=state.showAll?rows:rows.slice(0,13);
+  const max=Math.max(1,...rows.map(x=>x.value));
+  const chosen=rows.find(x=>x.code===target);
+  const shown=state.showAll?rows:(chosen&&!rows.slice(0,13).includes(chosen)?[...rows.slice(0,12),chosen]:rows.slice(0,13));
   for(const c of shown){
    const selected=c.code===target,line=el('div','rp-ranking-row'+(selected?' selected':''));
    const name=el('span','rp-rank-name',c.nom),track=el('div','rp-track');
