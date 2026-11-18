@@ -46,7 +46,12 @@ function locateHeader(rows){
  for(let i=0;i<Math.min(rows.length,25);i++){
   const headers=rows[i].map(clean);
   const code=headers.findIndex(h=>/^(?:codeinsee|codecog|codegeo|codecommune|codeinseedelacommune|codgeo|codcom|insee|codeinseecommune)$/.test(h)||/^(?:codeinsee|codecommune)/.test(h));
-  const zone=headers.findIndex(h=>/^(?:zonageabc|zoneabc|zonage2026|zone2026|zonage|classement|zone|zonageabcen vigueur|zoneabc2026)/.test(h)&&!/(?:avant|ancien|precedent|2025|reclassement|historique|origine)/.test(h));
+  // S'il existe plusieurs colonnes historiques, la zone en vigueur en 2026 prime.
+  const possible=headers.map((h,j)=>({h,j}))
+   .filter(({h})=>/^(?:zonageabc|zoneabc|zonage2026|zone2026|zonage|classement|zone)/.test(h))
+   .filter(({h})=>!/(?:avant|ancien|precedent|reclassement|historique|origine|20(?:0[0-9]|1[0-9]|2[0-5]))/.test(h))
+   .sort((a,b)=>((/2026|envigueur/.test(b.h)?1:0)-(/2026|envigueur/.test(a.h)?1:0)));
+  const zone=possible[0]?.j??-1;
   if(code>=0&&zone>=0)return {index:i,code,zone,headers:rows[i]};
  }
  return null;
