@@ -1,0 +1,25 @@
+name: Indexer municipales officielles 2026 pour 44 et 85
+on:
+  push:
+    paths:
+      - scripts/build-elections-2026-44-85.py
+      - .github/workflows/build-elections-2026-44-85.yml
+  workflow_dispatch:
+permissions: {contents: write}
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - run: python scripts/build-elections-2026-44-85.py
+      - name: Publier la base des résultats municipaux
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/data/elections-2026-44-85.json.gz public/data/elections-2026-44-85-couverture.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Indexer les municipales 2026 officielles des communes 44 et 85"
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
