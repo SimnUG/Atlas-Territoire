@@ -69,7 +69,9 @@ def office(num_bv,ins,vot,exp,blanc,nul,abst,candidates):
 def from2026(year,round_no,raw,url):
  found=[]
  it=csv.DictReader(io.StringIO(text(raw)),delimiter=';')
- for r in it:
+ for idx,r in enumerate(it):
+  if idx==0:print('DEBUG2026 HEAD',repr({k:v for k,v in list(r.items())[:10]}),flush=True)
+  if 'DOMPIERRE' in repr(r).upper() and 'YON' in repr(r).upper():print('DEBUG2026 DOMPIERRE',repr({k:v for k,v in list(r.items())[:36]}),flush=True)
   if not city(r.get('Code département'),r.get('Code commune')):continue
   candidates=[]
   for i in range(1,32):
