@@ -1,0 +1,29 @@
+name: Indexer toutes les communes 44 et 85 — INSEE Logements
+on:
+  push:
+    paths:
+      - scripts/index-logements-44-85.js
+      - .github/workflows/index-logements-44-85.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  index:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Extraire les données officielles par commune et EPCI
+        run: node scripts/index-logements-44-85.js
+      - name: Publier l’index vérifié
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/data/logements-44-85-2023.json.gz public/data/logements-44-85-couverture.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Pré-indexer tous les logements INSEE des départements 44 et 85"
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
