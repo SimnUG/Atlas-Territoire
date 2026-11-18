@@ -10,7 +10,7 @@ ZIP_URL='https://www.statistiques.developpement-durable.gouv.fr/media/8938/downl
 API='https://data.statistiques.developpement-durable.gouv.fr/dido/api/v1/datafiles/f3c2f2cb-8fb1-40fd-8733-964247744c9a/json?millesime=2025-01&DEPCOM=eq:85081'
 SOURCE_SITE='https://www.statistiques.developpement-durable.gouv.fr/54-millions-de-logements-locatifs-sociaux-en-france-au-1er-janvier-2025'
 FIELDS=list(range(3,10))+list(range(15,27))+list(range(27,39))+list(range(75,82))+list(range(104,117))+list(range(130,143))+list(range(143,156))+list(range(171,182))
-assert len(FIELDS)==85
+assert len(FIELDS)==88
 def download(url):
  req=urllib.request.Request(url,headers={'User-Agent':'Mozilla/5.0 (Atlas Territoires; RPLS OpenData)'})
  with urllib.request.urlopen(req,timeout=170) as r:return r.read()
