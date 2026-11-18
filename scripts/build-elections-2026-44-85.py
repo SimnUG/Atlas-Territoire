@@ -67,7 +67,7 @@ def aggregate(annee,tour,rows,url):
  return {code:len(rows) for code,rows in group.items()}
 for tour,slug,label in DATASETS:
  with req(BASE+slug+'/') as resp:meta=json.load(resp)
- candidates_meta=[x for x in meta['resources'] if label.lower() in (x.get('title') or '').lower() and
+ candidates_meta=[x for x in meta['resources'] if (x.get('title') or '').startswith('Municipales 2026 - ') and label.lower() in (x.get('title') or '').lower() and
   ('csv' in (x.get('format') or '').lower() or '.csv' in (x.get('url') or ''))]
  if len(candidates_meta)!=1:raise RuntimeError('Ambiguous official resource '+slug+str([x['title'] for x in candidates_meta]))
  u=candidates_meta[0]['url']
