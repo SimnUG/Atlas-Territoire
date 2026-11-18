@@ -59,6 +59,8 @@
   const right=elem('div','pc-top-right');
   right.append(elem('small','pc-eyebrow','QUARTIER À AFFICHER'));
   const quart=dropdown('Quartier à afficher',[['commune','Commune seule']],'commune',()=>{},'pc-quarter');
+  quart.disabled=true;
+  quart.title='Comparaison par quartier en attente d’un découpage IRIS officiel vérifié';
   right.append(quart);top.append(left,right);return top;
  }
  function selectorLine(){
@@ -415,7 +417,11 @@
  function footnote(){
   const div=elem('div','pc-footnote');
   div.append(elem('span',null,'ⓘ'),elem('p',null,'Source : Sitadel (SDES — Ministère de la Transition écologique) · Permis de construire créant des logements, depuis 2013. L’état final enregistré est autorisé, commencé ou terminé ; les PC annulés et les déclarations préalables sont exclus. Les logements mixtes ne sont comptés que pour le type choisi. Les données 2026 sont provisoires et ne doivent pas être assimilées aux statistiques DR++ estimées. La géolocalisation repose sur la Base Adresse Nationale ; une opération non géocodée reste comptée dans les indicateurs. '));
-  div.lastChild.append(link('Source officielle et licence',sourceURL));return div;
+  div.lastChild.append(link('Source officielle et licence Sitadel',sourceURL));
+  div.lastChild.append(document.createTextNode(' · Géocodage : '));
+  div.lastChild.append(link('Géoplateforme — IGN / BAN','https://data.geopf.fr/geocodage/search'));
+  div.lastChild.append(document.createTextNode(' — Licence Ouverte 2.0.'));
+  return div;
  }
  function render(root,siteState){
   rootRef=root;sourceState=siteState;
