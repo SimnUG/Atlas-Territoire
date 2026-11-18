@@ -1,0 +1,26 @@
+name: Construire répertoire officiel RPLS 2025
+on:
+  push:
+    paths:
+      - scripts/build-social-rpls.py
+      - .github/workflows/build-social-rpls.yml
+  workflow_dispatch:
+permissions: {contents: write}
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - run: python -m pip install -q openpyxl pyproj
+      - run: python scripts/build-social-rpls.py
+      - name: Publier les données vérifiées
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/data/rpls-2025-communes.json.gz public/data/rpls-geo-85081.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Indexer les données RPLS 2025 pour toutes les communes et les géolocalisations de Dompierre"
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
