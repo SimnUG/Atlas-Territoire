@@ -26,7 +26,12 @@ function growth(n){
 function lineChart(root,points,color){
  const width=760,height=230,pad={l:48,r:24,t:23,b:35};
  const innerW=width-pad.l-pad.r,innerH=height-pad.t-pad.b;
- const values=points.map(x=>x.valeur);
+ const valid=points.filter(x=>typeof x.valeur==='number'&&Number.isFinite(x.valeur));
+ if(valid.length<2){
+  root.append(elm('div','lg-chart-unavailable','Série historique INSEE non disponible pour ce territoire.'));
+  return;
+ }
+ const values=valid.map(x=>x.valeur);
  const max=Math.max(1,...values);
  const nice=(value)=>{
   const base=Math.pow(10,Math.floor(Math.log10(value||1))),n=value/base;
@@ -43,7 +48,8 @@ function lineChart(root,points,color){
  }
  chart.append(svg('line',{x1:pad.l,y1:pad.t,x2:pad.l,y2:height-pad.b,stroke:'#b6bcc7','stroke-width':1}),
               svg('line',{x1:pad.l,y1:height-pad.b,x2:width-pad.r,y2:height-pad.b,stroke:'#b6bcc7','stroke-width':1}));
- const path=points.map((p,i)=>{
+ const allValid=valid.length===points.length;
+ const path=allValid?points.map((p,i)=>{
   if(!i)return 'M'+x(i).toFixed(2)+' '+y(p.valeur).toFixed(2);
   const prev=points[i-1],pp=points[Math.max(0,i-2)],next=points[Math.min(points.length-1,i+1)];
   const cp1x=x(i-1)+(x(i)-x(Math.max(0,i-2)))/6;
@@ -51,13 +57,19 @@ function lineChart(root,points,color){
   const cp2x=x(i)-(x(i+1>=points.length?i:i+1)-x(i-1))/6;
   const cp2y=y(p.valeur)-(y(next.valeur)-y(prev.valeur))/6;
   return 'C'+[cp1x,cp1y,cp2x,cp2y,x(i),y(p.valeur)].map(q=>q.toFixed(2)).join(' ');
+ }).join(' '):points.map((p,i)=>{
+  if(typeof p.valeur!=='number'||!Number.isFinite(p.valeur))return '';
+  const previous=points[i-1]?.valeur;
+  const tag=typeof previous==='number'&&Number.isFinite(previous)?'L':'M';
+  return tag+x(i).toFixed(2)+' '+y(p.valeur).toFixed(2);
  }).join(' ');
  chart.append(svg('path',{d:path,fill:'none',stroke:color,'stroke-width':2.1,'stroke-linecap':'round','stroke-linejoin':'round'}));
  points.forEach((p,i)=>{
-  const xx=x(i),yy=y(p.valeur);
+  const xx=x(i),yy=(typeof p.valeur==='number'&&Number.isFinite(p.valeur))?y(p.valeur):null;
   chart.append(svg('line',{x1:xx,x2:xx,y1:height-pad.b,y2:height-pad.b+4,stroke:'#b6bcc7'}));
   const date=svg('text',{x:xx,y:height-12,'text-anchor':'middle','font-size':10,fill:'#8791a0'});
   date.textContent=p.annee;chart.append(date);
+  if(yy===null)return;
   const circle=svg('circle',{cx:xx,cy:yy,r:3.3,fill:color,stroke:'#fff','stroke-width':1.2,tabindex:0});
   const tooltip=svg('title');tooltip.textContent=p.annee+' : '+fmt(p.valeur)+' logements';circle.append(tooltip);
   chart.append(circle);
@@ -167,34 +179,49 @@ function comparison(root,table,data){
  const b=elm('span',null,'Dynamique : 2017 → 2023 · EPCI / Commune');
  foot.append(a,b);block.append(foot);root.append(block);
 }
-function fallback(data,state){
- const c=state?.housing?.commune,e=state?.housing?.epci;
- if(!c)return null;
- const make=(key,txt,reference=null)=>({
-  label:txt,commune:{2023:c.distribution?.find(r=>r.key===key)?.valeur??null,
-   part:c.distribution?.find(r=>r.key===key)?.part??null},
-  epci:{2023:e?.distribution?.find(r=>r.key===key)?.valeur??null,
-   part:e?.distribution?.find(r=>r.key===key)?.part??null},reference_france:reference
- });
- const rows=[make('principales','Résidences principales',82.4),make('secondaires','Résidences secondaires et logements occasionnels',9.7),make('vacants','Logements vacants',7.8)]
-  .filter(r=>typeof r.commune[2023]==='number'&&typeof r.epci[2023]==='number');
- if(!rows.length)return null;
- return {commune:{nom:c.nom||state.loc.commune,code:state.loc.code_insee,total:rows.reduce((s,r)=>s+r.commune[2023],0)},
- epci:{nom:state.admin?.epci?.nom||'Intercommunalité',code:state.admin?.epci?.code||'',total:rows.reduce((s,r)=>s+r.epci[2023],0)},
- source:{url_commune:'https://www.insee.fr/fr/statistiques/2011101?geo=COM-'+state.loc.code_insee,
- url_epci:'https://www.insee.fr/fr/statistiques/2011101'},
- historique:{},
- tableaux:[{id:'categorie',titre:'Logements par type de résidences',denominateur:'total',lignes:rows}]};
+function emptyLayout(state){
+ const years=[1968,1975,1982,1990,1999,2007,2012,2017,2023];
+ const fallback=()=>years.map(annee=>({annee,valeur:null}));
+ const entries=[
+  ['total','Logements totaux'],['principales','Résidences principales'],
+  ['secondaires','Résidences secondaires & logements occasionnels'],['vacants','Logements vacants']
+ ];
+ const historique={};
+ for(const [key,titre] of entries)historique[key]={titre,commune:fallback(),epci:fallback()};
+ const sections=[
+  ['type','Logements par type de biens','total',['Maisons','Appartements','Autres logements']],
+  ['categorie','Logements par type de résidences','total',['Résidences principales','Résidences secondaires et logements occasionnels','Logements vacants']],
+  ['occupation',"Résidences principales par statut d'occupation",'principales',['Propriétaires','Locataires','dont locataires HLM','dont locataires hors HLM','Logés gratuitement']],
+  ['pieces','Résidences principales par nombre de pièces','principales',['1 pièce','2 pièces','3 pièces','4 pièces','5 pièces ou plus']],
+  ['anciennete',"Résidences principales par ancienneté d'emménagement",'principales',['Moins de 2 ans','2 à 4 ans','5 à 9 ans','10 ans ou plus']]
+ ];
+ const empty=()=>({'2017':null,'2023':null,part:null,variation:null});
+ const tableaux=sections.map(([id,titre,denominateur,labels])=>({
+  id,titre,denominateur,lignes:labels.map(label=>({
+   label,commune:empty(),epci:empty(),reference_france:null
+  }))
+ }));
+ const code=state.loc?.code_insee||'';
+ const epci=state.admin?.epci?.code||'';
+ const dep=state.admin?.departement?.code||'';
+ return {commune:{code,nom:state.loc?.commune||'Commune',total:null},
+  epci:{code:epci||('DEP-'+dep),nom:state.admin?.epci?.nom||state.admin?.departement?.nom||'Territoire de comparaison',total:null},
+  historique,tableaux,
+  source:{url_commune:code?'https://www.insee.fr/fr/statistiques/9001791?geo=COM-'+code:null,
+   url_epci:epci?'https://www.insee.fr/fr/statistiques/9001791?geo=EPCI-'+epci:null,
+   url_france:'https://www.insee.fr/fr/statistiques/9001791?geo=FRANCE-F',
+   url_millesime_2017:'https://www.insee.fr/fr/statistiques/8997194'}};
 }
+
 function render(root,state){
  root.replaceChildren();root.classList.add('lg-root');
- const data=state.logementsReference;
+ const data=state.logementsReference||emptyLayout(state);
  const top=elm('div','lg-top-actions');
  const lab=elm('span',null,'VUE');top.append(lab);
  const b1=button('▦ Matrice','lg-mode'+(comparisonMode==='matrice'?' active':''),()=>{comparisonMode='matrice';render(root,state)});
  const b2=button('▥ Graphique','lg-mode'+(comparisonMode==='graphique'?' active':''),()=>{comparisonMode='graphique';render(root,state)});
  top.append(b1,b2);root.append(top);
- if(!data){
+ if(!state.logementsReference){
   const msg=elm('section','lg-loading');
   if(state.logementsError){
     msg.append(elm('strong',null,'Données INSEE momentanément indisponibles'),
@@ -204,7 +231,7 @@ function render(root,state){
     msg.append(elm('strong',null,'Chargement du recensement INSEE 2023…'),
       elm('p',null,'Récupération des séries 1968–2023, des indicateurs 2017 et 2023, puis des références nationales.'));
   }
-  root.append(msg);return true;
+  root.append(msg);
  }
  const hist=data.historique||{};
  for(const key of ['total','principales','secondaires','vacants']){
