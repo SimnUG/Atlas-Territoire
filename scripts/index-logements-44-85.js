@@ -94,7 +94,7 @@ async function build(){
   schema:'ATLAS-RP-LOGEMENT-2023-44-85-v1',
   source:'INSEE Melodi — DS_RP_SERIE_HISTORIQUE + DS_RP_LOGEMENT_PRINC',
   millesime:2023,geographie:'COG 2026',
-  departements,
+  departements:departments,
   generé_le:new Date().toISOString().slice(0,10),
   communes:profiles
  };
@@ -108,6 +108,8 @@ async function build(){
   alertes_de_donnees_manquantes:alerts,
   epci_differents:allEpcis.length
  },null,2)+'\n');
+ console.log('FAILED',JSON.stringify(failures.slice(0,20)));
+ console.log('MISSING',JSON.stringify(alerts.slice(0,20)));
  console.log('SUMMARY',JSON.stringify({
   communes:list.length,indexed:Object.keys(profiles).length,failed:failures.length,
   withMissing:alerts.length,epcis:allEpcis.length,
