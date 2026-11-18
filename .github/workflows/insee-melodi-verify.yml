@@ -3,6 +3,7 @@ on:
   push:
     paths:
       - '.github/workflows/insee-melodi-verify.yml'
+      - 'scripts/inspect-insee-melodi.js'
 permissions:
   contents: read
 jobs:
