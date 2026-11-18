@@ -22,7 +22,7 @@ const clean=x=>String(x??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toL
 function zoneCanon(zone){
  const s=String(zone??'').normalize('NFKC').toUpperCase()
    .replace(/\s+/g,'').replace(/[\-_.]/g,'').replace(/^ZONE/,'');
- if(s==='ABIS'||s==='A1')return 'A bis';
+ if(s==='ABIS')return 'A bis';
  return ['A','B1','B2','C'].includes(s)?s:null;
 }
 function csvRows(data,separator){
