@@ -21,3 +21,13 @@ async function extra(){
  }
 }
 extra().catch(e=>console.error(e));
+async function housingTenure(){
+ const u=new URL('https://api.insee.fr/melodi/data/DS_RP_LOGEMENT_PRINC');u.searchParams.set('GEO','COM-85081');u.searchParams.set('TIME_PERIOD','2023');u.searchParams.set('maxResult','1500');
+ const res=await fetch(u);const data=await res.json();const a=data.observations||[];
+ console.log('HOUSING STATUS',res.status,'count',a.length,'paging',data.paging);
+ const dims=[...new Set(a.flatMap(x=>Object.keys(x.dimensions||{})))];
+ console.log('HOUSING DIMS',dims);
+ for(const key of dims)console.log('HOUSING CODE',key,[...new Set(a.map(x=>x.dimensions?.[key]))].slice(0,50));
+ console.log('HOUSING SAMPLE',JSON.stringify(a.slice(0,3)).slice(0,2500));
+}
+housingTenure().catch(e=>console.error('HOUSING TENURE',e.message));
