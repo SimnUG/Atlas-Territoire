@@ -1,0 +1,35 @@
+.app.atlas-sru-active,.app.atlas-sru-active .main{background:#fff}
+.app.atlas-sru-active .content{max-width:none;padding:0 15px 50px}
+.app.atlas-sru-active .headline,.app.atlas-sru-active .demo-banner,.app.atlas-sru-active .tabs-top,.app.atlas-sru-active .footnote{display:none!important}
+.sru-root{font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;color:#172135;font-size:12px;padding-bottom:30px}
+.sru-root *{box-sizing:border-box}
+.sru-root .sru-license{font-size:9px;color:#8991a0;margin:18px 0 21px}
+.sru-root a{color:#e0007a;text-decoration:underline}
+.sru-root h1{font-size:23px;line-height:1.2;font-weight:850;letter-spacing:-.5px;margin:0 0 2px;color:#0a1526}
+.sru-root .sru-intro{color:#8793a6;font-size:11px;margin:0 0 26px}
+.sru-root .sru-kpis{display:grid;grid-template-columns:repeat(2,minmax(0,405px));gap:10px;margin-bottom:14px}
+.sru-root .sru-kpi{background:#fff;border:1px solid #e7e7eb;border-radius:11px;min-height:83px;box-shadow:0 2px 0 #00000024;padding:14px 13px 11px;display:flex;flex-direction:column;align-items:flex-start}
+.sru-root .sru-kpi-label{font-size:9px;font-weight:850;letter-spacing:1px;color:#808c9e;margin-bottom:5px}
+.sru-root .sru-kpi-value{font-size:21px;line-height:1.18;font-weight:850;letter-spacing:-.5px}
+.sru-root .sru-kpi-value.pink{color:#e0007a}
+.sru-root .sru-kpi-value.orange{color:#f07800}
+.sru-root .sru-kpi-sub{font-size:10px;color:#8a94a5;margin-top:5px}
+.sru-root .sru-panel{border:1px solid #e6e7eb;border-radius:11px;box-shadow:0 2px 0 #00000025;padding:15px 14px;background:#fff;margin-bottom:14px}
+.sru-root .sru-panel h2{font-size:13px;font-weight:850;color:#162238;margin:0 0 4px}
+.sru-root .sru-muted{font-size:11px;color:#8993a5;margin:0}
+.sru-root .sru-progress-line{display:flex;align-items:center;gap:13px;margin-top:16px}
+.sru-root .sru-progress-track{flex:1;background:#f0f0f1;border-radius:50px;height:11px;overflow:hidden}
+.sru-root .sru-progress-fill{height:100%;background:#df067a;border-radius:50px;transition:width .3s}
+.sru-root .sru-progress-value{font-size:10px;color:#a0a7b4;white-space:nowrap}
+.sru-root .sru-situation-top{display:flex;align-items:start;justify-content:space-between;gap:12px}
+.sru-root .sru-source-tag{border-radius:50px;color:#cf0070;background:#fce6f2;font-size:9px;padding:5px 9px;font-weight:750;white-space:nowrap}
+.sru-root .sru-status-row{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-top:20px;font-size:11px}
+.sru-root .sru-status{border-radius:50px;padding:5px 9px;font-size:10px;font-weight:750;text-align:right}
+.sru-root .sru-status.deficit{color:#bf3134;background:#fbe4e4}
+.sru-root .sru-status.success{color:#15805e;background:#e2f5ed}
+.sru-root .sru-status.neutral{color:#667386;background:#eef0f4}
+.sru-root .sru-explanation{margin:14px 0 0;color:#798498;font-size:11px}
+.sru-root .sru-footnote{border:1px solid #e3e7ed;border-radius:10px;padding:11px 12px;display:flex;gap:8px;align-items:flex-start;font-size:9.5px;color:#8793a6;line-height:1.55}
+.sru-root .sru-footnote p{margin:0}
+.sru-root .sru-info{font-size:14px;color:#8492a8;line-height:1.1}
+@media(max-width:740px){.sru-root .sru-kpis{grid-template-columns:1fr}.sru-root .sru-progress-line{align-items:start;flex-direction:column}.sru-root .sru-progress-track{width:100%}.sru-root .sru-status-row{align-items:start;flex-direction:column}.sru-root .sru-license{margin-top:14px}}
