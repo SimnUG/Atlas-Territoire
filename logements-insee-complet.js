@@ -16,6 +16,27 @@ const VALID_COMMUNE=/^(?:[0-9]{5}|2[AB][0-9]{3})$/i;
 const VALID_EPCI=/^[0-9]{9}$/;
 const FULL_DIM=['NOR','TDW','TSH','L_STAY','BUILD_END','CARS','NRG_SRC','CARPARK','LIFT','NOC'];
 const DATA_CACHE=new Map();
+const fs=require('node:fs');
+const path=require('node:path');
+const zlib=require('node:zlib');
+let REGIONAL_INDEX;
+let regionalLoadAttempted=false;
+function getIndexed(commune,epci){
+ if(!/^(44|85)[0-9]{3}$/.test(commune))return null;
+ if(!regionalLoadAttempted){
+  regionalLoadAttempted=true;
+  try{
+   const filename=path.join(__dirname,'public','data','logements-44-85-2023.json.gz');
+   const data=JSON.parse(zlib.gunzipSync(fs.readFileSync(filename)).toString('utf8'));
+   if(data.schema==='ATLAS-RP-LOGEMENT-2023-44-85-v1'&&data.communes){
+    REGIONAL_INDEX=data.communes;
+   }
+  }catch(_){REGIONAL_INDEX=null}
+ }
+ const value=REGIONAL_INDEX?.[commune];
+ return value?.statut==='disponible'&&value.epci?.code===epci?value:null;
+}
+
 const MELODI_CACHE=new Map();
 let nationalPromise=null;
 const finite=n=>typeof n==='number'&&Number.isFinite(n);
@@ -211,6 +232,8 @@ async function loadRemote({commune,epci,nomCommune,nomEpci}){
 async function logement(args){
  const code=String(args?.commune||''),epci=String(args?.epci||'');
  if(!VALID_COMMUNE.test(code)||!VALID_EPCI.test(epci))throw Object.assign(new Error('Codes INSEE commune / EPCI invalides'),{status:400});
+ const indexed=getIndexed(code,epci);
+ if(indexed)return indexed;
  const id=code+'/'+epci;
  const cached=DATA_CACHE.get(id);
  if(cached&&cached.expire>Date.now())return cached.promise;
@@ -220,4 +243,4 @@ async function logement(args){
  try{return await promise}
  catch(e){DATA_CACHE.delete(id);throw e}
 }
-module.exports={logement,melodi,one,metrics,ext,createArea,assemble,TABLE_SCHEMA,HISTORY_YEARS,observations};
+module.exports={logement,melodi,one,metrics,ext,createArea,assemble,TABLE_SCHEMA,HISTORY_YEARS,observations,getIndexed};
