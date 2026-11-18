@@ -420,7 +420,9 @@
   div.lastChild.append(link('Source officielle et licence Sitadel',sourceURL));
   div.lastChild.append(document.createTextNode(' · Géocodage : '));
   div.lastChild.append(link('Géoplateforme — IGN / BAN','https://data.geopf.fr/geocodage/search'));
-  div.lastChild.append(document.createTextNode(' — Licence Ouverte 2.0.'));
+  div.lastChild.append(document.createTextNode(' · Complément documentaire : '));
+  div.lastChild.append(link('PSS — recherche d’autorisations','https://www.pss-archi.eu/recherche_au.html'));
+  div.lastChild.append(document.createTextNode(' (consultation externe ; aucun flux PSS non documenté n’est utilisé). Licence Ouverte 2.0 pour les données Sitadel et IGN.'));
   return div;
  }
  function render(root,siteState){
