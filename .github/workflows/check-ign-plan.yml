@@ -1,0 +1,19 @@
+name: Vérifier le plan IGN gratuit
+on:
+  push:
+    paths:
+      - scripts/check-ign-plan.js
+      - .github/workflows/check-ign-plan.yml
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  map:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --check public/elections-map-points.js
+      - run: node scripts/check-ign-plan.js
