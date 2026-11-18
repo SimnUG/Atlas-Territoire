@@ -1,0 +1,26 @@
+name: Compléter les variations logements INSEE RP2017
+on:
+  push:
+    paths:
+      - scripts/complete-logements-2017.py
+      - .github/workflows/complete-logements-2017.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  enrich:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - run: python scripts/complete-logements-2017.py
+      - name: Publier les variations vérifiées
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/data/logements-85081.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Compléter la durée d'emménagement avec INSEE RP2017"
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
