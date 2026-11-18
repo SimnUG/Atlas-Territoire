@@ -12,3 +12,19 @@ for name,url in sources.items():
    a=f.read(6000)
   print('\nSOURCE',name,'status OK,',len(a),'bytes header:',repr(a[:1300]))
  except Exception as e:print('ERROR',name,str(e))
+
+print("DETAIL PROBE 2026 CSV")
+import csv,io
+u=sources['2026-BV']
+raw=urllib.request.urlopen(urllib.request.Request(u,headers={'User-Agent':'Mozilla/5.0'}),timeout=100).read().decode('utf-8-sig')
+reader=csv.DictReader(io.StringIO(raw),delimiter=';')
+print('FIELDS',reader.fieldnames[:32])
+for row in reader:
+ if 'DOMPIERRE' in str(row).upper() and 'YON' in str(row).upper():
+  print('ROW',repr({k:v for k,v in list(row.items())[:32]}));break
+print('DETAIL 2008')
+u=sources['2008-BV']
+raw=urllib.request.urlopen(urllib.request.Request(u,headers={'User-Agent':'Mozilla/5.0'}),timeout=100).read().decode('latin1')
+for line in raw.splitlines():
+ if ';85;' in line and 'Dompierre-sur-Yon' in line:
+  print('ROW2008',repr(line[:950]));break
