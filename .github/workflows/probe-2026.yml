@@ -1,0 +1,13 @@
+name: Sonde mairie 2026 rapide
+on:
+  push:
+    paths: ['scripts/probe-2026.py','.github/workflows/probe-2026.yml']
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - run: python scripts/probe-2026.py
