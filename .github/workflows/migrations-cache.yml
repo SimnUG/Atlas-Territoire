@@ -1,0 +1,39 @@
+name: Pré-calcul INSEE migrations 2023
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/build-migrations-cache.js'
+      - 'migrations-detail-insee.js'
+      - '.github/workflows/migrations-cache.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: migrations-data-cache
+  cancel-in-progress: false
+jobs:
+  build-migrations:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --omit=dev
+      - name: Télécharger et agréger INSEE RP2023
+        run: node scripts/build-migrations-cache.js
+        env:
+          MIGRATION_COMMUNES: '85081'
+      - name: Publier uniquement les agrégats de mobilité
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/data/migrations-85081.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Cache INSEE officiel migrations 2023 Dompierre-sur-Yon"
+            git push origin HEAD:main
+          fi
