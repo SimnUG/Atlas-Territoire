@@ -22,6 +22,7 @@ const socialRpls = require('./social-rpls');
 const socialRplsGeo = require('./social-rpls-geo');
 const sruInventaire = require('./sru-inventaire');
 const zonageABC2026 = require('./zonage-abc-2026');
+const permisSitadel = require('./permis-sitadel');
 const fullHousingInsee = require('./logements-insee-complet');
 const fullElections = require('./elections-officielles-44-85');
 
@@ -83,6 +84,20 @@ http.createServer(async(req,res)=>{
     try{return send(res,200,fullElections.get(code));}
     catch(_){return send(res,503,{statut:'indisponible',code_insee:code,scrutins:[],
       raison:'Répertoire national des municipales temporairement inaccessible'});}
+  }
+  if(url.pathname==='/api/permis-sitadel'){
+    const code=(url.searchParams.get('code_insee')||'').trim();
+    if(!permisSitadel.valid(code))return send(res,400,{statut:'invalide',erreur:'Code INSEE hors 44/85 ou invalide'});
+    try{return send(res,200,await permisSitadel.permits(code))}
+    catch(e){return send(res,503,{statut:'indisponible',erreur:e.message})}
+  }
+  if(url.pathname==='/api/permis-sitadel-geocode'){
+    const code=(url.searchParams.get('code_insee')||'').trim();
+    if(!permisSitadel.valid(code))return send(res,400,{statut:'invalide',erreur:'Code INSEE invalide'});
+    const ids=(url.searchParams.get('ids')||'').split(',').filter(x=>x.length>0&&x.length<60).slice(0,120);
+    const city=(url.searchParams.get('commune')||'').slice(0,80);
+    try{return send(res,200,await permisSitadel.geocodes(code,ids,city))}
+    catch(e){return send(res,503,{statut:'indisponible',erreur:'Géocodage Sitadel temporairement inaccessible'})}
   }
   if(url.pathname==='/api/zonage-abc'){
     const code=(url.searchParams.get('code_insee')||'').trim();
