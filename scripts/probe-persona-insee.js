@@ -11,3 +11,13 @@ async function run(){
  }
 }
 run();
+
+async function extra(){
+ for(const [ds,k] of [['DS_RP_DIPLOMES_PRINC','EDUC'],['DS_RP_TD_LOGEMENT_CARACT_PRINC','L_STAY']]){
+ const u=new URL('https://api.insee.fr/melodi/data/'+ds);u.searchParams.set('GEO','COM-85081');u.searchParams.set('TIME_PERIOD','2023');u.searchParams.set('maxResult','950');
+ const r=await fetch(u);const d=await r.json();const rows=d.observations||[];
+ console.log('DETAIL',ds,'unique',k,[...new Set(rows.map(x=>x.dimensions?.[k]))], 'NOR',[...new Set(rows.map(x=>x.dimensions?.NOR))]);
+ for(const x of rows.filter(x=>ds.includes('DIPLOMES')?x.dimensions.SEX==='_T':x.dimensions.OCS==='DW_MAIN'&&x.dimensions.NOR==='_T'&&x.dimensions.TDW==='_T'&&x.dimensions.NOC==='_T'&&x.dimensions.TSH==='_T'&&x.dimensions.LIFT==='_T'&&x.dimensions.BUILD_END==='_T'))console.log('ROW',JSON.stringify(x.dimensions),x.measures.OBS_VALUE_NIVEAU.value);
+ }
+}
+extra().catch(e=>console.error(e));
