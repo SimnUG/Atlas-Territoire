@@ -602,9 +602,11 @@ function ensureElections(){
 }
 function ensureLogementsReference(){
  if(!state.loc?.code_insee||!state.admin||state.logementsReference||state.logementsReferenceRequest)return;
- const epci=state.admin?.epci?.code||state.admin?.commune?.code_epci||'';
- if(!/^[0-9]{9}$/.test(epci)){
-   state.logementsError="Le code de l'intercommunalité n'a pas pu être identifié pour cette adresse.";
+ const epi=state.admin?.epci?.code||state.admin?.commune?.code_epci||'';
+ const dep=state.admin?.departement?.code||state.admin?.commune?.code_departement||'';
+ const epci=/^[0-9]{9}$/.test(epi)?epi:(/^(44|85)$/.test(dep)?'DEP-'+dep:'');
+ if(!/^(?:[0-9]{9}|DEP-(?:44|85))$/.test(epci)){
+   state.logementsError="Le territoire de comparaison n'a pas pu être identifié pour cette adresse.";
    if(state.tab==='logements')redraw();
    return;
  }
@@ -612,7 +614,7 @@ function ensureLogementsReference(){
    code_insee:state.loc.code_insee,
    code_epci:epci,
    nom_commune:state.loc.commune||'',
-   nom_epci:state.admin?.epci?.nom||''
+   nom_epci:state.admin?.epci?.nom||(dep==='85'?'Département de la Vendée':dep==='44'?'Département de la Loire-Atlantique':'')
  });
  state.logementsError=null;
  state.logementsReferenceRequest=get('/api/logements-insee-complet?'+params,100000)
