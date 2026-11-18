@@ -7,7 +7,7 @@ const rentals=require('./rental-data');
 const SOURCE={nom:'DVF+ open data — DGFiP / Cerema',
  url:'https://www.data.gouv.fr/datasets/dvfplus-open-data',
  methode:'Prix de vente médian des mutations à destination exclusivement maison (111) ou appartement (121), prix foncier divisé par surface bâtie; min. 5 ventes par année et catégorie'};
-const START='https://apidf-preprod.cerema.fr/dvf_opendata/mutations/';
+const HOSTS=['https://apidf-preprod.cerema.fr','https://apidf.k8-dev.cerema.fr'];
 const memo=new Map();
 const numeric=v=>{
  if(v===null||v===undefined||v==='')return null;
@@ -39,12 +39,13 @@ function prepare(raw,code){
  if(!id)return null;
  return {id:String(id),year:Number(year),type:type==='111'?'maisons':'appartements',prix:prix/surface};
 }
-async function getMutations(code){
- let url=new URL(START);
+async function getMutationsForHost(code,base){
+ let url=new URL(base+'/dvf_opendata/mutations/');
  url.searchParams.set('code_insee',code);
  url.searchParams.set('anneemut_min','2022');
  url.searchParams.set('anneemut_max','2025');
  url.searchParams.set('page_size','500');
+ url.searchParams.set('fields','all');
  url.searchParams.set('page','1');
  let all=[],visited=new Set(),page=0,reported=null;
  while(url&&page<60){
@@ -61,7 +62,7 @@ async function getMutations(code){
   const next=body?.next;
   if(!next){url=null;break}
   const dest=new URL(next,url);
-  if(dest.protocol!=='https:'||dest.hostname!=='apidf-preprod.cerema.fr'||!dest.pathname.startsWith('/dvf_opendata/mutations'))
+  if(dest.protocol!=='https:'||dest.hostname!==new URL(base).hostname||!dest.pathname.startsWith('/dvf_opendata/mutations'))
    throw Error('Redirection DVF+ non reconnue');
   url=dest;
  }
@@ -84,7 +85,15 @@ async function getMutations(code){
    data[year][type]={nombre_ventes:values.length,prix_m2:values.length>=5?median(values):null};
   }
  }
- return {data,mutations_lues:all.length,source:SOURCE,exhaustif:true};
+ return {data,mutations_lues:all.length,source:SOURCE,exhaustif:true,serveur:new URL(base).hostname};
+}
+async function getMutations(code){
+ let error=null;
+ for(const base of HOSTS){
+  try{return await getMutationsForHost(code,base)}
+  catch(e){error=e}
+ }
+ throw Error('Les deux endpoints officiels DVF+ du Cerema sont indisponibles : '+(error?.message||'erreur inconnue'));
 }
 async function rendement(code){
  if(!/^(44|85)\d{3}$/.test(String(code||'')))throw Error('Code INSEE invalide');
@@ -111,4 +120,4 @@ async function rendement(code){
  memo.set(code,{until:Date.now()+2*3600000,promise});
  try{return await promise}catch(e){memo.delete(code);throw e}
 }
-module.exports={rendement,prepare,median};
+module.exports={rendement,prepare,median,getMutationsForHost,HOSTS};
