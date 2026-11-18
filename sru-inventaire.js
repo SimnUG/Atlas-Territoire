@@ -37,6 +37,11 @@ function number(s){
  if(!v||/^(?:nc|nd|na|nr|n d|-|sans objet|non renseigne)$/i.test(v))return null;
  return /^-?\d+(?:\.\d+)?$/.test(v)?Number(v):null;
 }
+// Dans les tableurs officiels, le taux peut être un ratio (0,0832) et non un pourcentage (8,32).
+function percentage(value){
+ const n=number(value);
+ return n!==null&&n>=0&&n<=1?Math.round(n*1000000)/10000:n;
+}
 function locate(headers,conditions){
  for(const test of conditions){
   const found=headers.findIndex(h=>test(clean(h)));
@@ -109,8 +114,8 @@ function extractRecord(table,code){
  const {index,rows}=table;
  const row=rows.find(r=>select(r,index.code).replace(/\.0$/,'').padStart(5,'0')===code);
  if(!row)return null;
- const taux=number(select(row,index.taux));
- const objectif=number(select(row,index.objectif));
+ const taux=percentage(select(row,index.taux));
+ const objectif=percentage(select(row,index.objectif));
  const rawStatus=select(row,index.situation);
  const rawDeficit=select(row,index.deficit);
  const rawExemption=select(row,index.exemption);
@@ -170,4 +175,4 @@ async function inventaire(code){
   message:'Cette commune ne figure pas dans le périmètre de l’inventaire SRU publié pour 2026.',
   source:{nom:'Inventaire SRU — DGALN/DHUP, ministère du Logement',url:SOURCE,licence:'Licence Ouverte 2.0'}};
 }
-module.exports={inventaire,readTable,extractRecord,number,indexFields,CSV,SOURCE};
+module.exports={inventaire,readTable,extractRecord,number,percentage,indexFields,CSV,SOURCE};
