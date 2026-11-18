@@ -14,6 +14,8 @@ SOURCES={
 '2026_2':'https://www.data.gouv.fr/api/1/datasets/r/ac97f1d2-64b3-453e-90e6-485913aabd04',
 '2020_1':'https://static.data.gouv.fr/resources/elections-municipales-2020-resultats/20200525-133704/2020-05-18-resultats-communes-de-1000-et-plus.txt',
 '2020_2':'https://static.data.gouv.fr/resources/municipales-2020-resultats-2nd-tour/20200629-192435/2020-06-29-resultats-t2-communes-de-1000-hab-et-plus.txt',
+'2020_BV_1':'https://static.data.gouv.fr/resources/elections-municipales-2020-resultats/20200525-133745/2020-05-18-resultats-par-niveau-burvot-t1-france-entiere.txt',
+'2020_BV_2':'https://static.data.gouv.fr/resources/municipales-2020-resultats-2nd-tour/20200629-192438/resultats-par-niveau-burvot-t2-france-entiere.txt',
 '2014':'https://static.data.gouv.fr/resources/elections-municipales-2014-resultats-par-bureaux-de-vote/20150925-122128/MN14_Bvot_T1T2.txt',
 '2008':'https://static.data.gouv.fr/resources/elections-municipales-2008-communes-de-plus-de-3-500-habitants-resultats-par-bureaux-de-vote-1/20150925-122851/MN08_BVot_T1T2.txt'
 }
@@ -61,7 +63,8 @@ def aggregate(year,tour,offices,url):
  rows=sorted(candidates.values(),key=lambda x:-x['voix'])
  for c in rows:c['part']=round(100*c['voix']/exprimes,2) if exprimes else None
  return {'annee':year,'tour':tour,'inscrits':inscriptions,'abstentions':abstentions,'votants':votants,
- 'exprimes':exprimes,'blancs':blanc,'nuls':nul,'candidats':rows,'bureaux':offices,'source':url}
+ 'exprimes':exprimes,'blancs':blanc,'nuls':nul,'blancs_nuls':votants-exprimes if votants>=exprimes else None,
+ 'candidats':rows,'bureaux':offices,'source':url}
 def office(num_bv,ins,vot,exp,blanc,nul,abst,candidates):
  return {'code':str(num_bv).zfill(4),'libelle':'Bureau '+str(num_bv).zfill(4),'inscrits':num(ins),
  'votants':num(vot),'exprimes':num(exp),'abstentions':num(abst),
@@ -110,6 +113,22 @@ def from2020(year,tour,raw,url):
   dest.append(office(office_no,row[4] if office_no=='1' else row[6],row[7] if office_no=='1' else row[9],row[15] if office_no=='1' else row[16],
    row[9] if office_no=='1' else row[11],row[12] if office_no=='1' else row[14],row[5] if office_no=='1' else row[7],cs))
  return aggregate(year,tour,dest,url)
+def from2020bv(tour,raw,url):
+ offices=[]
+ it=csv.reader(io.StringIO(text(raw).replace('\x00','')),delimiter='\t' if tour==1 else ';')
+ next(it,None)
+ for row in it:
+  if len(row)<28 or not city(row[0],row[2]):continue
+  candidates=[]
+  for i in range(19,len(row)-8,9):
+   block=row[i:i+9]
+   if len(block)<9 or not block[3].strip():break
+   cand=candidate(block[3],block[4],block[1],block[6],block[5])
+   if cand['voix'] is not None:candidates.append(cand)
+  if not candidates:continue
+  offices.append(office(row[4],row[5],row[8],row[16],row[10],row[13],row[6],candidates))
+ return aggregate(2020,tour,offices,url)
+
 def from2014(raw,url):
  groups=defaultdict(lambda:{'ins':None,'vot':None,'exp':None,'cs':[]})
  for line in text(raw).splitlines():
@@ -157,18 +176,21 @@ def from2008(raw,url):
  return rounds
 def main():
  results=[]
- for key in ['2026_1','2026_2','2020_1','2020_2','2014','2008']:
+ for key in ['2026_1','2026_2','2020_1','2020_2','2020_BV_1','2020_BV_2','2014','2008']:
   url=SOURCES[key]
   try:
    print('Lecture '+key+' '+url,flush=True)
    raw=fetch(url)
    print('Taille ',len(raw),flush=True)
    if key.startswith('2026'):value=from2026(2026,int(key[-1]),raw,url);item=[value] if value else []
+   elif key.startswith('2020_BV'):value=from2020bv(int(key[-1]),raw,url);item=[value] if value else []
    elif key.startswith('2020'):value=from2020(2020,int(key[-1]),raw,url);item=[value] if value else []
    elif key=='2014':item=list(from2014(raw,url).values())
    else:item=list(from2008(raw,url).values())
    print('Trouvés ',[(x['annee'],x['tour'],x['inscrits'],len(x['bureaux']),[(c['nom'],c['voix']) for c in x['candidats'][:3]]) for x in item],flush=True)
-   results.extend(item)
+   for new in item:
+    results=[old for old in results if not (old['annee']==new['annee'] and old['tour']==new['tour'] and len(old['bureaux'])<len(new['bureaux']))]
+    if not any(old['annee']==new['annee'] and old['tour']==new['tour'] for old in results):results.append(new)
   except Exception as e:
    print('ERREUR '+key+' '+repr(e),flush=True)
  if not any(x['annee']==2026 and x['tour']==1 and x['exprimes']==1555 for x in results):
