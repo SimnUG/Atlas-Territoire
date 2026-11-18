@@ -132,7 +132,9 @@ async function renderEpciMap(root,state){
 function r2026(data){return data.find(x=>x.annee===2026&&x.tour===1)}
 function commune(root,state,rs){
  const p=panel(root,'Résumé des résultats des dernières élections municipales','Commune · Municipales');
- createTable(p,['Municipales','Victoire','Gagnant','Nuance politique','Abstention'],rs.map(x=>{
+ const finals=[...new Set(rs.map(x=>x.annee))].sort((a,b)=>b-a).map(year=>
+   rs.filter(r=>r.annee===year).sort((a,b)=>b.tour-a.tour)[0]);
+ createTable(p,['Municipales','Victoire','Gagnant','Nuance politique','Abstention'],finals.map(x=>{
   const w=winner(x);return [x.annee+' · T'+x.tour,x.tour===1?'Premier tour':'Deuxième tour',
    w?w.nom+' ('+pct(ratio(w.voix,x.exprimes))+')':'—',w?nuance(w):'—',pct(ratio(x.abstentions,x.inscrits))];
  }));
@@ -276,9 +278,20 @@ function bureauDetailed(root,rs){
   for(const b of offices){
    const c=el('article','el-bureau-card');
    c.append(el('h3',null,'BUREAU N°'+b.code));
-   createTable(c,['Inscrits','Abstentions','Votants','Exprimés','Blancs','Nuls'],
+   const history=rs.filter(r=>r.bureaux?.some(o=>o.code===b.code))
+    .sort((a,x)=>x.annee-a.annee||x.tour-a.tour);
+   createTable(c,['Municipales','Tour','Gagnant','Nuance','Abstention','Inscrits'],
+     history.map(r=>{const bureau=r.bureaux.find(x=>x.code===b.code);
+      const w=[...bureau.candidats].sort((a,z)=>z.voix-a.voix)[0];
+      return [r.annee,r.tour,w?w.nom+' ('+pct(ratio(w.voix,bureau.exprimes))+')':'—',
+      nuance(w),pct(ratio(bureau.abstentions,bureau.inscrits)),n(bureau.inscrits)];
+     }));
+   const details=el('details','el-bureau-expand');const summary=el('summary',null,'Voir le détail des votes de ce bureau en '+latest.annee);
+   details.append(summary);
+   createTable(details,['Inscrits','Abstentions','Votants','Exprimés','Blancs','Nuls'],
     [[n(b.inscrits),pct(ratio(b.abstentions,b.inscrits)),n(b.votants),n(b.exprimes),n(b.blancs),n(b.nuls)]]);
-   voteBar(c,b.candidats,b.exprimes);target.append(c);
+   voteBar(details,b.candidats,b.exprimes);
+   c.append(details);target.append(c);
   }
  }
  draw();
