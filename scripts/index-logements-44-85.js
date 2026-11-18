@@ -85,7 +85,7 @@ async function build(){
    if(lastError)failures.push({code,commune:commune.nom,erreur:lastError.message});
    done++;
    if(done%25===0||done===list.length){
-    console.log('INDEX',done+'/'+list.length,'profils',Object.keys(profiles).length,'erreurs',failures.length,'elapsed',Math.round((Date.now()-started)/1000)+'s',flush=true);
+    console.log('INDEX',done+'/'+list.length,'profils',Object.keys(profiles).length,'erreurs',failures.length,'elapsed',Math.round((Date.now()-started)/1000)+'s');
    }
   }
  });
@@ -111,7 +111,7 @@ async function build(){
  console.log('SUMMARY',JSON.stringify({
   communes:list.length,indexed:Object.keys(profiles).length,failed:failures.length,
   withMissing:alerts.length,epcis:allEpcis.length,
-  archiveKB:Math.round(fs.statSync(OUT).size/1024)}),flush=true);
+  archiveKB:Math.round(fs.statSync(OUT).size/1024)}));
  if(Object.keys(profiles).length<list.length*.99)
   throw Error('Couverture inférieure à 99% : '+Object.keys(profiles).length+'/'+list.length);
 }
