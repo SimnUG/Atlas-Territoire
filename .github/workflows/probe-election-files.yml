@@ -1,0 +1,13 @@
+name: Examiner colonnes électorales
+on:
+  push:
+    paths: ['scripts/probe-election-files.py','.github/workflows/probe-election-files.yml']
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - run: python scripts/probe-election-files.py
