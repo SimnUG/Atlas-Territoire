@@ -53,6 +53,37 @@
   });
   return leafletPromise;
  }
+ // Plan IGN (Géoplateforme), sans clé ni facturation, avec secours OSM.
+ function addReadableBaseMap(L,map){
+  const ign='https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0'+
+   '&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2&STYLE=normal&TILEMATRIXSET=PM'+
+   '&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&FORMAT=image/png';
+  const ignLayer=L.tileLayer(ign,{maxZoom:19,maxNativeZoom:19,
+   attribution:'© <a href="https://www.ign.fr/" target="_blank" rel="noopener">IGN</a> — Plan IGN'});
+  const osmLayer=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{
+   maxZoom:19,attribution:'© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors'
+  });
+  ignLayer.on('tileerror',()=>{if(map.hasLayer(ignLayer)){map.removeLayer(ignLayer);osmLayer.addTo(map)}});
+  ignLayer.addTo(map);
+  L.control.layers({'Plan IGN':ignLayer,'Plan OpenStreetMap':osmLayer},null,{collapsed:true,position:'topright'}).addTo(map);
+ }
+ function addPointLayers(L,map,points,color,visibleFrom=14){
+  const renderer=L.canvas({padding:.5});
+  const layer=L.layerGroup();
+  for(const p of points){
+   const dot=L.circleMarker([p.lat,p.lng],{renderer,radius:2,color:'#fff',
+    weight:.4,opacity:.9,fillColor:color,fillOpacity:.72});
+   // Never insert an untrusted BAN address using an HTML parser.
+   const text=document.createElement('span');
+   text.textContent=(p.adresse||'Adresse BAN')+' — point géographique, pas un électeur';
+   dot.bindPopup(text);
+   layer.addLayer(dot);
+  }
+  const apply=()=>{if(map.getZoom()>=visibleFrom){if(!map.hasLayer(layer))layer.addTo(map)}
+   else if(map.hasLayer(layer))map.removeLayer(layer)};
+  map.on('zoomend',apply);apply();
+  return layer;
+ }
  function overlayMessage(container,number,color){
   const legend=add(container,'div','atlas-map-overlays');
   const pill=add(legend,'span','atlas-map-point-pill',number.toLocaleString('fr-FR')+' points d’adresses réels');
@@ -82,20 +113,13 @@
  async function drawLeaflet(div,points,lat,lng,color){
   const L=await loadLeaflet();
   if(!div.isConnected)throw Error('Carte retirée');
-  const m=L.map(div,{preferCanvas:true,zoomControl:true,scrollWheelZoom:false}).setView([lat,lng],13);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-    maxZoom:19,attribution:'© OpenStreetMap contributors'
-  }).addTo(m);
-  const renderer=L.canvas({padding:.5});
-  const layer=L.featureGroup();
-  for(const p of points){
-   const dot=L.circleMarker([p.lat,p.lng],{renderer,radius:2.7,color:'#fff',
-    weight:.5,opacity:.6,fillColor:color,fillOpacity:.92});
-   dot.bindPopup((p.adresse||'Adresse BAN')+' — point géographique BAN, pas un électeur');
-   layer.addLayer(dot);
+  const m=L.map(div,{preferCanvas:true,zoomControl:true,scrollWheelZoom:false}).setView([lat,lng],14);
+  addReadableBaseMap(L,m);
+  const layer=addPointLayers(L,m,points,color,14);
+  if(points.length){
+   const bounds=L.latLngBounds(points.map(p=>[p.lat,p.lng]));
+   m.fitBounds(bounds.pad(.025),{maxZoom:15});
   }
-  layer.addTo(m);
-  if(points.length)m.fitBounds(layer.getBounds().pad(.08),{maxZoom:15});
   requestAnimationFrame(()=>{if(div.isConnected)m.invalidateSize()});
  }
  async function render(root,options={}){
@@ -104,28 +128,18 @@
   const box=add(root,'div','atlas-point-map');
   const heading=add(box,'div','atlas-point-map-toolbar');
   add(heading,'strong',null,'Plan et points géographiques');
-  add(heading,'small',null,'Fond de carte interactif · zoom et déplacement');
+  add(heading,'small',null,'Plan IGN gratuit · noms de rues · points visibles en zoomant');
   const div=add(box,'div','atlas-point-map-canvas');
   div.setAttribute('aria-label','Carte des points géolocalisés d’adresses BAN, sans information sur les électeurs');
-  const note=add(box,'div','atlas-point-map-disclaimer',
+  add(box,'div','atlas-point-map-disclaimer',
    'Chaque point correspond à une adresse géographique BAN, et non à un électeur ou à un bulletin de vote. '+
    'Les scores électoraux restent agrégés au bureau de vote, sans attribution à une adresse.');
-  let alive=true;
   try{
    const points=await getPoints(code);
-   if(!box.isConnected||!alive)return;
+   if(!box.isConnected)return;
    if(!points.length){div.replaceChildren();add(div,'p','atlas-map-unavailable',
     'Points BAN non disponibles pour cette commune.');return}
-   const cfg=await getConfig();if(!box.isConnected)return;
-   const key=typeof cfg?.key==='string'?cfg.key.trim():'';
-   try{
-    if(key)await drawGoogle(div,points,lat,lng,color,key);
-    else await drawLeaflet(div,points,lat,lng,color);
-   }catch(e){
-    // En présence d'une clé Google, utiliser le fond de plan alternatif si la clé est refusée.
-    if(key){div.replaceChildren();await drawLeaflet(div,points,lat,lng,color)}
-    else throw e;
-   }
+   await drawLeaflet(div,points,lat,lng,color);
    if(box.isConnected)overlayMessage(box,points.length,color);
   }catch(e){
    if(box.isConnected){div.replaceChildren();add(div,'p','atlas-map-unavailable',
@@ -138,7 +152,7 @@
   const wrapper=add(root,'div','atlas-point-map atlas-epci-roadmap');
   const heading=add(wrapper,'div','atlas-point-map-toolbar');
   add(heading,'strong',null,'Situation de la commune au sein de son EPCI');
-  add(heading,'small',null,'Fond « Plan » et contours communaux');
+  add(heading,'small',null,'Plan IGN · communes et rues lisibles');
   const div=add(wrapper,'div','atlas-point-map-canvas');
   const legend=add(wrapper,'div','atlas-epci-map-legend');
   const palette=[['Divers gauche','#ed88bd'],['Divers droite','#4e91d5'],
@@ -173,7 +187,6 @@
    if(!features.length)throw Error('Absence de contours');
    const addressPoints=await getPoints(code);
    if(!wrapper.isConnected)return;
-   const cfg=await getConfig(),key=cfg?.key?.trim?.()||'';
    const districtInfo=feature=>{
     const id=feature?.properties?.code||'',win=colorByNuance[id]||null;
     return (feature?.properties?.nom||'Commune')+' : '+(win?win.liste+' ('+win.nuance+')':'résultat non indexé');
@@ -219,25 +232,17 @@
    async function leafletMap(){
     const L=await loadLeaflet();
     if(!wrapper.isConnected)return;
-    const map=L.map(div,{preferCanvas:true,scrollWheelZoom:false}).setView([options.lat||46.73,options.lng||-1.4],10);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-     attribution:'© OpenStreetMap contributors',maxZoom:19
-    }).addTo(map);
+    const map=L.map(div,{preferCanvas:true,scrollWheelZoom:false}).setView([options.lat||46.73,options.lng||-1.4],11);
+    addReadableBaseMap(L,map);
     const polygons=L.geoJSON(featureCollection,{style:f=>({
-     color:f.properties?.code===code?'#283b61':'#fdfdfd',weight:f.properties?.code===code?3:1.2,
-     fillColor:polygonColor(f),fillOpacity:.55
+     color:f.properties?.code===code?'#283b61':'#56627b',weight:f.properties?.code===code?2.7:1.1,
+     fillColor:polygonColor(f),fillOpacity:.22
     }),onEachFeature:(f,l)=>l.bindPopup(districtInfo(f))}).addTo(map);
-    map.fitBounds(polygons.getBounds().pad(.04));
-    const renderer=L.canvas({padding:.5});
-    for(const p of addressPoints){
-     L.circleMarker([p.lat,p.lng],{renderer,radius:2,color:'#fff',weight:.25,
-      fillColor:'#eb87b9',fillOpacity:.85}).bindPopup((p.adresse||'Adresse BAN')+
-       ' — adresse géographique, pas un électeur').addTo(map);
-    }
+    map.fitBounds(polygons.getBounds().pad(.03));
+    addPointLayers(L,map,addressPoints,'#e978ad',14);
     requestAnimationFrame(()=>map.invalidateSize());
    }
-   try{if(key)await googleMap();else await leafletMap()}
-   catch(e){if(!key)throw e;div.replaceChildren();await leafletMap()}
+   await leafletMap()
   }catch(error){
    div.replaceChildren();add(div,'p','atlas-map-unavailable','Carte des communes indisponible : '+error.message);
   }
