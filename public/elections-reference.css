@@ -1,0 +1,60 @@
+.app.atlas-elections-active .headline,.app.atlas-elections-active .tabs-top,.app.atlas-elections-active .demo-banner,.app.atlas-elections-active .footnote{display:none!important}
+.app.atlas-elections-active .main{background:#fff}
+.app.atlas-elections-active .content{max-width:none;padding:0 0 45px}
+.app.atlas-elections-active .topbar{height:55px}
+.election-root{font-size:12px;color:#1b2946;--el-pink:#e00075;--el-pale:#fae4ee}
+.election-root *{box-sizing:border-box}
+.election-root button{font:inherit;cursor:pointer}
+.election-root .el-top-filter{padding:18px 16px 15px;border-bottom:1px solid #e6e8ef}
+.election-root .el-tag{display:inline-block;border-radius:11px;padding:9px 13px;font-size:11px;background:#f0f1f4;font-weight:750;color:#152542}
+.election-root .el-layout{display:grid;grid-template-columns:205px minmax(0,1fr);align-items:stretch}
+.election-root .el-local-nav{border-right:1px solid #e0e4ed;min-height:100vh;padding:17px 0;position:sticky;top:0;align-self:start;background:#fff}
+.election-root .el-local-city{font-size:13px;font-weight:800;padding:10px 12px 18px;color:#1c2d4c}
+.election-root .el-local-nav h4{font-size:9px;font-weight:850;letter-spacing:1px;color:#8f9bb0;margin:12px 12px 5px}
+.election-root .el-local-button{border:0;background:transparent;width:100%;padding:11px 10px;text-align:left;font-size:11px;color:#273859;font-weight:650}
+.election-root .el-local-button.active{background:var(--el-pale);border-left:3px solid var(--el-pink);color:var(--el-pink);font-weight:800}
+.election-root .el-election-content{padding:18px 20px 30px;min-width:0;max-width:1530px}
+.election-root .el-card,.election-root .el-accordion{border:1px solid #e1e5ed;border-radius:24px;padding:18px 17px;margin-bottom:18px;background:#fff;overflow:hidden}
+.election-root .el-card h2{font-size:14px;font-weight:800;color:#182844;margin:0 0 6px}
+.election-root .el-sub{font-size:10px;color:#8492a5;margin:0 0 15px}
+.election-root .el-table-scroll{overflow:auto;width:100%}
+.election-root .el-table{border-collapse:collapse;min-width:570px;width:100%;font-size:11px}
+.election-root .el-table th{color:#334466;background:#f7f8fb;font-size:10px;padding:10px;border-bottom:1px solid #dfe4ed;text-align:left}
+.election-root .el-table td{padding:10px;border-bottom:1px solid #e8eaf0;font-weight:450;color:#435373}
+.election-root .el-table tr:last-child td{border-bottom:0}
+.election-root .el-acc-head{display:flex;justify-content:space-between;align-items:center;text-align:left;padding:0;background:transparent;border:0;width:100%;font-weight:800;color:#132440;font-size:13px}
+.election-root .el-acc-chevron{background:#f9e7f0;color:#d80a73;display:grid;place-items:center;border-radius:50%;width:30px;height:30px;font-size:20px}
+.election-root .el-acc-body{padding-top:16px}
+.election-root .el-acc-body[hidden]{display:none}
+.election-root .el-acc-body>h3,.election-root .el-year-block h3{font-size:12px;color:#243553;margin:19px 0 13px}
+.election-root .el-line{display:grid;grid-template-columns:130px 1fr 60px 64px;gap:9px;align-items:center;margin:8px 0;font-size:11px}
+.election-root .el-line>span:first-child{color:#72819d}
+.election-root .el-line-track{height:22px;border-radius:3px 16px 16px 3px;background:#f3f3f7;overflow:hidden;display:block}
+.election-root .el-line-track i{height:100%;display:block;border-radius:0 15px 15px 0}
+.election-root .el-line b{text-align:right;font-size:10px}.election-root .el-line small{text-align:right;font-size:10px;color:#60708e}
+.election-root .el-map-box{background:#f5f6f8;border-radius:18px;overflow:hidden}
+.election-root .el-map-frame{width:100%;height:410px;display:block;border:0}
+.election-root .el-map-note{font-size:10px;color:#607089;padding:10px 14px;line-height:1.55}
+.election-root .el-map-placeholder{padding:85px;text-align:center;background:#eef0f4}
+.election-root .el-year-block{border-top:1px solid #e1e5ee;padding:15px 0 5px;margin-top:12px}
+.election-root .el-vote-abst{font-size:11px;background:#f3f4f8;border-radius:13px;padding:11px;color:#273d6f}
+.election-root .el-vote-bar{display:flex;width:100%;max-width:620px;height:35px;border-radius:0 25px 25px 0;overflow:hidden;gap:3px;margin-top:14px}
+.election-root .el-vote-bar span{color:white;text-align:center;font-weight:800;padding:8px 3px;white-space:nowrap;font-size:13px}
+.election-root .el-vote-legend{display:flex;gap:14px;flex-wrap:wrap;margin:13px 0;color:#52627b;font-size:10px}
+.election-root .el-vote-legend>div{display:inline-flex;gap:6px;align-items:center}
+.election-root .el-vote-legend i{width:12px;height:12px;border-radius:50%;display:inline-block;flex:none}
+.election-root .el-round-outcome{color:#d10d4c;border:1px solid #ed324f;border-radius:20px;padding:12px;margin:18px 0 6px;font-size:11px}
+.election-root .el-muted{color:#718198;font-size:11px;line-height:1.6}
+.election-root .el-choice{border:1px solid #dfe3ec;border-radius:35px;padding:8px 12px;background:#fff;font-size:11px;color:#263957;font-weight:700}
+.election-root .el-choice.active,.election-root .el-choice:hover{border-color:#e00075;color:#df0076;background:#fff5fa}
+.election-root .el-filter-line{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin:15px 0}
+.election-root .el-legend-item{color:#4b6080;font-size:10px;padding:6px}
+.election-root .el-bureau-columns{display:grid;grid-template-columns:1.2fr .9fr;gap:22px;margin-top:12px}
+.election-root .el-bureau-columns .el-line{grid-template-columns:110px 1fr 48px 58px}
+.election-root .el-vote-selection{color:#e00075;font-weight:700;margin:8px 0}
+.election-root .el-bureau-card{border-left:8px solid #16a35b;border-bottom:1px solid #e1e5ea;padding:16px;margin:18px 0}
+.election-root .el-bureau-card h3{font-size:17px;margin:4px 0 12px}
+.election-root .el-foot{font-size:10px;color:#8894a6;padding:15px 25px;line-height:1.6}
+.election-root .el-foot a{display:inline-block;margin:0 10px 6px 0;color:#cb0a78}
+@media(max-width:1100px){.election-root .el-bureau-columns{grid-template-columns:1fr}.election-root .el-line{grid-template-columns:100px 1fr 48px 55px}}
+@media(max-width:700px){.election-root .el-layout{grid-template-columns:1fr}.election-root .el-local-nav{position:static;min-height:0;border-right:0;display:flex;flex-wrap:wrap;border-bottom:1px solid #e1e5ed;padding:9px}.election-root .el-local-nav h4{display:none}.election-root .el-local-city{width:100%;padding:8px}.election-root .el-local-button{width:auto;font-size:10px;border-radius:9px}.election-root .el-election-content{padding:12px}.election-root .el-line{grid-template-columns:85px 1fr 40px 45px;gap:4px;font-size:10px}}
