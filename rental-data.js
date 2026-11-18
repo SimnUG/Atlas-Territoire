@@ -73,6 +73,36 @@ async function manifest(y){
   return out;
  },86400000);
 }
+// L'API tabulaire interroge une seule commune, évitant le transfert de 16
+// fichiers nationaux de près de 5 Mo pour les séries 2022-2025.
+async function getTabular(resource,code){
+ const id=String(resource?.id||'');
+ if(!/^[0-9a-f-]{36}$/i.test(id))return null;
+ const base='https://tabular-api.data.gouv.fr/api/resources/'+id+'/';
+ const profile=await cached('rent-profile:'+id,async()=>{
+  const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),16000);
+  try{
+   const r=await fetch(base+'profile/',{headers:{Accept:'application/json'},signal:controller.signal});
+   if(!r.ok)throw Error('Profil API tabulaire '+r.status);
+   return r.json();
+  }finally{clearTimeout(timeout)}
+ },86400000);
+ const keys=profile?.profile?.header||profile?.header||[];
+ const codeField=keys.find(k=>['insee','inseec','codeinsee','codinsee','codecommune','comcode','codgeo','inseecom','codcom'].includes(norm(k)));
+ if(!codeField)return null;
+ const url=new URL(base+'data/');
+ url.searchParams.set(codeField+'__exact',code);
+ url.searchParams.set('page_size','10');
+ const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),20000);
+ try{
+  const r=await fetch(url.toString(),{headers:{Accept:'application/json'},signal:controller.signal});
+  if(!r.ok)throw Error('API tabulaire '+r.status);
+  const content=await r.json();
+  const rows=Array.isArray(content?.data)?content.data:content?.data?.data||[];
+  const found=rows.filter(x=>String(x[codeField]??'').trim().padStart(5,'0')===code);
+  return found.length===1?found[0]:null;
+ }finally{clearTimeout(timeout)}
+}
 function parseLine(line,delim){
  const out=[];let part='',q=false;
  for(let i=0;i<line.length;i++){
@@ -149,10 +179,19 @@ async function one(code,y,kind){
  if(!res)return {type:kind,annee:y,loyer:null,erreur:'Fichier de typologie non identifié dans le jeu officiel '+y};
  const u=res.url;
  if(!u)return {type:kind,annee:y,loyer:null,erreur:'URL source absente'};
- const content=await cached('rentfile:'+res.id,()=>get(u,22000),86400000);
- const hit=rowFor(content,code);
- if(!hit.row)return {type:kind,annee:y,loyer:null,erreur:hit.issue,colonne_disponibles:hit.keys.slice(0,40)};
- const i=interpret(hit.row,y,kind);
+ let row=null,queryError=null;
+ try{row=await getTabular(res,code)}
+ catch(e){queryError=e.message}
+ if(!row){
+  // Repli officiel CSV si l'API tabulaire ne prend pas en charge la ressource.
+  try{
+   const content=await cached('rentfile:'+res.id,()=>get(u,32000),86400000);
+   const hit=rowFor(content,code);
+   if(!hit.row)return {type:kind,annee:y,loyer:null,erreur:hit.issue,colonne_disponibles:hit.keys.slice(0,40)};
+   row=hit.row;
+  }catch(e){return {type:kind,annee:y,loyer:null,erreur:'API tabulaire '+(queryError||'indisponible')+' ; CSV : '+e.message}}
+ }
+ const i=interpret(row,y,kind);
  if(i.loyer===null)i.erreur='Colonne de loyer reconnue indisponible ou valeur hors domaine';
  return i;
 }
@@ -177,4 +216,4 @@ async function rent({code,historique=false}){
   avertissement:'Le loyer est une estimation pour un bien type, pas celui du bien recherché. Les chiffres 2022-2025 ne sont comparables que si la prédiction est communale à chaque millésime.',
   date_recherche:new Date().toISOString()};
 }
-module.exports={rent,parseRecords,rowFor,interpret,category};
+module.exports={rent,parseRecords,rowFor,interpret,category,getTabular,manifest};
