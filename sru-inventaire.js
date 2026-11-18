@@ -124,10 +124,14 @@ function extractRecord(table,code){
  const exempt=/(?:oui|exemptee|exemption|exempte)/.test(clean(rawExemption))||/exempte/.test(normStatus);
  const deficient=/(?:oui|deficitaire)/.test(clean(rawDeficit))||/deficitaire/.test(normStatus);
  const conform=/(?:non deficitaire|conforme|atteint)/.test(normStatus);
- let situation=rawStatus||null;
+ // Une colonne « Commune déficitaire 2026 » contient Oui/Non :
+ // ne pas afficher le mot « Oui » comme statut de la commune.
+ const binary=/^(?:oui|non|vrai|faux|true|false|1|0)$/.test(normStatus);
+ let situation=binary?null:(rawStatus||null);
  if(!situation&&exempt)situation='Commune exemptée';
  if(!situation&&deficient)situation='Commune déficitaire';
  if(!situation&&conform)situation='Commune au taux cible';
+ if(!situation&&/^(?:non|faux|false|0)$/.test(clean(rawDeficit)))situation='Commune non déficitaire';
  // Si le statut explicite manque, un taux inférieur au taux cible signifie un déficit.
  if(!situation&&taux!==null&&objectif!==null)
    situation=taux<objectif?'Commune déficitaire':'Taux cible atteint';
