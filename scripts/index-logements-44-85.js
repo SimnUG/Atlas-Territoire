@@ -61,15 +61,15 @@ async function build(){
    const code=commune.code;
    let epci=commune.codeEpci;
    if(!/^[0-9]{9}$/.test(epci||'')){
-    try{epci=await getCommuneEpci(code)}
-    catch(e){failures.push({code,commune:commune.nom,erreur:'EPCI : '+e.message});continue}
+    try{epci=await getCommuneEpci(code)}catch(_){epci=null}
+    if(!/^[0-9]{9}$/.test(epci||''))epci='DEP-'+commune.departement;
    }
    let lastError;
    for(let n=0;n<4;n++){
     try{
      const d=await insee.logement({
       commune:code,epci,nomCommune:commune.nom,
-      nomEpci:names.get(epci)||epci
+      nomEpci:names.get(epci)||(epci==='DEP-85'?'Département de la Vendée':epci==='DEP-44'?'Département de la Loire-Atlantique':epci)
      });
      if(d.statut!=='disponible'||d.tableaux.length!==5)throw Error('Profil incomplet');
      const fields=d.tableaux.flatMap(t=>t.lignes.flatMap(r=>
