@@ -67,3 +67,15 @@
 .election-root .el-epci-legend span{font-size:11px;display:inline-flex;gap:6px;align-items:center;color:#4f5d75}
 .election-root .el-epci-legend i{width:12px;height:12px;border-radius:50%;display:inline-block}
 .election-root .el-map-detail{background:#fff;border:1px solid #e1e4ee;border-radius:10px;padding:10px;font-size:11px;color:#344561}
+
+.election-root .el-persona-section{padding:15px 0 22px;margin:7px 0;border-top:1px solid #e1e5ed}
+.election-root .el-persona-section h3{font-size:12px;color:#15243b;margin:10px 0 16px}
+.election-root .el-persona-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.election-root .el-persona-group h4{text-align:center;font-size:11px;color:#67738c;margin:6px}
+.election-root .el-persona-cards{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.election-root .el-persona-card{border:1px solid #e10078;border-radius:9px;min-height:170px;text-align:center;padding:14px 8px}
+.election-root .el-persona-card h5{font-size:11px;margin:0 0 4px}
+.election-root .el-persona-card p{color:#7a8499;font-size:10px;margin:0 0 7px}
+.election-root .el-persona-card small{font-size:10px;color:#5c6b83}
+.election-root .el-persona-circle{width:68px;height:68px;margin:7px auto;display:grid;place-items:center;border-radius:50%;background:radial-gradient(circle at center,#fff 0 57%,transparent 60%),conic-gradient(#eedf00 var(--share),#edf0f2 0);font-size:13px;font-weight:850}
+@media(max-width:1000px){.election-root .el-persona-grid{grid-template-columns:1fr}}
