@@ -215,7 +215,7 @@ function render(root,state){
  const footer=elm('footer','lg-notes');
  const source=elm('div');source.append(elm('strong',null,'Source : '),document.createTextNode('INSEE — Recensement de la population 2023. Séries historiques 1968–2023. Références France au RP 2023.'));
  const other=elm('div','lg-source-links');
- for(const [label,url] of [['Commune',data.source.url_commune],['EPCI',data.source.url_epci],['France',data.source.url_france]]){
+ for(const [label,url] of [['Commune',data.source.url_commune],['EPCI',data.source.url_epci],['France',data.source.url_france],['RP 2017',data.source.url_millesime_2017]]){
   if(!url)continue;const a=elm('a',null,label+' ↗');a.href=url;a.target='_blank';a.rel='noopener noreferrer';other.append(a);
  }
  footer.append(source,other,
