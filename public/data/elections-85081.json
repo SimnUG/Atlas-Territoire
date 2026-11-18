@@ -11,6 +11,7 @@
    "exprimes": 1555,
    "blancs": 331,
    "nuls": 138,
+   "blancs_nuls": 469,
    "candidats": [
     {
      "nom": "François GILET",
@@ -105,6 +106,7 @@
    "exprimes": 1795,
    "blancs": 12,
    "nuls": 13,
+   "blancs_nuls": 25,
    "candidats": [
     {
      "nom": "François GILET",
@@ -132,35 +134,125 @@
     {
      "code": "0001",
      "libelle": "Bureau 0001",
-     "inscrits": 3471,
-     "votants": 1820,
-     "exprimes": 1795,
-     "abstentions": 1651,
-     "blancs": 12,
-     "nuls": 13,
+     "inscrits": 894,
+     "votants": 444,
+     "exprimes": 437,
+     "abstentions": 450,
+     "blancs": 1,
+     "nuls": 6,
      "candidats": [
       {
        "nom": "François GILET",
        "nuance": "LDVG",
-       "voix": 788,
+       "voix": 173,
        "liste": "En Avant Dompierre !"
       },
       {
        "nom": "Evelyne MISSIRE",
        "nuance": "LDVD",
-       "voix": 679,
+       "voix": 183,
        "liste": "Dompierre Avenir 2020"
       },
       {
        "nom": "Marc LEPELLETIER",
        "nuance": "LDIV",
-       "voix": 328,
+       "voix": 81,
+       "liste": "L'AUTRE LISTE"
+      }
+     ]
+    },
+    {
+     "code": "0002",
+     "libelle": "Bureau 0002",
+     "inscrits": 799,
+     "votants": 453,
+     "exprimes": 444,
+     "abstentions": 346,
+     "blancs": 5,
+     "nuls": 4,
+     "candidats": [
+      {
+       "nom": "François GILET",
+       "nuance": "LDVG",
+       "voix": 206,
+       "liste": "En Avant Dompierre !"
+      },
+      {
+       "nom": "Evelyne MISSIRE",
+       "nuance": "LDVD",
+       "voix": 156,
+       "liste": "Dompierre Avenir 2020"
+      },
+      {
+       "nom": "Marc LEPELLETIER",
+       "nuance": "LDIV",
+       "voix": 82,
+       "liste": "L'AUTRE LISTE"
+      }
+     ]
+    },
+    {
+     "code": "0003",
+     "libelle": "Bureau 0003",
+     "inscrits": 876,
+     "votants": 475,
+     "exprimes": 470,
+     "abstentions": 401,
+     "blancs": 5,
+     "nuls": 0,
+     "candidats": [
+      {
+       "nom": "François GILET",
+       "nuance": "LDVG",
+       "voix": 213,
+       "liste": "En Avant Dompierre !"
+      },
+      {
+       "nom": "Evelyne MISSIRE",
+       "nuance": "LDVD",
+       "voix": 174,
+       "liste": "Dompierre Avenir 2020"
+      },
+      {
+       "nom": "Marc LEPELLETIER",
+       "nuance": "LDIV",
+       "voix": 83,
+       "liste": "L'AUTRE LISTE"
+      }
+     ]
+    },
+    {
+     "code": "0004",
+     "libelle": "Bureau 0004",
+     "inscrits": 902,
+     "votants": 448,
+     "exprimes": 444,
+     "abstentions": 454,
+     "blancs": 1,
+     "nuls": 3,
+     "candidats": [
+      {
+       "nom": "François GILET",
+       "nuance": "LDVG",
+       "voix": 196,
+       "liste": "En Avant Dompierre !"
+      },
+      {
+       "nom": "Evelyne MISSIRE",
+       "nuance": "LDVD",
+       "voix": 166,
+       "liste": "Dompierre Avenir 2020"
+      },
+      {
+       "nom": "Marc LEPELLETIER",
+       "nuance": "LDIV",
+       "voix": 82,
        "liste": "L'AUTRE LISTE"
       }
      ]
     }
    ],
-   "source": "https://static.data.gouv.fr/resources/elections-municipales-2020-resultats/20200525-133704/2020-05-18-resultats-communes-de-1000-et-plus.txt"
+   "source": "https://static.data.gouv.fr/resources/elections-municipales-2020-resultats/20200525-133745/2020-05-18-resultats-par-niveau-burvot-t1-france-entiere.txt"
   },
   {
    "annee": 2020,
@@ -171,6 +263,7 @@
    "exprimes": 1754,
    "blancs": 31,
    "nuls": 26,
+   "blancs_nuls": 57,
    "candidats": [
     {
      "nom": "François GILET",
@@ -191,29 +284,101 @@
     {
      "code": "0001",
      "libelle": "Bureau 0001",
-     "inscrits": 3473,
-     "votants": 1811,
-     "exprimes": 1754,
-     "abstentions": 1662,
-     "blancs": 31,
-     "nuls": 26,
+     "inscrits": 892,
+     "votants": 457,
+     "exprimes": 444,
+     "abstentions": 435,
+     "blancs": 4,
+     "nuls": 9,
      "candidats": [
       {
        "nom": "François GILET",
        "nuance": "LDVG",
-       "voix": 986,
+       "voix": 243,
        "liste": "En Avant Dompierre !"
       },
       {
        "nom": "Evelyne MISSIRE",
        "nuance": "LDVD",
-       "voix": 768,
+       "voix": 201,
+       "liste": "Dompierre Avenir 2020"
+      }
+     ]
+    },
+    {
+     "code": "0002",
+     "libelle": "Bureau 0002",
+     "inscrits": 801,
+     "votants": 453,
+     "exprimes": 434,
+     "abstentions": 348,
+     "blancs": 9,
+     "nuls": 10,
+     "candidats": [
+      {
+       "nom": "François GILET",
+       "nuance": "LDVG",
+       "voix": 267,
+       "liste": "En Avant Dompierre !"
+      },
+      {
+       "nom": "Evelyne MISSIRE",
+       "nuance": "LDVD",
+       "voix": 167,
+       "liste": "Dompierre Avenir 2020"
+      }
+     ]
+    },
+    {
+     "code": "0003",
+     "libelle": "Bureau 0003",
+     "inscrits": 878,
+     "votants": 459,
+     "exprimes": 442,
+     "abstentions": 419,
+     "blancs": 11,
+     "nuls": 6,
+     "candidats": [
+      {
+       "nom": "François GILET",
+       "nuance": "LDVG",
+       "voix": 228,
+       "liste": "En Avant Dompierre !"
+      },
+      {
+       "nom": "Evelyne MISSIRE",
+       "nuance": "LDVD",
+       "voix": 214,
+       "liste": "Dompierre Avenir 2020"
+      }
+     ]
+    },
+    {
+     "code": "0004",
+     "libelle": "Bureau 0004",
+     "inscrits": 902,
+     "votants": 442,
+     "exprimes": 434,
+     "abstentions": 460,
+     "blancs": 7,
+     "nuls": 1,
+     "candidats": [
+      {
+       "nom": "François GILET",
+       "nuance": "LDVG",
+       "voix": 248,
+       "liste": "En Avant Dompierre !"
+      },
+      {
+       "nom": "Evelyne MISSIRE",
+       "nuance": "LDVD",
+       "voix": 186,
        "liste": "Dompierre Avenir 2020"
       }
      ]
     }
    ],
-   "source": "https://static.data.gouv.fr/resources/municipales-2020-resultats-2nd-tour/20200629-192435/2020-06-29-resultats-t2-communes-de-1000-hab-et-plus.txt"
+   "source": "https://static.data.gouv.fr/resources/municipales-2020-resultats-2nd-tour/20200629-192438/resultats-par-niveau-burvot-t2-france-entiere.txt"
   },
   {
    "annee": 2014,
@@ -224,6 +389,7 @@
    "exprimes": 2226,
    "blancs": null,
    "nuls": null,
+   "blancs_nuls": 78,
    "candidats": [
     {
      "nom": "Philippe GABORIAU",
@@ -325,6 +491,7 @@
    "exprimes": 2170,
    "blancs": null,
    "nuls": null,
+   "blancs_nuls": 68,
    "candidats": [
     {
      "nom": "Philippe GABORIAU",
@@ -430,12 +597,12 @@
   {
    "annee": 2020,
    "tour": 1,
-   "url": "https://static.data.gouv.fr/resources/elections-municipales-2020-resultats/20200525-133704/2020-05-18-resultats-communes-de-1000-et-plus.txt"
+   "url": "https://static.data.gouv.fr/resources/elections-municipales-2020-resultats/20200525-133745/2020-05-18-resultats-par-niveau-burvot-t1-france-entiere.txt"
   },
   {
    "annee": 2020,
    "tour": 2,
-   "url": "https://static.data.gouv.fr/resources/municipales-2020-resultats-2nd-tour/20200629-192435/2020-06-29-resultats-t2-communes-de-1000-hab-et-plus.txt"
+   "url": "https://static.data.gouv.fr/resources/municipales-2020-resultats-2nd-tour/20200629-192438/resultats-par-niveau-burvot-t2-france-entiere.txt"
   },
   {
    "annee": 2014,
