@@ -144,7 +144,7 @@
       // Pour les permis mixtes, les pièces ne sont pas ventilées entre maison et collectif.
       // Ne pas attribuer fictivement les T à un type de logement.
       if(state.type!=='all'&&op.record.typologie==='mixte')continue;
-      for(let i=0;i<rooms.length;i++)sums[rooms[i]]+=op.record.pieces?.[i]||0;
+      for(let i=0;i<rooms.length;i++)sums[rooms[i]]+=(measure==='operations'?(op.record.pieces?.[i]>0?1:0):(op.record.pieces?.[i]||0));
     }else sums[op.record.status]+=measure==='logements'?op.qty:1;
    }
    years.push({year:y,sums,total:Object.values(sums).reduce((x,y)=>x+y,0)});
@@ -219,7 +219,7 @@
   bar.append(elem('span','pc-mini-sub',typology?'Répartition des logements par nombre de pièces déclaré.':'Dimension affichée : statut. Choisissez les mesures pour changer la ventilation.'),h);
   p.append(bar,elem('strong','pc-label','Commune — '+city));
   svgBars(p,rows,{measure:typology?state.tyMeasure:state.measure,display:typology?state.tyDisplay:state.display,typology});
-  if(typology)p.append(elem('p','pc-mini-sub','Les typologies non renseignées et les permis mixtes non ventilables sont exclus du détail par pièces, mais comptés dans les totaux.'));
+  if(typology)p.append(elem('p','pc-mini-sub',state.tyMeasure==='operations'?'Chaque opération est comptée dans une typologie dès qu’elle contient au moins un logement de ce nombre de pièces ; une opération peut figurer dans plusieurs catégories.':'Les typologies non renseignées et les permis mixtes non ventilables sont exclus du détail par pièces, mais comptés dans les totaux.'));
   return p;
  }
  function housingTypes(rows){
@@ -329,6 +329,7 @@
       .then(r=>r.ok?r.json():null).then(d=>{
        for(const point of d?.points||[])geo.set(code+'/'+point.id,point);
        if(pointBox.isConnected)refresh();
+       else if(rootRef?.isConnected&&sourceState?.tab==='permis')draw();
       }).catch(()=>{if(pointBox.isConnected)foot.textContent='Certaines opérations ne peuvent pas être géocodées actuellement.'});
     }
     setTimeout(()=>{if(pointBox.isConnected)map?.invalidateSize()},110);
