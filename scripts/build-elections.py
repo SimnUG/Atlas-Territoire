@@ -139,14 +139,14 @@ def from2008(raw,url):
   if len(row)<25 or not city(row[1],row[3]):continue
   if current not in (1,2):continue
   bv=row[5];cs=[]
-  for i in range(16,len(row)-8,9):
+  for i in range(17,len(row)-8,9):
    blk=row[i:i+9]
    if len(blk)<9 or not blk[2].strip():break
    cc=candidate(blk[2],blk[3],blk[0],blk[6],blk[4])
    if cc['voix'] is not None:cs.append(cc)
   if not cs:continue
   ins=num(row[6]);vot=num(row[9])
-  x=office(bv,ins,vot,row[13],None,None,row[7],cs)
+  x=office(bv,ins,vot,row[14],None,None,row[7],cs)
   x['blancs_nuls_combines']=num(row[11])
   groups[current].append(x)
  rounds={}
