@@ -1,14 +1,16 @@
 'use strict';
 async function main(){
  const slugs=[
- ['2026-t1','elections-municipales-2026-resultats-du-premier-tour'],
- ['2026-t2','elections-municipales-2026-resultats-du-second-tour'],
- ['2020-t1','elections-municipales-2020-resultats']
+ ['2020-t2','municipales-2020-resultats-2nd-tour'],
+ ['2014','elections-municipales-2014-resultats-par-bureaux-de-vote'],
+ ['2008-150','elections-municipales-2008-resultats-572150'],
+ ['2008-152','elections-municipales-2008-resultats-572152'],
+ ['2008-154','elections-municipales-2008-resultats-572154']
  ];
  for(const [year,slug] of slugs){
   const response=await fetch('https://www.data.gouv.fr/api/1/datasets/'+slug+'/');
   const json=await response.json();
-  const list=(json.resources||[]).filter(x=>/bv|commune|burvot|bureau de vote/i.test(x.title)&&(/csv|txt/i.test(x.format)||/\.csv|\.txt/.test(x.url)));
+  const list=(json.resources||[]).filter(x=>(/csv|txt/i.test(x.format)||/\.csv|\.txt/.test(x.url)));
   for(const file of list){
    if(file.filesize>75_000_000)continue;
    try{
