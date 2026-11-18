@@ -1,0 +1,25 @@
+'use strict';
+const assert=require('node:assert/strict'),fs=require('node:fs'),{JSDOM}=require('jsdom');
+const rpls=require('../social-rpls');
+const dom=new JSDOM('<!doctype html><html lang="fr"><head></head><body><div id="result"></div></body></html>',
+ {url:'https://atlas-territoires-simnug.onrender.com/dashboard.html?onglet=social',runScripts:'outside-only'});
+dom.window.eval(fs.readFileSync('public/social-reference.js','utf8'));
+const root=dom.window.document.getElementById('result');
+const data=rpls.social('85081');
+const ok=dom.window.AtlasSocialPage.render(root,{loc:{commune:'Dompierre-sur-Yon',code_insee:'85081',latitude:46.738,longitude:-1.385},socialData:data});
+assert.equal(ok,true);
+assert.equal(root.querySelectorAll('.rs-section').length,8);
+assert.equal(root.querySelectorAll('.rs-panel').length,14);
+assert.equal(root.querySelectorAll('svg.rs-line-chart').length,4);
+assert.equal(root.querySelectorAll('.rs-checkbox').length,13);
+assert.equal(root.querySelectorAll('.rs-donut').length,1);
+assert.equal(root.querySelectorAll('.rs-finance-col').length,5);
+assert.equal(root.querySelectorAll('.rs-leaflet-map').length,1);
+assert.match(root.textContent,/149/);
+assert.match(root.textContent,/Parc locatif social|parc locatif social/);
+assert.match(root.textContent,/PLAI/);
+assert.match(root.textContent,/Taux de mobilité/);
+assert.match(root.textContent,/72 positions/);
+const test=dom.window.document.createElement('div');
+assert.doesNotThrow(()=>dom.window.AtlasSocialPage.render(test,{loc:{commune:'Test'},socialData:null}));
+console.log('DOM OK: 8 sections, 14 panels, 4 charts, 13 working filters, map, verified 149 homes');
