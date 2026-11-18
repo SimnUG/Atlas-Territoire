@@ -67,6 +67,7 @@ async function getMutationsForHost(code,base){
   url=dest;
  }
  if(url||reported!==null&&all.length<reported)throw Error('Source DVF+ incomplète, prix annuels non calculés');
+ if(!all.length)throw Error('Aucune transaction retournée par ce serveur DVF+ ; contrôle du second serveur requis');
  const unique=new Set(),groups={};
  for(const raw of all){
   const row=prepare(raw,code);
