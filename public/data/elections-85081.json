@@ -615,5 +615,1272 @@
    "url": "https://static.data.gouv.fr/resources/elections-municipales-2008-communes-de-plus-de-3-500-habitants-resultats-par-bureaux-de-vote-1/20150925-122851/MN08_BVot_T1T2.txt"
   }
  ],
+ "nuances_departement_2026": {
+  "85001": {
+   "nuance": "",
+   "liste": "ENSEMBLE UNIS POUR L'AIGUILLON LA PRESQU'ÎLE",
+   "voix": 1206
+  },
+  "85002": {
+   "nuance": "",
+   "liste": "L'AIGUILLON-SUR-VIE, C'EST VOUS !",
+   "voix": 515
+  },
+  "85003": {
+   "nuance": "LDVD",
+   "liste": "AIZENAY, VILLE DYNAMIQUE ET SOLIDAIRE",
+   "voix": 2832
+  },
+  "85004": {
+   "nuance": "",
+   "liste": "ANGLES L'AVENIR ENSEMBLE",
+   "voix": 1090
+  },
+  "85005": {
+   "nuance": "",
+   "liste": "S'UNIR POUR L'AVENIR",
+   "voix": 422
+  },
+  "85006": {
+   "nuance": "",
+   "liste": "Une ambition pour Apremont",
+   "voix": 524
+  },
+  "85008": {
+   "nuance": "LDIV",
+   "liste": "A NOUS TOUS L'AVENIR",
+   "voix": 1721
+  },
+  "85009": {
+   "nuance": "",
+   "liste": "AGIR ENSEMBLE POUR AUCHAY-SUR-VENDÉE",
+   "voix": 469
+  },
+  "85010": {
+   "nuance": "",
+   "liste": "AGIR POUR VOUS ET AVEC VOUS",
+   "voix": 566
+  },
+  "85011": {
+   "nuance": "",
+   "liste": "BARBÂTRE CE QUI NOUS LIE",
+   "voix": 981
+  },
+  "85012": {
+   "nuance": "",
+   "liste": "ECOUTER, AGIR ENSEMBLE POUR L'AVENIR",
+   "voix": 933
+  },
+  "85013": {
+   "nuance": "",
+   "liste": "AGIR ENSEMBLE DURABLEMENT",
+   "voix": 581
+  },
+  "85014": {
+   "nuance": "",
+   "liste": "ENSEMBLE POUR BAZOGES",
+   "voix": 351
+  },
+  "85015": {
+   "nuance": "",
+   "liste": "CONSTRUIRE ENSEMBLE POUR BEAUFOU",
+   "voix": 665
+  },
+  "85016": {
+   "nuance": "",
+   "liste": "S'UNIR POUR BEAULIEU",
+   "voix": 804
+  },
+  "85017": {
+   "nuance": "",
+   "liste": "BEAUREPAIRE, UNE COMMUNE À BIEN VIVRE",
+   "voix": 898
+  },
+  "85018": {
+   "nuance": "LDVD",
+   "liste": "UNE ÉQUIPE POUR L'AVENIR",
+   "voix": 1565
+  },
+  "85019": {
+   "nuance": "LDIV",
+   "liste": "AGIR ENSEMBLE POUR BELLEVIGNY",
+   "voix": 1918
+  },
+  "85020": {
+   "nuance": "LDVG",
+   "liste": "BENET, DYNAMIQUE POUR VOUS !",
+   "voix": 1503
+  },
+  "85022": {
+   "nuance": "",
+   "liste": "LA FORCE DU LIEN, LA RICHESSE DU TERRITOIRE",
+   "voix": 626
+  },
+  "85023": {
+   "nuance": "",
+   "liste": "ENSEMBLE POUR BESSAY",
+   "voix": 171
+  },
+  "85024": {
+   "nuance": "",
+   "liste": "BOIS-DE-CÉNÉ, TERRE DE LIENS ET D'AVENIR",
+   "voix": 596
+  },
+  "85025": {
+   "nuance": "",
+   "liste": "LA BOISSIÈRE, AGIR ENSEMBLE POUR DEMAIN",
+   "voix": 945
+  },
+  "85026": {
+   "nuance": "",
+   "liste": "CONTINUONS D'AGIR ENSEMBLE POUR LA BOISSIÈRE",
+   "voix": 562
+  },
+  "85028": {
+   "nuance": "",
+   "liste": "200 ANS DE MEMOIRE COLLECTIVE POUR CONTRUIRE UN AVENIR DURABLE",
+   "voix": 212
+  },
+  "85029": {
+   "nuance": "",
+   "liste": "ENSEMBLE POUR BOUIN avec THOMAS GISBERT",
+   "voix": 856
+  },
+  "85031": {
+   "nuance": "",
+   "liste": "UN COLLECTIF POUR VIVRE, BÂTIR ET GRANDIR AVEC VOUS",
+   "voix": 1225
+  },
+  "85033": {
+   "nuance": "",
+   "liste": "ENSEMBLE POUR UN AVENIR QUI RASSEMBLE",
+   "voix": 288
+  },
+  "85034": {
+   "nuance": "",
+   "liste": "BOURNEZEAU - SAINT VINCENT PUYMAUFRAIS : CULTIVONS NOS LIENS",
+   "voix": 1271
+  },
+  "85035": {
+   "nuance": "LDIV",
+   "liste": "POUR BRETIGNOLLES",
+   "voix": 1966
+  },
+  "85036": {
+   "nuance": "",
+   "liste": "VIVRE ENSEMBLE, GRANDIR ENSEMBLE",
+   "voix": 255
+  },
+  "85038": {
+   "nuance": "",
+   "liste": "AGISSONS ENSEMBLE POUR LES BROUZILS",
+   "voix": 1004
+  },
+  "85039": {
+   "nuance": "LDIV",
+   "liste": "LA BRUFFIERE, ENSEMBLE VERS L'AVENIR",
+   "voix": 1246
+  },
+  "85040": {
+   "nuance": "",
+   "liste": "Continuons d'agir ensemble pour la Caillère-Saint-Hilaire",
+   "voix": 322
+  },
+  "85042": {
+   "nuance": "",
+   "liste": "CHAILLÉ DEMAIN",
+   "voix": 795
+  },
+  "85045": {
+   "nuance": "",
+   "liste": "MÊME CAP, NOUVELLE ÉNERGIE",
+   "voix": 421
+  },
+  "85046": {
+   "nuance": "LDVD",
+   "liste": "La Chaize, Passion commune",
+   "voix": 1209
+  },
+  "85047": {
+   "nuance": "LDVC",
+   "liste": "Challans en Grand",
+   "voix": 4672
+  },
+  "85049": {
+   "nuance": "",
+   "liste": "POUR UNE COMMUNE À L'ÉCOUTE DE SES HABITANTS",
+   "voix": 556
+  },
+  "85050": {
+   "nuance": "",
+   "liste": "CONTINUONS À INNOVER POUR L'AVENIR DE CHAMP-SAINT-PÈRE",
+   "voix": 572
+  },
+  "85051": {
+   "nuance": "LDVD",
+   "liste": "CHANTONNAY : L'AVENIR S'ÉCRIT ENSEMBLE",
+   "voix": 2367
+  },
+  "85054": {
+   "nuance": "",
+   "liste": "POUR LE BIEN VIVRE À LA CHAPELLE-HERMIER",
+   "voix": 448
+  },
+  "85055": {
+   "nuance": "",
+   "liste": "UNE ÉQUIPE UNIE POUR UN FUTUR PARTAGÉ !",
+   "voix": 438
+  },
+  "85056": {
+   "nuance": "",
+   "liste": "ENSEMBLE, CONSTRUISONS DEMAIN",
+   "voix": 149
+  },
+  "85058": {
+   "nuance": "",
+   "liste": "CONSTRUISONS ENSEMBLE L'AVENIR DE CHASNAIS",
+   "voix": 318
+  },
+  "85059": {
+   "nuance": "",
+   "liste": "DYNAMISER AUJOURD'HUI, RÉUSSIR DEMAIN",
+   "voix": 743
+  },
+  "85061": {
+   "nuance": "",
+   "liste": "UNIS POUR AVANCER, ENGAGÉS POUR AGIR",
+   "voix": 517
+  },
+  "85062": {
+   "nuance": "",
+   "liste": "ENTREPRENDRE ENSEMBLE POUR CHÂTEAUNEUF",
+   "voix": 299
+  },
+  "85064": {
+   "nuance": "",
+   "liste": "CHAUCHÉ DEMAIN : C'EST AVEC VOUS !",
+   "voix": 841
+  },
+  "85065": {
+   "nuance": "LDVD",
+   "liste": "CHAVAGNES 2026 : UN ELAN COMMUN POUR CONSTRUIRE DEMAIN",
+   "voix": 1344
+  },
+  "85066": {
+   "nuance": "",
+   "liste": "Faire bien, faire simple, faire ensemble à Chavagnes Les Redoux",
+   "voix": 354
+  },
+  "85067": {
+   "nuance": "",
+   "liste": "Ensemble pour l'Avenir",
+   "voix": 443
+  },
+  "85070": {
+   "nuance": "",
+   "liste": "ENSEMBLE, FAISONS VIVRE COËX",
+   "voix": 1237
+  },
+  "85071": {
+   "nuance": "LDVD",
+   "liste": "COMMEQUIERS : MÊME ÉLAN, NOUVEAUX DÉFIS",
+   "voix": 1301
+  },
+  "85072": {
+   "nuance": "",
+   "liste": "ENSEMBLE POUR LA COPECHAGNIÈRE",
+   "voix": 386
+  },
+  "85073": {
+   "nuance": "",
+   "liste": "ENSEMBLE POUR CORPE",
+   "voix": 349
+  },
+  "85074": {
+   "nuance": "",
+   "liste": "LA COUTURE AVEC VOUS",
+   "voix": 96
+  },
+  "85076": {
+   "nuance": "LDIV",
+   "liste": "L'UNION EN ACTION",
+   "voix": 1796
+  },
+  "85077": {
+   "nuance": "",
+   "liste": "VIVRE ET AGIR À CURZON, ENSEMBLE",
+   "voix": 188
+  },
+  "85078": {
+   "nuance": "",
+   "liste": "ENSEMBLE POUR DAMVIX",
+   "voix": 334
+  },
+  "85080": {
+   "nuance": "",
+   "liste": "AGIR ENSEMBLE POUR DOIX-LÈS-FONTAINES",
+   "voix": 539
+  },
+  "85081": {
+   "nuance": "LDVG",
+   "liste": "DOMPIERRE AVANCE !",
+   "voix": 1555
+  },
+  "85082": {
+   "nuance": "",
+   "liste": "SPICÉENS, ENSEMBLE, CONTINUONS",
+   "voix": 1142
+  },
+  "85083": {
+   "nuance": "",
+   "liste": "VIVONS L'ÉPINE",
+   "voix": 613
+  },
+  "85084": {
+   "nuance": "LDIV",
+   "liste": "TOUS ENSEMBLE BOULOGNE LES ESSARTS",
+   "voix": 2334
+  },
+  "85086": {
+   "nuance": "",
+   "liste": "AGIR PRÈS DE VOUS, POUR VOUS",
+   "voix": 608
+  },
+  "85087": {
+   "nuance": "",
+   "liste": "ENSEMBLE POUR L'AVENIR DE FAYMOREAU",
+   "voix": 93
+  },
+  "85088": {
+   "nuance": "LDVD",
+   "liste": "POUR LE FENOUILLER",
+   "voix": 1094
+  },
+  "85089": {
+   "nuance": "LDVD",
+   "liste": "VIVRE ENSEMBLE LA FERRIERE",
+   "voix": 1810
+  },
+  "85090": {
+   "nuance": "LDIV",
+   "liste": "ENSEMBLE POUR SÈVREMONT",
+   "voix": 2119
+  },
+  "85092": {
+   "nuance": "LDVD",
+   "liste": "FONTENAY AU COEUR",
+   "voix": 2772
+  },
+  "85093": {
+   "nuance": "",
+   "liste": "UNIS ET ENGAGÉS POUR FOUGERÉ",
+   "voix": 582
+  },
+  "85094": {
+   "nuance": "",
+   "liste": "UNE ÉQUIPE POUR VOUS, AVEC VOUS !",
+   "voix": 474
+  },
+  "85095": {
+   "nuance": "",
+   "liste": "CONVIVIALITÉ ET BIEN ÊTRE",
+   "voix": 724
+  },
+  "85096": {
+   "nuance": "LDVD",
+   "liste": "POUR VOUS ET AVEC VOUS",
+   "voix": 1803
+  },
+  "85097": {
+   "nuance": "",
+   "liste": "COLLECTIVEMENT AU SERVICE DE LA GAUBRETIÈRE",
+   "voix": 1015
+  },
+  "85098": {
+   "nuance": "",
+   "liste": "Pour une commune vivante et solidaire",
+   "voix": 723
+  },
+  "85099": {
+   "nuance": "",
+   "liste": "POUR LE GIROUARD, UNE DYNAMIQUE COMMUNE",
+   "voix": 410
+  },
+  "85100": {
+   "nuance": "",
+   "liste": "GIVRAND, PASSION COMMUNE",
+   "voix": 879
+  },
+  "85101": {
+   "nuance": "",
+   "liste": "AGIR AUJOURD'HUI POUR DEMAIN",
+   "voix": 233
+  },
+  "85102": {
+   "nuance": "",
+   "liste": "NOTRE VILLAGE, NOTRE AVENIR",
+   "voix": 252
+  },
+  "85103": {
+   "nuance": "",
+   "liste": "TOUS ENSEMBLE POUR GROSBREUIL",
+   "voix": 777
+  },
+  "85104": {
+   "nuance": "",
+   "liste": "AGIR ENSEMBLE POUR GRUES",
+   "voix": 388
+  },
+  "85105": {
+   "nuance": "",
+   "liste": "TOUS ENSEMBLE POUR LE BIEN COMMUN",
+   "voix": 171
+  },
+  "85106": {
+   "nuance": "",
+   "liste": "ENSEMBLE POUR LA GUÉRINIÈRE",
+   "voix": 619
+  },
+  "85108": {
+   "nuance": "",
+   "liste": "AGIR ENSEMBLE POUR L'HERBERGEMENT",
+   "voix": 1139
+  },
+  "85109": {
+   "nuance": "LDVD",
+   "liste": "LES HERBIERS, L'ESPRIT D'EQUIPE !",
+   "voix": 5109
+  },
+  "85110": {
+   "nuance": "",
+   "liste": "VIVONS ENSEMBLE À L'HERMENAULT",
+   "voix": 246
+  },
+  "85111": {
+   "nuance": "",
+   "liste": "Bien vivre à l'Île-d'Elle",
+   "voix": 364
+  },
+  "85112": {
+   "nuance": "",
+   "liste": "UN VILLAGE, UNE ÉQUIPE, DES PROJETS",
+   "voix": 1284
+  },
+  "85113": {
+   "nuance": "LDVD",
+   "liste": "M'YEU ENSEMBLE",
+   "voix": 1358
+  },
+  "85114": {
+   "nuance": "",
+   "liste": "JARD, UN AVENIR QUI INSPIRE !",
+   "voix": 1133
+  },
+  "85115": {
+   "nuance": "",
+   "liste": "AVANÇONS ENSEMBLE, POUR TOUS",
+   "voix": 217
+  },
+  "85116": {
+   "nuance": "",
+   "liste": "LA JONCHÈRE L'AVENIR EN COMMUN",
+   "voix": 241
+  },
+  "85117": {
+   "nuance": "",
+   "liste": "ENSEMBLE, POURSUIVONS L'OPTIMISME",
+   "voix": 290
+  },
+  "85118": {
+   "nuance": "",
+   "liste": "VIVONS LANDERONDE",
+   "voix": 864
+  },
+  "85119": {
+   "nuance": "",
+   "liste": "UNE ÉQUIPE POUR DEMAIN",
+   "voix": 945
+  },
+  "85120": {
+   "nuance": "",
+   "liste": "AVANÇONS ENSEMBLE",
+   "voix": 587
+  },
+  "85121": {
+   "nuance": "",
+   "liste": "BIEN VIVRE AU LANGON",
+   "voix": 327
+  },
+  "85123": {
+   "nuance": "",
+   "liste": "TOUS UNIS...TOUS POUR LIEZ",
+   "voix": 140
+  },
+  "85125": {
+   "nuance": "",
+   "liste": "DIALOGUE POUR TOUS",
+   "voix": 155
+  },
+  "85126": {
+   "nuance": "",
+   "liste": "CONTINUONS D'AGIR POUR LONGÈVES !",
+   "voix": 585
+  },
+  "85127": {
+   "nuance": "",
+   "liste": "Imaginons Longeville Demain",
+   "voix": 776
+  },
+  "85128": {
+   "nuance": "LDVD",
+   "liste": "LUÇON ENSEMBLE DEMAIN",
+   "voix": 1491
+  },
+  "85129": {
+   "nuance": "LDVC",
+   "liste": "AVANÇONS ENSEMBLE POUR LES LUCS",
+   "voix": 1417
+  },
+  "85130": {
+   "nuance": "",
+   "liste": "AVANÇONS ENSEMBLE POUR MACHÉ",
+   "voix": 681
+  },
+  "85131": {
+   "nuance": "",
+   "liste": "CONTINUONS À AGIR ENSEMBLE POUR LES MAGNILS-REIGNIERS",
+   "voix": 705
+  },
+  "85132": {
+   "nuance": "",
+   "liste": "BIEN VIVRE ENSEMBLE À MAILLÉ",
+   "voix": 320
+  },
+  "85133": {
+   "nuance": "",
+   "liste": "UNIS POUR MAILLEZAIS",
+   "voix": 323
+  },
+  "85134": {
+   "nuance": "",
+   "liste": "TOUS ENSEMBLE POUR MALLIEVRE",
+   "voix": 125
+  },
+  "85135": {
+   "nuance": "",
+   "liste": "Continuons avec passion pour Mareuil sur Lay Dissais",
+   "voix": 864
+  },
+  "85136": {
+   "nuance": "",
+   "liste": "Bien vivre à Marillet",
+   "voix": 44
+  },
+  "85137": {
+   "nuance": "",
+   "liste": "BIEN VIVRE À MARSAIS-SAINTE-RADÉGONDE",
+   "voix": 188
+  },
+  "85138": {
+   "nuance": "",
+   "liste": "Bien vivre ensemble à Martinet",
+   "voix": 512
+  },
+  "85139": {
+   "nuance": "",
+   "liste": "LA MAZEENNE",
+   "voix": 193
+  },
+  "85140": {
+   "nuance": "",
+   "liste": "LA MEILLERAIE-TILLAY, CONTINUONS LA ROUTE ENSEMBLE",
+   "voix": 548
+  },
+  "85141": {
+   "nuance": "",
+   "liste": "AGIR AVEC VOUS",
+   "voix": 238
+  },
+  "85142": {
+   "nuance": "",
+   "liste": "AGIR TOUS ENSEMBLE POUR LA MERLATIERE",
+   "voix": 346
+  },
+  "85143": {
+   "nuance": "",
+   "liste": "ENSEMBLE POUR MERVENT",
+   "voix": 401
+  },
+  "85144": {
+   "nuance": "",
+   "liste": "ENSEMBLE POUR MESNARD",
+   "voix": 625
+  },
+  "85145": {
+   "nuance": "",
+   "liste": "MONSIREIGNE, UNIS POUR L'AVENIR",
+   "voix": 390
+  },
+  "85146": {
+   "nuance": "LDVD",
+   "liste": "Montaigu-Vendée, Une Ambition Partagée",
+   "voix": 6882
+  },
+  "85147": {
+   "nuance": "",
+   "liste": "VIVRE ET AGIR ENSEMBLE POUR MONTOURNAIS",
+   "voix": 595
+  },
+  "85148": {
+   "nuance": "",
+   "liste": "Tous Unis au Coeur de nos Villages",
+   "voix": 281
+  },
+  "85149": {
+   "nuance": "",
+   "liste": "AGIR ENSEMBLE POUR MOREILLES",
+   "voix": 138
+  },
+  "85151": {
+   "nuance": "LDIV",
+   "liste": "MORTAGNE \"CAP SUR DEMAIN\"",
+   "voix": 1910
+  },
+  "85152": {
+   "nuance": "LDVD",
+   "liste": "DEMAIN LES ACHARDS !",
+   "voix": 1282
+  },
+  "85153": {
+   "nuance": "",
+   "liste": "POUR MOUCHAMPS, AGISSONS ENSEMBLE !",
+   "voix": 1140
+  },
+  "85154": {
+   "nuance": "",
+   "liste": "POURSUIVONS L'ÉLAN DE NOTRE COMMUNE",
+   "voix": 635
+  },
+  "85155": {
+   "nuance": "LDVD",
+   "liste": "Cultivons l'esprit Mouilleron",
+   "voix": 2079
+  },
+  "85156": {
+   "nuance": "",
+   "liste": "UNIS POUR L'AVENIR DE MOUTIERS-LES-MAUXFAITS",
+   "voix": 1000
+  },
+  "85157": {
+   "nuance": "",
+   "liste": "ENSEMBLE AU FIL DU LAY, LE VILLAGE QUI VOUS RESSEMBLE",
+   "voix": 299
+  },
+  "85158": {
+   "nuance": "",
+   "liste": "VIVRE ET AGIR, ENSEMBLE ! A MOUZEUIL SAINT MARTIN",
+   "voix": 421
+  },
+  "85159": {
+   "nuance": "",
+   "liste": "Unis dans la diversité, pour NALLIERS",
+   "voix": 725
+  },
+  "85160": {
+   "nuance": "",
+   "liste": "AGIR ENSEMBLE POUR NESMY",
+   "voix": 838
+  },
+  "85161": {
+   "nuance": "",
+   "liste": "NIEUL, UN FUTUR QUI NOUS RASSEMBLE",
+   "voix": 794
+  },
+  "85162": {
+   "nuance": "",
+   "liste": "AUTISIENS, AVANÇONS VERS DEMAIN",
+   "voix": 656
+  },
+  "85163": {
+   "nuance": "LDVD",
+   "liste": "ENGAGÉS POUR NOIRMOUTIER",
+   "voix": 1624
+  },
+  "85164": {
+   "nuance": "",
+   "liste": "AVANÇONS ENSEMBLE",
+   "voix": 870
+  },
+  "85165": {
+   "nuance": "",
+   "liste": "L'OIE, CONTINUONS ENSEMBLE",
+   "voix": 522
+  },
+  "85167": {
+   "nuance": "",
+   "liste": "UNE EQUIPE POUR L'ORBRIE",
+   "voix": 404
+  },
+  "85169": {
+   "nuance": "",
+   "liste": "VIVRE ET CONSTRUIRE ENSEMBLE",
+   "voix": 406
+  },
+  "85171": {
+   "nuance": "",
+   "liste": "PÉAULT, ENSEMBLE POUR DEMAIN",
+   "voix": 236
+  },
+  "85172": {
+   "nuance": "",
+   "liste": "LE PERRIER, ON AVANCE",
+   "voix": 843
+  },
+  "85174": {
+   "nuance": "",
+   "liste": "CONTINUONS À AGIR POUR PETOSSE",
+   "voix": 200
+  },
+  "85175": {
+   "nuance": "",
+   "liste": "LES PINEAUX, UNE COMMUNE QUI AVANCE, UN AVENIR QUI RASSEMBLE",
+   "voix": 263
+  },
+  "85176": {
+   "nuance": "",
+   "liste": "PISSOTE ENSEMBLE",
+   "voix": 450
+  },
+  "85177": {
+   "nuance": "",
+   "liste": "Une équipe engagée pour votre avenir",
+   "voix": 474
+  },
+  "85178": {
+   "nuance": "LDVD",
+   "liste": "AGIR ENSEMBLE POUR LE POIRÉ-SUR-VIE",
+   "voix": 2589
+  },
+  "85179": {
+   "nuance": "",
+   "liste": "POIROUX AVANCE, POURSUIVONS ENSEMBLE",
+   "voix": 378
+  },
+  "85181": {
+   "nuance": "",
+   "liste": "POUILLÉ, ENSEMBLE POUR BIEN VIVRE",
+   "voix": 206
+  },
+  "85182": {
+   "nuance": "LDVD",
+   "liste": "VIVRE POUZAUGES",
+   "voix": 1370
+  },
+  "85184": {
+   "nuance": "",
+   "liste": "PUY DE SERRE, DANS L'INTERET DE TOUS",
+   "voix": 114
+  },
+  "85185": {
+   "nuance": "",
+   "liste": "Ensemble pour Puyravault",
+   "voix": 189
+  },
+  "85186": {
+   "nuance": "",
+   "liste": "LA RABATELIÈRE UNE AMBITION COMMUNE",
+   "voix": 376
+  },
+  "85187": {
+   "nuance": "",
+   "liste": "Bien vivre à Réaumur",
+   "voix": 341
+  },
+  "85188": {
+   "nuance": "",
+   "liste": "ENSEMBLE, ENGAGÉS POUR LES RÉORTHAIS",
+   "voix": 374
+  },
+  "85189": {
+   "nuance": "",
+   "liste": "NOTRE DAME DE RIEZ CONSTRUIRE L'AVENIR EN PRÉSERVANT L'ESSENTIEL",
+   "voix": 870
+  },
+  "85190": {
+   "nuance": "LDVD",
+   "liste": "ENSEMBLE, VIVRE ROCHESERVIÈRE",
+   "voix": 1259
+  },
+  "85191": {
+   "nuance": "LDVG",
+   "liste": "POUR La Roche",
+   "voix": 9900
+  },
+  "85192": {
+   "nuance": "",
+   "liste": "ROCHETREJOUX, POUR UNE COMMUNE DYNAMIQUE, ATTRACTIVE ET TOURNÉE VERS L'AVENIR",
+   "voix": 495
+  },
+  "85193": {
+   "nuance": "",
+   "liste": "Rosnay, Plaisir Ambition et Partage",
+   "voix": 251
+  },
+  "85194": {
+   "nuance": "LDVD",
+   "liste": "AVEC NICOLAS CHÉNÉCHAUD, LES SABLES AU COEUR",
+   "voix": 9872
+  },
+  "85196": {
+   "nuance": "",
+   "liste": "Saint André Goule d'Oie 2032 \"Un Egagement Collectif\"",
+   "voix": 868
+  },
+  "85197": {
+   "nuance": "LDVD",
+   "liste": "MONTRÉVERD ENSEMBLE, RÊVER ENSEMBLE MONTRÉVERD",
+   "voix": 1369
+  },
+  "85198": {
+   "nuance": "",
+   "liste": "ENSEMBLE, CONTINUONS POUR BIEN VIVRE À SAINT-AUBIN",
+   "voix": 645
+  },
+  "85199": {
+   "nuance": "",
+   "liste": "DEVENIR, UN AVENIR SEREIN",
+   "voix": 171
+  },
+  "85200": {
+   "nuance": "",
+   "liste": "AGIR POUR UNE COMMUNE OÙ IL FAIT BON VIVRE",
+   "voix": 525
+  },
+  "85201": {
+   "nuance": "",
+   "liste": "VIVRE ENSEMBLE À SAINT-BENOIST-SUR-MER",
+   "voix": 274
+  },
+  "85202": {
+   "nuance": "",
+   "liste": "Sainte Cécile Ensemble, le dynamisme au service de Tous",
+   "voix": 580
+  },
+  "85204": {
+   "nuance": "",
+   "liste": "SAINT-CHRISTOPHE-DU-LIGNERON, UN FUTUR QUI NOUS RASSEMBLE",
+   "voix": 1080
+  },
+  "85205": {
+   "nuance": "",
+   "liste": "AGISSONS ENSEMBLE POUR SAINT CYR",
+   "voix": 195
+  },
+  "85206": {
+   "nuance": "",
+   "liste": "UN NOUVEL ÉLAN POUR SAINT-CYR-EN-TALMONDAIS",
+   "voix": 158
+  },
+  "85207": {
+   "nuance": "",
+   "liste": "Pour votre avenir, agir dans la diversité",
+   "voix": 198
+  },
+  "85208": {
+   "nuance": "",
+   "liste": "DIONYSIENS, UN ÉLAN COMMUN !",
+   "voix": 791
+  },
+  "85209": {
+   "nuance": "",
+   "liste": "ENSEMBLE",
+   "voix": 175
+  },
+  "85210": {
+   "nuance": "",
+   "liste": "ENGAGÉS POUR BIEN VIVRE À SAINT ÉTIENNE DU BOIS",
+   "voix": 707
+  },
+  "85211": {
+   "nuance": "",
+   "liste": "DEMAIN, SAINTE-FLAIVE-DES-LOUPS",
+   "voix": 892
+  },
+  "85212": {
+   "nuance": "",
+   "liste": "SAINTE-FLORENCE A'VENIR",
+   "voix": 553
+  },
+  "85213": {
+   "nuance": "LDIV",
+   "liste": "RIVES DE L'YON 2026",
+   "voix": 889
+  },
+  "85214": {
+   "nuance": "",
+   "liste": "SAINTE-FOY 2026 : UNE ÉQUIPE À L'ÉCOUTE, UN VILLAGE QUI AVANCE",
+   "voix": 904
+  },
+  "85215": {
+   "nuance": "LDVC",
+   "liste": "AGIR ENSEMBLE POUR SAINT-FULGENT",
+   "voix": 1534
+  },
+  "85216": {
+   "nuance": "",
+   "liste": "SAINTE-GEMME-LA-PLAINE un Futur partagé",
+   "voix": 623
+  },
+  "85218": {
+   "nuance": "",
+   "liste": "AGIR POUR SAINT GEORGES",
+   "voix": 491
+  },
+  "85220": {
+   "nuance": "",
+   "liste": "Bien vivre ensemble",
+   "voix": 657
+  },
+  "85221": {
+   "nuance": "",
+   "liste": "RÉINVENTONS SAINT-GERVAIS",
+   "voix": 685
+  },
+  "85222": {
+   "nuance": "LDVD",
+   "liste": "VIVRE SAINT-GILLES-CROIX-DE-VIE",
+   "voix": 3461
+  },
+  "85223": {
+   "nuance": "LDIV",
+   "liste": "UNIS POUR L'AVENIR",
+   "voix": 1199
+  },
+  "85226": {
+   "nuance": "LDVC",
+   "liste": "SAINT-HILAIRE PASSIONNÉMENT",
+   "voix": 4551
+  },
+  "85227": {
+   "nuance": "",
+   "liste": "AGISSONS ENSEMBLE POUR SAINT HILAIRE",
+   "voix": 581
+  },
+  "85229": {
+   "nuance": "",
+   "liste": "ENSEMBLE, CONTINUONS LA DYNAMIQUE",
+   "voix": 212
+  },
+  "85231": {
+   "nuance": "",
+   "liste": "BIEN VIVRE À SAINT-HILAIRE-LA-FORÊT",
+   "voix": 303
+  },
+  "85232": {
+   "nuance": "",
+   "liste": "Une équipe à l'écoute des vouraisiens",
+   "voix": 302
+  },
+  "85234": {
+   "nuance": "LDVD",
+   "liste": "ENSEMBLE CREONS L'AVENIR",
+   "voix": 2652
+  },
+  "85235": {
+   "nuance": "",
+   "liste": "Ensemble pour notre village",
+   "voix": 181
+  },
+  "85236": {
+   "nuance": "",
+   "liste": "SAINT JULIEN EN CHEMIN",
+   "voix": 773
+  },
+  "85237": {
+   "nuance": "",
+   "liste": "ENSEMBLE POUR SAINT LAURENT",
+   "voix": 149
+  },
+  "85238": {
+   "nuance": "LDIV",
+   "liste": "EXPERIENCE & DIALOGUE VERS UN HORIZON PARTAGE",
+   "voix": 1108
+  },
+  "85239": {
+   "nuance": "",
+   "liste": "REUSSIR ENSEMBLE POUR SAINT MAIXENT",
+   "voix": 473
+  },
+  "85240": {
+   "nuance": "",
+   "liste": "TOUS ENSEMBLE, FAISONS VIVRE SAINT-MALÔ-DU-BOIS",
+   "voix": 686
+  },
+  "85242": {
+   "nuance": "",
+   "liste": "UNIS POUR VOUS",
+   "voix": 462
+  },
+  "85243": {
+   "nuance": "",
+   "liste": "L'AVENIR ENSEMBLE",
+   "voix": 1210
+  },
+  "85244": {
+   "nuance": "",
+   "liste": "ENSEMBLE CONTINUONS A AGIR POUR LES TESSONNAIS",
+   "voix": 328
+  },
+  "85245": {
+   "nuance": "",
+   "liste": "Avec vous pour bien vivre à Saint-Martin-des-Fontaines",
+   "voix": 58
+  },
+  "85246": {
+   "nuance": "",
+   "liste": "ENSEMBLE ET ENGAGÉS POUR LES MARTINOYENS",
+   "voix": 930
+  },
+  "85247": {
+   "nuance": "",
+   "liste": "ENSEMBLE, POUR BIEN VIVRE A SAINT MARTIN",
+   "voix": 492
+  },
+  "85248": {
+   "nuance": "",
+   "liste": "POURSUIVRE ENSEMBLE pour ST MARTIN LARS",
+   "voix": 195
+  },
+  "85250": {
+   "nuance": "",
+   "liste": "UN VILLAGE UNI, UN AVENIR COMMUN !",
+   "voix": 865
+  },
+  "85251": {
+   "nuance": "",
+   "liste": "\"NOUES\" ENSEMBLE",
+   "voix": 270
+  },
+  "85252": {
+   "nuance": "",
+   "liste": "ENSEMBLE CONSTRUISONS NOTRE AVENIR",
+   "voix": 257
+  },
+  "85254": {
+   "nuance": "",
+   "liste": "DEMAIN POUR SAINT MESMIN",
+   "voix": 599
+  },
+  "85255": {
+   "nuance": "",
+   "liste": "SAINT-MICHEL ENSEMBLE AGIR POUR L'AVENIR",
+   "voix": 866
+  },
+  "85256": {
+   "nuance": "",
+   "liste": "Saint Michel : des racines, de l'élan, un avenir partagé",
+   "voix": 489
+  },
+  "85259": {
+   "nuance": "",
+   "liste": "SAINT-PAUL-EN-PAREDS, L'ART DE VIVRE ENSEMBLE",
+   "voix": 565
+  },
+  "85260": {
+   "nuance": "",
+   "liste": "Avec vous, Saint Paul",
+   "voix": 262
+  },
+  "85261": {
+   "nuance": "",
+   "liste": "En avant Sainte Pexine !",
+   "voix": 115
+  },
+  "85262": {
+   "nuance": "LDIV",
+   "liste": "ENTRE CONTINUITÉ ET NOUVEAUTÉ, CONSTRUISONS L'AVENIR ENSEMBLE",
+   "voix": 1302
+  },
+  "85264": {
+   "nuance": "",
+   "liste": "ÉLAN COLLECTIF POUR SAINT PIERRE DU CHEMIN",
+   "voix": 389
+  },
+  "85265": {
+   "nuance": "",
+   "liste": "UNIS À SAINT-PIERRE-LE-VIEUX",
+   "voix": 338
+  },
+  "85266": {
+   "nuance": "",
+   "liste": "ENSEMBLE POUR L'AVENIR DE SAINT-PROUANT",
+   "voix": 672
+  },
+  "85267": {
+   "nuance": "",
+   "liste": "L'EXPÉRIENCE DES UNS, L'ÉNERGIE DES AUTRES : UN VILLAGE POUR TOUS",
+   "voix": 334
+  },
+  "85268": {
+   "nuance": "",
+   "liste": "AGIR AVEC VOUS, POUR VOUS",
+   "voix": 582
+  },
+  "85269": {
+   "nuance": "",
+   "liste": "ENSEMBLE POUR SAINT-SIGISMOND",
+   "voix": 156
+  },
+  "85273": {
+   "nuance": "",
+   "liste": "SAINT URBAIN L'AVENIR EN COMMUN",
+   "voix": 592
+  },
+  "85274": {
+   "nuance": "",
+   "liste": "AVANÇONS AVEC VOUS POUR SAINT-VALÉRIEN",
+   "voix": 200
+  },
+  "85276": {
+   "nuance": "",
+   "liste": "SAINT-VINCENT-STERLANGES : AGIR AUJOURD'HUI, PRÉPARER DEMAIN",
+   "voix": 257
+  },
+  "85277": {
+   "nuance": "",
+   "liste": "Ensemble, un nouvel élan pour Saint-Vincent-sur-Graon",
+   "voix": 593
+  },
+  "85278": {
+   "nuance": "",
+   "liste": "Votre voix, notre force pour demain",
+   "voix": 857
+  },
+  "85280": {
+   "nuance": "LDVD",
+   "liste": "ENSEMBLE, CONSTRUISONS DEMAIN",
+   "voix": 1368
+  },
+  "85281": {
+   "nuance": "",
+   "liste": "BIEN VIVRE A SERIGNÉ",
+   "voix": 495
+  },
+  "85282": {
+   "nuance": "",
+   "liste": "UNE ÉQUIPE, DES PROJETS POUR L'AVENIR DE SIGOURNAIS",
+   "voix": 418
+  },
+  "85284": {
+   "nuance": "LDVD",
+   "liste": "D'UNION ET D'INTÉRÊT COMMUNAL",
+   "voix": 1475
+  },
+  "85285": {
+   "nuance": "",
+   "liste": "BIEN VIVRE AU TABLIER",
+   "voix": 256
+  },
+  "85286": {
+   "nuance": "",
+   "liste": "ENSEMBLE, LA TAILLÉE AU COEUR",
+   "voix": 230
+  },
+  "85287": {
+   "nuance": "",
+   "liste": "ENSEMBLE, AGISSONS POUR LE BIEN VIVRE DE LA POPULATION GEMMOISE",
+   "voix": 183
+  },
+  "85288": {
+   "nuance": "LDVD",
+   "liste": "DU COEUR A L'ACTION",
+   "voix": 3498
+  },
+  "85289": {
+   "nuance": "",
+   "liste": "TERVAL UNIS POUR L'AVENIR",
+   "voix": 884
+  },
+  "85290": {
+   "nuance": "",
+   "liste": "AGIR ENSEMBLE POUR THIRÉ",
+   "voix": 212
+  },
+  "85291": {
+   "nuance": "",
+   "liste": "THORIGNY 2026 - TOUS ENSEMBLE POUR DEMAIN",
+   "voix": 351
+  },
+  "85292": {
+   "nuance": "",
+   "liste": "DEMAIN AUX RIVES-DU-FOUGERAIS",
+   "voix": 513
+  },
+  "85293": {
+   "nuance": "",
+   "liste": "TIFFAUGES, LA DIVERSITÉ, NOTRE RICHESSE",
+   "voix": 612
+  },
+  "85294": {
+   "nuance": "",
+   "liste": "UNIS POUR LA TRANCHE",
+   "voix": 1592
+  },
+  "85295": {
+   "nuance": "",
+   "liste": "Agissons pour le bien vivre ensemble",
+   "voix": 1211
+  },
+  "85296": {
+   "nuance": "",
+   "liste": "SEMONS AVEC VOUS LE TREIZE-VENTS DE DEMAIN",
+   "voix": 503
+  },
+  "85297": {
+   "nuance": "",
+   "liste": "VIVRE A TRIAIZE",
+   "voix": 449
+  },
+  "85298": {
+   "nuance": "",
+   "liste": "POUR VOUS : AGISSONS, CONSTRUISONS ENSEMBLE",
+   "voix": 625
+  },
+  "85300": {
+   "nuance": "LDVD",
+   "liste": "AGIR POUR VENANSAULT",
+   "voix": 1536
+  },
+  "85301": {
+   "nuance": "",
+   "liste": "Agir pour Vendrennes",
+   "voix": 699
+  },
+  "85302": {
+   "nuance": "LDVD",
+   "liste": "ENSEMBLE, POURSUIVONS LA DYNAMIQUE CHANVERRIAISE",
+   "voix": 2185
+  },
+  "85303": {
+   "nuance": "",
+   "liste": "VIX EN MOUVEMENT",
+   "voix": 472
+  },
+  "85304": {
+   "nuance": "",
+   "liste": "ENSEMBLE POUR L'AVENIR",
+   "voix": 246
+  },
+  "85305": {
+   "nuance": "",
+   "liste": "Tous ensemble pour VOUVANT",
+   "voix": 305
+  },
+  "85306": {
+   "nuance": "",
+   "liste": "VIVRE ET AGIR POUR XANTON-CHASSENON",
+   "voix": 290
+  }
+ },
  "note": "Bureaux de vote : données administratives. Pas de géolocalisation de résidents ni d’attribution de voix aux adresses individuelles."
 }
