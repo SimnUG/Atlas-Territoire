@@ -69,6 +69,23 @@ def office(num_bv,ins,vot,exp,blanc,nul,abst,candidates):
  return {'code':str(num_bv).zfill(4),'libelle':'Bureau '+str(num_bv).zfill(4),'inscrits':num(ins),
  'votants':num(vot),'exprimes':num(exp),'abstentions':num(abst),
  'blancs':num(blanc),'nuls':num(nul),'candidats':candidates}
+def nuances_departement2026(raw):
+ out=defaultdict(lambda:defaultdict(int))
+ rows=csv.DictReader(io.StringIO(text(raw)),delimiter=';')
+ for row in rows:
+  if str(row.get('Code département','')).strip()!='85':continue
+  code=row.get('Code commune','').strip()
+  if not re.fullmatch(r'85[0-9]{3}',code):continue
+  for i in range(1,24):
+   val=num(row.get('Voix '+str(i)))
+   if val is None:continue
+   nuance=row.get('Nuance liste '+str(i)) or ''
+   liste=row.get('Libellé abrégé de liste '+str(i)) or row.get('Libellé de liste '+str(i)) or ''
+   out[code][(nuance,liste)]+=val
+ return {code:{'nuance':max(result.items(),key=lambda x:x[1])[0][0],
+               'liste':max(result.items(),key=lambda x:x[1])[0][1],
+               'voix':max(result.values())} for code,result in out.items() if result}
+
 def from2026(year,round_no,raw,url):
  found=[]
  it=csv.DictReader(io.StringIO(text(raw)),delimiter=';')
@@ -176,12 +193,14 @@ def from2008(raw,url):
  return rounds
 def main():
  results=[]
+ departement_2026={}
  for key in ['2026_1','2026_2','2020_1','2020_2','2020_BV_1','2020_BV_2','2014','2008']:
   url=SOURCES[key]
   try:
    print('Lecture '+key+' '+url,flush=True)
    raw=fetch(url)
    print('Taille ',len(raw),flush=True)
+   if key=='2026_1':departement_2026=nuances_departement2026(raw)
    if key.startswith('2026'):value=from2026(2026,int(key[-1]),raw,url);item=[value] if value else []
    elif key.startswith('2020_BV'):value=from2020bv(int(key[-1]),raw,url);item=[value] if value else []
    elif key.startswith('2020'):value=from2020(2020,int(key[-1]),raw,url);item=[value] if value else []
@@ -197,6 +216,7 @@ def main():
   raise SystemExit('Échec validation ministérielle 2026 : attendu 1555 exprimés Dompierre-sur-Yon')
  result={'code_insee':CODE,'commune':'Dompierre-sur-Yon','scrutins':sorted(results,key=lambda x:(-x['annee'],x['tour'])),
   'sources':[{'annee':x['annee'],'tour':x['tour'],'url':x['source']} for x in results],
+  'nuances_departement_2026':departement_2026,
   'note':'Bureaux de vote : données administratives. Pas de géolocalisation de résidents ni d’attribution de voix aux adresses individuelles.'}
  TARGET.parent.mkdir(parents=True,exist_ok=True)
  TARGET.write_text(json.dumps(result,ensure_ascii=False,indent=1))
