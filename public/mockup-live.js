@@ -1,7 +1,7 @@
 'use strict';
 const $ = id=>document.getElementById(id);
 const requested=new URLSearchParams(location.search).get('adresse')||'';
-const state={loc:null,analysis:null,housing:null,rent:null,planning:null,risk:null,admin:null,extras:null,populationData:null,populationRequest:null,familiesData:null,familiesRequest:null,employmentData:null,employmentRequest:null,salariesData:null,salariesRequest:null,revenusData:null,revenusRequest:null,migrationsData:null,migrationsRequest:null,migrationsDetail:null,migrationsDetailRequest:null,migrationsMelodi:null,migrationsMelodiRequest:null,electionsData:null,electionsRequest:null,electionsPersona:null,electionsPersonaRequest:null,logementsReference:null,logementsReferenceRequest:null,socialData:null,socialRequest:null,tab:['population','familles','emploi','salaires','revenus','migrations','elections','logements','social'].includes(new URLSearchParams(location.search).get('onglet'))?new URLSearchParams(location.search).get('onglet'):'programmation'};
+const state={loc:null,analysis:null,housing:null,rent:null,planning:null,risk:null,admin:null,extras:null,populationData:null,populationRequest:null,familiesData:null,familiesRequest:null,employmentData:null,employmentRequest:null,salariesData:null,salariesRequest:null,revenusData:null,revenusRequest:null,migrationsData:null,migrationsRequest:null,migrationsDetail:null,migrationsDetailRequest:null,migrationsMelodi:null,migrationsMelodiRequest:null,electionsData:null,electionsRequest:null,electionsPersona:null,electionsPersonaRequest:null,logementsReference:null,logementsReferenceRequest:null,socialData:null,socialRequest:null,socialGeoRequest:null,socialGeoDone:false,tab:['population','familles','emploi','salaires','revenus','migrations','elections','logements','social'].includes(new URLSearchParams(location.search).get('onglet'))?new URLSearchParams(location.search).get('onglet'):'programmation'};
 const fmt=new Intl.NumberFormat('fr-FR',{maximumFractionDigits:1});
 const elem=(tag,cls,value)=>{const a=document.createElement(tag);if(cls)a.className=cls;if(value!==undefined&&value!==null)a.textContent=String(value);return a};
 const append=(parent,...children)=>(parent.append(...children.filter(Boolean)),parent);
@@ -611,11 +611,20 @@ function ensureLogementsReference(){
  }})
  .finally(()=>{state.logementsReferenceRequest=null});
 }
+function ensureSocialGeo(){
+ if(!state.loc?.code_insee||!state.socialData||state.socialGeoRequest||state.socialGeoDone)return;
+ if(state.socialData.statut!=='disponible'||state.socialData.geo?.statut==='disponible')return;
+ state.socialGeoDone=true;
+ state.socialGeoRequest=get('/api/parc-social-rpls-points?code_insee='+encodeURIComponent(state.loc.code_insee),90000)
+  .then(d=>{if(d){state.socialData.geo=d;if(state.tab==='social')redraw()}})
+  .finally(()=>{state.socialGeoRequest=null});
+}
 function ensureSocialRpls(){
  if(!state.loc?.code_insee||state.socialData||state.socialRequest)return;
  state.socialRequest=get('/api/parc-social-rpls?code_insee='+encodeURIComponent(state.loc.code_insee),32000)
   .then(d=>{state.socialData=d||{statut:'indisponible'};
     if(state.tab==='social')redraw();
+    ensureSocialGeo();
   })
   .finally(()=>{state.socialRequest=null});
 }
