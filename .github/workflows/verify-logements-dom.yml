@@ -1,0 +1,21 @@
+name: Valider affichage Logements 44 et 85
+on:
+  push:
+    paths:
+      - scripts/verify-logements-dom.js
+      - public/logements-reference.js
+      - public/logements-reference.css
+      - public/data/logements-44-85-2023.json.gz
+      - .github/workflows/verify-logements-dom.yml
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - run: npm install --no-save --ignore-scripts jsdom@26.1.0
+      - run: node scripts/verify-logements-dom.js
