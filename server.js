@@ -16,6 +16,7 @@ const inseeSalaries = require('./salaires-insee');
 const inseeRevenus = require('./revenus-insee');
 const inseeMigrations = require('./migrations-insee');
 const inseeMigrationsDetail = require('./migrations-detail-insee');
+const inseeMigrationsMelodi = require('./migrations-melodi');
 
 const PORT = Number(process.env.PORT || 3000);
 const PUBLIC = path.join(__dirname, 'public');
@@ -58,6 +59,12 @@ http.createServer(async(req,res)=>{
     if(!/^(?:[0-9]{5}|2[AB][0-9]{3})$/i.test(code))return send(res,400,{erreur:'Code INSEE invalide'});
     try{return send(res,200,await officialExtras.all(code));}
     catch(_){return send(res,200,{zonage:null,ecoles:null,eau:null});}
+  }
+  if(url.pathname==='/api/migrations-melodi'){
+    const code=(url.searchParams.get('code_insee')||'').trim();
+    if(!/^(?:[0-9]{5}|2[AB][0-9]{3})$/i.test(code))return send(res,400,{erreur:'Code commune invalide'});
+    try{return send(res,200,await inseeMigrationsMelodi.migrations(code))}
+    catch(e){return send(res,503,{statut:'indisponible',erreur:e.message})}
   }
   if(url.pathname==='/api/migrations-detail-insee'){
     const code=(url.searchParams.get('code_insee')||'').trim();
