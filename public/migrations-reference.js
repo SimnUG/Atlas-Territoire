@@ -34,7 +34,10 @@ function profileGrid(parent,profileData){
  ]){
   const col=mk('div','mr-profile');col.append(mk('h4',null,title));
   const values=profileData?.distributions?.[table]||[];
+  const measured=values.reduce((s,x)=>s+x.valeur,0);
+  const residual=valid(profileData?.total)?Math.max(0,profileData.total-measured):null;
   const entries=values.length?values.map(x=>({label:x.label,valeur:x.valeur})):emptyLabels.map(label=>({label,valeur:null}));
+  if(values.length&&residual>0.2)entries.push({label:'Autre situation / hors logement ordinaire',valeur:residual});
   const max=Math.max(1,...values.map(x=>x.valeur));
   for(const item of entries)meter(col,item.label,item.valeur,profileData?.total??null,max);
   grid.append(col);
@@ -149,7 +152,7 @@ function render(root,state){
  if(detail&&valid(moved)&&moved>0){
   const values=['2','3','4','5','6','7','8','9'].map(k=>detail.repartition[k]||0);
   for(let n=0;n<values.length;n++){const v=values[n];if(!v)continue;const seg=mk('span');
-   seg.style.background=color[Math.min(color.length-1,Math.floor(n/2))];seg.style.width=100*v/moved+'%';seg.title=['Même commune','Même département','Même région','Autre région','DOM','COM','UE','Hors UE'][n]+ ' : '+num(v);band.append(seg)}
+   seg.style.background=color[Math.min(color.length-1,n)];seg.style.width=100*v/moved+'%';seg.title=['Même commune','Même département','Même région','Autre région','DOM','COM','UE','Hors UE'][n]+ ' : '+num(v);band.append(seg)}
  }else if(valid(intra)&&valid(incoming)&&moved>0){
   for(const [n,v] of [intra,incoming].entries()){const seg=mk('span');seg.style.background=color[n];seg.style.width=100*v/moved+'%';band.append(seg)}
  }else for(const [i,w] of [42,20,17,13,8].entries()){const seg=mk('span');seg.style.width=w+'%';seg.style.background=color[i];seg.className='mr-empty-seg';band.append(seg)}
