@@ -38,7 +38,7 @@
   }
   kpis.append(kpi('TAUX SRU ACTUEL',percent(rate),'taux cible : '+percent(goal),'pink'));
   kpis.append(kpi('PRÉLÈVEMENT NET DONT MAJORATION',euro(paid),
-   paid===null?'non publié pour cette commune':'montant à régler','orange'));
+   paid===null?'non publié pour cette commune':('prélèvement '+(d.prelevement_annee||2026)),'orange'));
   root.append(kpis);
 
   const objective=el('section','sru-panel sru-progress');
@@ -80,7 +80,7 @@
   const description=el('p');
   description.append(document.createTextNode('Source : Inventaire SRU (loi Solidarité et Renouvellement Urbain, art. 55) — Ministère chargé du Logement, périmètre des communes suivies en 2026 (bilan au 1er janvier 2025). Le taux cible dépend du régime applicable à la commune (20 % ou 25 %). Le prélèvement net inclut la majoration lorsqu’elle est publiée. Les communes absentes du fichier ne sont pas automatiquement considérées comme conformes. Publication : août 2026. Traitement : Atlas Territoires. '));
   const link=el('a',null,'Consulter le jeu officiel');link.href=SOURCE;link.target='_blank';link.rel='noopener noreferrer';
-  description.append(link,document.createTextNode('. Licence : Ministère du Logement — Licence Ouverte 2.0.'));
+  description.append(link,document.createTextNode('. Le prélèvement est celui de l’exercice '+(d?.prelevement_annee||'non indiqué')+' et peut différer du bilan du parc au 1er janvier 2025. Licence : Ministère du Logement — Licence Ouverte 2.0.'));
   foot.append(description);root.append(foot);
   return true;
  }
