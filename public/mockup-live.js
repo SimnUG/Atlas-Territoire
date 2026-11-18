@@ -1,7 +1,7 @@
 'use strict';
 const $ = id=>document.getElementById(id);
 const requested=new URLSearchParams(location.search).get('adresse')||'';
-const state={loc:null,analysis:null,housing:null,rent:null,planning:null,risk:null,admin:null,extras:null,populationData:null,populationRequest:null,familiesData:null,familiesRequest:null,employmentData:null,employmentRequest:null,salariesData:null,salariesRequest:null,revenusData:null,revenusRequest:null,migrationsData:null,migrationsRequest:null,migrationsDetail:null,migrationsDetailRequest:null,migrationsMelodi:null,migrationsMelodiRequest:null,electionsData:null,electionsRequest:null,electionsPersona:null,electionsPersonaRequest:null,logementsReference:null,logementsReferenceRequest:null,logementsError:null,socialData:null,socialRequest:null,socialGeoRequest:null,socialGeoDone:false,sruData:null,sruRequest:null,zonageData:null,zonageRequest:null,permisData:null,permisRequest:null,rentEpci:null,rentEpciRequest:null,rentEpciHistory:null,rentEpciHistoryRequest:null,rentYield:null,rentYieldRequest:null,tab:['population','familles','emploi','salaires','revenus','migrations','elections','logements','social','sru','zonage','permis','loyers'].includes(new URLSearchParams(location.search).get('onglet'))?new URLSearchParams(location.search).get('onglet'):'programmation'};
+const state={loc:null,analysis:null,housing:null,rent:null,rentHistoryLoaded:false,rentHistoryRequest:null,planning:null,risk:null,admin:null,extras:null,populationData:null,populationRequest:null,familiesData:null,familiesRequest:null,employmentData:null,employmentRequest:null,salariesData:null,salariesRequest:null,revenusData:null,revenusRequest:null,migrationsData:null,migrationsRequest:null,migrationsDetail:null,migrationsDetailRequest:null,migrationsMelodi:null,migrationsMelodiRequest:null,electionsData:null,electionsRequest:null,electionsPersona:null,electionsPersonaRequest:null,logementsReference:null,logementsReferenceRequest:null,logementsError:null,socialData:null,socialRequest:null,socialGeoRequest:null,socialGeoDone:false,sruData:null,sruRequest:null,zonageData:null,zonageRequest:null,permisData:null,permisRequest:null,rentEpci:null,rentEpciRequest:null,rentEpciHistory:null,rentEpciHistoryRequest:null,rentYield:null,rentYieldRequest:null,tab:['population','familles','emploi','salaires','revenus','migrations','elections','logements','social','sru','zonage','permis','loyers'].includes(new URLSearchParams(location.search).get('onglet'))?new URLSearchParams(location.search).get('onglet'):'programmation'};
 const fmt=new Intl.NumberFormat('fr-FR',{maximumFractionDigits:1});
 const elem=(tag,cls,value)=>{const a=document.createElement(tag);if(cls)a.className=cls;if(value!==undefined&&value!==null)a.textContent=String(value);return a};
 const append=(parent,...children)=>(parent.append(...children.filter(Boolean)),parent);
@@ -669,6 +669,15 @@ function ensurePermisSitadel(){
 function ensureLoyersReference(){
   if(!state.loc?.code_insee)return;
   const code=encodeURIComponent(state.loc.code_insee);
+  if(!state.rentHistoryLoaded&&!state.rentHistoryRequest){
+    state.rentHistoryRequest=get('/api/loyers?historique=1&code_insee='+code,115000)
+      .then(d=>{
+        if(arr(d?.types).some(t=>arr(t.serie).some(y=>typeof y.loyer==='number'))){
+          state.rent=d;state.rentHistoryLoaded=true;
+          if(state.tab==='loyers')redraw();
+        }
+      }).finally(()=>{state.rentHistoryRequest=null});
+  }
   if(!state.rentEpci&&!state.rentEpciRequest){
     state.rentEpciRequest=get('/api/loyers-epci?code_insee='+code,90000)
       .then(d=>{state.rentEpci=d||{statut:'indisponible',communes:[]};if(state.tab==='loyers')redraw()})
@@ -710,17 +719,14 @@ async function load(){
   (async()=>{state.admin=await get('/api/profil-administratif?code_insee='+encodeURIComponent(l.code_insee),18000)||{};redraw();if(state.tab==='logements')ensureLogementsReference();if(state.tab==='population')ensurePopulation();if(state.tab==='familles')ensureFamilies();if(state.tab==='emploi')ensureEmployment();if(state.tab==='salaires')ensureSalaries();if(state.tab==='revenus')ensureRevenus();if(state.tab==='migrations'){ensureMigrations();ensureMigrationsMelodi();ensureMigrationsDetail()}if(state.tab==='elections'){ensureElections();ensurePopulation();ensureEmployment()}})(),
   (async()=>{state.extras=await get('/api/etude-complements?code_insee='+encodeURIComponent(l.code_insee),33000);redraw()})(),
   (async()=>{state.housing=await get('/api/logements-detail?code_insee='+encodeURIComponent(l.code_insee),65000);redraw()})(),
-  (async()=>{state.rent=await get('/api/loyers?code_insee='+encodeURIComponent(l.code_insee),60000);redraw()})(),
+  (async()=>{const data=await get('/api/loyers?code_insee='+encodeURIComponent(l.code_insee),60000);if(!state.rentHistoryLoaded)state.rent=data;redraw()})(),
   (async()=>{
    if(!Number.isFinite(l.longitude)||!Number.isFinite(l.latitude))return;
    const data=await get('/api/contexte-foncier?code_insee='+encodeURIComponent(l.code_insee)+'&lon='+l.longitude+'&lat='+l.latitude,24000);
    state.planning=data?.urbanisme||null;state.risk=data?.risques||null;redraw()
   })()
  ]);
- if(rents().length){
-  const history=await get('/api/loyers?historique=1&code_insee='+encodeURIComponent(l.code_insee),85000);
-  if(arr(history?.types).some(t=>typeof t.dernier==='number')){state.rent=history;redraw()}
- }
+ if(state.tab==='loyers'&&!state.rentHistoryLoaded)ensureLoyersReference();
 }
 $('mobile').onclick=()=>$('sidebar').classList.toggle('open');
 $('print').onclick=()=>window.print();
