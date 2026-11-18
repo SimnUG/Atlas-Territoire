@@ -15,7 +15,8 @@
     "url_commune": "https://www.insee.fr/fr/statistiques/2011101?geo=COM-85081",
     "url_epci": "https://www.insee.fr/fr/statistiques/2011101?geo=EPCI-248500589",
     "url_france": "https://www.insee.fr/fr/statistiques/2011101?geo=FRANCE-1",
-    "annee": 2023
+    "annee": 2023,
+    "url_millesime_2017": "https://www.insee.fr/fr/statistiques/4515532"
   },
   "historique": {
     "total": {
@@ -629,11 +630,15 @@
           "label": "Moins de 2 ans",
           "commune": {
             "2023": 195,
-            "part": 10.3
+            "part": 10.3,
+            "2017": 158,
+            "variation": 23.4
           },
           "epci": {
             "2023": 6294,
-            "part": 13.5
+            "part": 13.5,
+            "2017": 6704,
+            "variation": -6.1
           },
           "reference_france": 12
         },
@@ -641,11 +646,15 @@
           "label": "2 à 4 ans",
           "commune": {
             "2023": 312,
-            "part": 16.5
+            "part": 16.5,
+            "2017": 265,
+            "variation": 17.7
           },
           "epci": {
             "2023": 9752,
-            "part": 21
+            "part": 21,
+            "2017": 9220,
+            "variation": 5.8
           },
           "reference_france": 20.9
         },
@@ -653,11 +662,15 @@
           "label": "5 à 9 ans",
           "commune": {
             "2023": 289,
-            "part": 15.2
+            "part": 15.2,
+            "2017": 302,
+            "variation": -4.3
           },
           "epci": {
             "2023": 8088,
-            "part": 17.4
+            "part": 17.4,
+            "2017": 7697,
+            "variation": 5.1
           },
           "reference_france": 18
         },
@@ -665,11 +678,15 @@
           "label": "10 ans ou plus",
           "commune": {
             "2023": 1100,
-            "part": 58
+            "part": 58,
+            "2017": 913,
+            "variation": 20.5
           },
           "epci": {
             "2023": 22352,
-            "part": 48.1
+            "part": 48.1,
+            "2017": 20437,
+            "variation": 9.4
           },
           "reference_france": 49.1
         }
