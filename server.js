@@ -20,6 +20,7 @@ const inseeMigrationsMelodi = require('./migrations-melodi');
 const electionsPersona = require('./elections-persona-insee');
 const socialRpls = require('./social-rpls');
 const socialRplsGeo = require('./social-rpls-geo');
+const sruInventaire = require('./sru-inventaire');
 const fullHousingInsee = require('./logements-insee-complet');
 const fullElections = require('./elections-officielles-44-85');
 
@@ -81,6 +82,12 @@ http.createServer(async(req,res)=>{
     try{return send(res,200,fullElections.get(code));}
     catch(_){return send(res,503,{statut:'indisponible',code_insee:code,scrutins:[],
       raison:'Répertoire national des municipales temporairement inaccessible'});}
+  }
+  if(url.pathname==='/api/loi-sru'){
+    const code=(url.searchParams.get('code_insee')||'').trim();
+    if(!/^\d{5}$/.test(code))return send(res,400,{statut:'invalide',erreur:'Code INSEE invalide'});
+    try{return send(res,200,await sruInventaire.inventaire(code))}
+    catch(e){return send(res,503,{statut:'indisponible',erreur:e.message})}
   }
   if(url.pathname==='/api/parc-social-rpls-points'){
     const code=(url.searchParams.get('code_insee')||'').trim();
