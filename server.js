@@ -48,6 +48,23 @@ http.createServer(async(req,res)=>{
   if(!privateAccess.allow(req,res))return;
   const url = new URL(req.url,'http://localhost');
   if(req.method!=='GET')return send(res,405,{erreur:'Méthode non autorisée'});
+  if(url.pathname==='/api/google-maps-config'){
+    // Restrict the browser key by HTTPS referrer (Render domain) in Google Cloud.
+    const key=process.env.GOOGLE_MAPS_BROWSER_KEY||'';
+    return send(res,200,{key});
+  }
+  if(url.pathname==='/api/elections-address-points'){
+    const code=(url.searchParams.get('code_insee')||'').trim();
+    if(!/^(?:[0-9]{5}|2[AB][0-9]{3})$/i.test(code))return send(res,400,{erreur:'Code INSEE invalide'});
+    try{
+      const filename=path.join(PUBLIC,'data','elections-address-points-'+code+'.json');
+      const data=fs.readFileSync(filename,'utf8');
+      return send(res,200,data);
+    }catch(_){
+      return send(res,200,{statut:'indisponible',code_insee:code,points:[],
+        raison:'Points BAN non pré-indexés pour cette commune'});
+    }
+  }
   if(url.pathname==='/api/elections-persona-insee'){
     const code=(url.searchParams.get('code_insee')||'').trim();
     if(!/^(?:[0-9]{5}|2[AB][0-9]{3})$/i.test(code))return send(res,400,{erreur:'Code INSEE invalide'});
