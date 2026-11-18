@@ -457,7 +457,7 @@ function redraw(){
   btn.classList.toggle('active',active);
   btn.setAttribute('aria-current',active?'page':'false');
  }
- const root=$('body');root.replaceChildren();
+ const root=$('body');root.className='';root.replaceChildren();
  const matched=(selected.id==='population'&&window.AtlasPopulationPage?.render?.(root,state)===true)
   ||(selected.id==='familles'&&window.AtlasFamiliesPage?.render?.(root,state)===true)
   ||(selected.id==='emploi'&&window.AtlasEmploymentPage?.render?.(root,state)===true)
