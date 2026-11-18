@@ -9,11 +9,11 @@ function sumByArea(rows,geo){
   &&x.dimensions.RP_MEASURE==='POP'&&typeof x.measures?.OBS_VALUE_NIVEAU?.value==='number'
   &&Number.isFinite(x.measures.OBS_VALUE_NIVEAU.value));
  const ages=new Set(valid.map(x=>x.dimensions.AGE));
- const ageBands=new Set(['Y_LT15','Y15T24','Y25T39','Y40T54','Y55T64','Y65T79','Y_GE80']);
+ const ageBands=new Set(['Y1T14','Y_LT15','Y15T24','Y25T39','Y40T54','Y55T64','Y65T79','Y_GE80']);
  const sexes=new Set(valid.map(x=>x.dimensions.SEX));
  const nationalities=new Set(valid.map(x=>x.dimensions.NATIONALITY_TYPE));
  const accept=(dim,set)=>!set.has('_T')||dim==='_T';
- const found=valid.filter(x=>(ages.has('_T')?x.dimensions.AGE==='_T':ageBands.has(x.dimensions.AGE))
+ const found=valid.filter(x=>(ages.has('_T')?x.dimensions.AGE==='_T':ages.has('Y_GE1')?x.dimensions.AGE==='Y_GE1':ageBands.has(x.dimensions.AGE))
   &&accept(x.dimensions.SEX,sexes)&&accept(x.dimensions.NATIONALITY_TYPE,nationalities));
  const out={};
  for(const code of CODES){
