@@ -1,0 +1,13 @@
+{
+  "date": "2026-11-18",
+  "annee": 2026,
+  "total_communes": 460,
+  "couverture_1er_tour": 460,
+  "couverture_2e_tour": 32,
+  "communes_absentes": [],
+  "nombre_bureaux": 2369,
+  "sources": {
+    "1": "https://static.data.gouv.fr/resources/elections-municipales-2026-resultats-du-premier-tour/20260320-164249/municipales-2026-resultats-bv-par-communes-2026-03-20.csv",
+    "2": "https://static.data.gouv.fr/resources/elections-municipales-2026-resultats-du-scond-tour/20260323-180132/municipales-2026-resultats-bureau-de-vote-2026-03-23-16h15.csv"
+  }
+}
