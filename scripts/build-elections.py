@@ -32,8 +32,17 @@ def den(s):
  try:return float(str(s).replace('%','').replace(' ','').replace(',','.'))
  except:return None
 def fetch(url):
+ import time
  req=urllib.request.Request(url,headers={'User-Agent':'AtlasTerritoires/1.0','Accept':'text/plain,text/csv'})
- with urllib.request.urlopen(req,timeout=180) as f: return f.read()
+ error=None
+ for attempt in range(1,7):
+  try:
+   with urllib.request.urlopen(req,timeout=180) as f:return f.read()
+  except Exception as exc:
+   error=exc
+   print('Coupure téléchargement, tentative',attempt,'sur 6 :',str(exc)[:120],flush=True)
+   if attempt<6:time.sleep(3)
+ raise error
 def text(data):
  for charset in ('utf-8-sig','cp1252','latin-1'):
   try:return data.decode(charset)
