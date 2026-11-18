@@ -601,29 +601,20 @@ function ensureElections(){
  .finally(()=>{state.electionsRequest=null});
 }
 function ensureLogementsReference(){
- if(!state.loc?.code_insee||!state.admin||state.logementsReference||state.logementsReferenceRequest)return;
- const epi=state.admin?.epci?.code||state.admin?.commune?.code_epci||'';
- const dep=state.admin?.departement?.code||state.admin?.commune?.code_departement||'';
- const epci=/^[0-9]{9}$/.test(epi)?epi:(/^(44|85)$/.test(dep)?'DEP-'+dep:'');
- if(!/^(?:[0-9]{9}|DEP-(?:44|85))$/.test(epci)){
-   state.logementsError="Le territoire de comparaison n'a pas pu être identifié pour cette adresse.";
-   if(state.tab==='logements')redraw();
-   return;
- }
- const params=new URLSearchParams({
-   code_insee:state.loc.code_insee,
-   code_epci:epci,
-   nom_commune:state.loc.commune||'',
-   nom_epci:state.admin?.epci?.nom||(dep==='85'?'Département de la Vendée':dep==='44'?'Département de la Loire-Atlantique':'')
- });
+ if(!state.loc?.code_insee||state.logementsReference||state.logementsReferenceRequest)return;
+ // Le code INSEE communal est suffisant : toutes les communes actuelles 44/85
+ // sont pré-indexées. L'API administrative EPCI n'est pas un prérequis.
+ const code=state.loc.code_insee;
+ const params=new URLSearchParams({code_insee:code});
  state.logementsError=null;
- state.logementsReferenceRequest=get('/api/logements-insee-complet?'+params,100000)
+ state.logementsReferenceRequest=get('/api/logements-insee-complet?'+params,30000)
   .then(data=>{
-   if(data?.statut==='disponible'&&data?.historique?.total?.commune?.length===9&&data?.tableaux?.length===5){
+   if(data?.statut==='disponible'&&data?.commune?.code===code&&
+      data?.historique?.total?.commune?.length===9&&data?.tableaux?.length===5){
      state.logementsReference=data;
      state.logementsError=null;
    }else{
-     state.logementsError=data?.erreur||'Les séries officielles INSEE sont temporairement indisponibles pour ce territoire.';
+     state.logementsError=data?.erreur||'Statistiques officielles INSEE indisponibles pour cette commune.';
    }
    if(state.tab==='logements')redraw();
   })
