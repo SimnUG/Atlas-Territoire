@@ -90,3 +90,5 @@
 @media(max-width:850px){.pc-root .pc-split,.pc-root .pc-map-layout{grid-template-columns:1fr}.pc-root .pc-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.pc-root .pc-graph-head>.pc-mini-sub{max-width:none}.pc-root .pc-chart{min-height:150px}.pc-root .pc-topline{flex-wrap:wrap}}
 @media(max-width:500px){.pc-root .pc-kpi-grid,.pc-root .pc-bottom-kpis{grid-template-columns:1fr}.pc-root .pc-comparison-grid{grid-template-columns:1fr}.pc-root .pc-graph-actions{gap:8px}.pc-root .pc-typ-row{grid-template-columns:70px 1fr 38px 42px;gap:5px}.pc-root .pc-chart{min-height:120px}}
 @media print{.app.atlas-permis-active .sidebar,.app.atlas-permis-active .top-actions,.pc-root .pc-reset,.pc-root .pc-export{display:none!important}.pc-root .pc-panel{break-inside:avoid}}
+.pc-root .pc-status-control{float:right;margin:-4px 0 6px 12px}
+.pc-root .pc-status-control .pc-segmented button{padding:4px 9px}
