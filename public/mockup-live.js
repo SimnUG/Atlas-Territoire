@@ -1,7 +1,7 @@
 'use strict';
 const $ = id=>document.getElementById(id);
 const requested=new URLSearchParams(location.search).get('adresse')||'';
-const state={loc:null,analysis:null,housing:null,rent:null,planning:null,risk:null,admin:null,extras:null,populationData:null,populationRequest:null,familiesData:null,familiesRequest:null,employmentData:null,employmentRequest:null,salariesData:null,salariesRequest:null,revenusData:null,revenusRequest:null,migrationsData:null,migrationsRequest:null,migrationsDetail:null,migrationsDetailRequest:null,migrationsMelodi:null,migrationsMelodiRequest:null,electionsData:null,electionsRequest:null,electionsPersona:null,electionsPersonaRequest:null,logementsReference:null,logementsReferenceRequest:null,logementsError:null,socialData:null,socialRequest:null,socialGeoRequest:null,socialGeoDone:false,sruData:null,sruRequest:null,zonageData:null,zonageRequest:null,tab:['population','familles','emploi','salaires','revenus','migrations','elections','logements','social','sru','zonage'].includes(new URLSearchParams(location.search).get('onglet'))?new URLSearchParams(location.search).get('onglet'):'programmation'};
+const state={loc:null,analysis:null,housing:null,rent:null,planning:null,risk:null,admin:null,extras:null,populationData:null,populationRequest:null,familiesData:null,familiesRequest:null,employmentData:null,employmentRequest:null,salariesData:null,salariesRequest:null,revenusData:null,revenusRequest:null,migrationsData:null,migrationsRequest:null,migrationsDetail:null,migrationsDetailRequest:null,migrationsMelodi:null,migrationsMelodiRequest:null,electionsData:null,electionsRequest:null,electionsPersona:null,electionsPersonaRequest:null,logementsReference:null,logementsReferenceRequest:null,logementsError:null,socialData:null,socialRequest:null,socialGeoRequest:null,socialGeoDone:false,sruData:null,sruRequest:null,zonageData:null,zonageRequest:null,permisData:null,permisRequest:null,tab:['population','familles','emploi','salaires','revenus','migrations','elections','logements','social','sru','zonage','permis'].includes(new URLSearchParams(location.search).get('onglet'))?new URLSearchParams(location.search).get('onglet'):'programmation'};
 const fmt=new Intl.NumberFormat('fr-FR',{maximumFractionDigits:1});
 const elem=(tag,cls,value)=>{const a=document.createElement(tag);if(cls)a.className=cls;if(value!==undefined&&value!==null)a.textContent=String(value);return a};
 const append=(parent,...children)=>(parent.append(...children.filter(Boolean)),parent);
@@ -449,6 +449,7 @@ function redraw(){
  document.querySelector('.app')?.classList.toggle('atlas-social-active',selected.id==='social');
   document.querySelector('.app')?.classList.toggle('atlas-sru-active',selected.id==='sru');
   document.querySelector('.app')?.classList.toggle('atlas-zonage-active',selected.id==='zonage');
+  document.querySelector('.app')?.classList.toggle('atlas-permis-active',selected.id==='permis');
  document.querySelector('.app')?.classList.toggle('atlas-salaires-active',selected.id==='salaires');
  $('addressLine1').textContent=state.loc?.adresse||requested||'Adresse';
  $('addressLine2').textContent=[state.loc?.commune,state.loc?.code_insee].filter(Boolean).join(' · ')||'Étude territoriale';
@@ -471,6 +472,7 @@ function redraw(){
   ||(selected.id==='social'&&window.AtlasSocialPage?.render?.(root,state)===true)
    ||(selected.id==='sru'&&window.AtlasSruPage?.render?.(root,state)===true)
    ||(selected.id==='zonage'&&window.AtlasZonagePage?.render?.(root,state)===true)
+   ||(selected.id==='permis'&&window.AtlasPermisPage?.render?.(root,state)===true)
   ||window.AtlasPanels?.render?.(root,selected.id,state)===true;
  if(!matched){
   selected.render(root);
@@ -479,7 +481,7 @@ function redraw(){
   realInsight(root);
  }
  // La grille, les marges et les cartes sont définies par les styles de la maquette.
- if(compact&&!['population','familles','emploi','salaires','revenus'].includes(selected.id)&&selected.id!=='migrations'&&selected.id!=='elections'&&selected.id!=='logements'&&selected.id!=='social'&&selected.id!=='sru'&&selected.id!=='zonage'){
+ if(compact&&!['population','familles','emploi','salaires','revenus'].includes(selected.id)&&selected.id!=='migrations'&&selected.id!=='elections'&&selected.id!=='logements'&&selected.id!=='social'&&selected.id!=='sru'&&selected.id!=='zonage'&&selected.id!=='permis'){
   // Même comportement que dans la maquette : KPI + première rangée,
   // aucune suppression définitive des panneaux de la vue détaillée.
   const children=[...root.children];
@@ -656,9 +658,15 @@ function ensureZonageABC(){
   })
   .finally(()=>{state.zonageRequest=null});
 }
+function ensurePermisSitadel(){
+  if(!state.loc?.code_insee||state.permisData||state.permisRequest)return;
+  state.permisRequest=get('/api/permis-sitadel?code_insee='+encodeURIComponent(state.loc.code_insee),110000)
+   .then(data=>{state.permisData=data||{statut:'indisponible'};if(state.tab==='permis')redraw()})
+   .finally(()=>{state.permisRequest=null});
+}
 function pick(id){
  if(!tabs.some(t=>t.id===id))return;
- state.tab=id;redraw();if(id==='population')ensurePopulation();if(id==='familles')ensureFamilies();if(id==='emploi')ensureEmployment();if(id==='salaires')ensureSalaries();if(id==='revenus')ensureRevenus();if(id==='migrations'){ensureMigrations();ensureMigrationsMelodi();ensureMigrationsDetail()}if(id==='elections'){ensureElections();ensureElectionsPersona();ensurePopulation();ensureEmployment();}if(id==='logements')ensureLogementsReference();if(id==='social')ensureSocialRpls();if(id==='sru')ensureSru();if(id==='zonage')ensureZonageABC();$('sidebar').classList.remove('open');
+ state.tab=id;redraw();if(id==='population')ensurePopulation();if(id==='familles')ensureFamilies();if(id==='emploi')ensureEmployment();if(id==='salaires')ensureSalaries();if(id==='revenus')ensureRevenus();if(id==='migrations'){ensureMigrations();ensureMigrationsMelodi();ensureMigrationsDetail()}if(id==='elections'){ensureElections();ensureElectionsPersona();ensurePopulation();ensureEmployment();}if(id==='logements')ensureLogementsReference();if(id==='social')ensureSocialRpls();if(id==='sru')ensureSru();if(id==='zonage')ensureZonageABC();if(id==='permis')ensurePermisSitadel();$('sidebar').classList.remove('open');
  window.scrollTo({top:0,behavior:'smooth'});
 }
 
@@ -671,10 +679,10 @@ async function get(url,ms=65000){
 }
 async function load(){
  // Étape 1 : autoriser l'aperçu de Population sans recherche ni statistiques.
- if(!requested){if(!['population','familles','emploi','salaires','revenus','migrations','elections','logements','social','sru','zonage'].includes(state.tab))location.assign('/');return}
+ if(!requested){if(!['population','familles','emploi','salaires','revenus','migrations','elections','logements','social','sru','zonage','permis'].includes(state.tab))location.assign('/');return}
  const geo=await get('/api/analyse?adresse='+encodeURIComponent(requested),13000);
  if(!geo?.localisation){location.assign('/');return}
- state.loc=geo.localisation;redraw();if(state.tab==='logements')ensureLogementsReference();if(state.tab==='social')ensureSocialRpls();if(state.tab==='sru')ensureSru();if(state.tab==='zonage')ensureZonageABC();
+ state.loc=geo.localisation;redraw();if(state.tab==='logements')ensureLogementsReference();if(state.tab==='social')ensureSocialRpls();if(state.tab==='sru')ensureSru();if(state.tab==='zonage')ensureZonageABC();if(state.tab==='permis')ensurePermisSitadel();
  const l=state.loc,q=new URLSearchParams({code_insee:l.code_insee,adresse:l.adresse||requested,code_postal:l.code_postal||'',ban_id:l.ban_id||''});
  await Promise.all([
   (async()=>{state.analysis=await get('/api/indicateurs?'+q,93000);redraw()})(),
