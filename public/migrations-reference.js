@@ -122,12 +122,14 @@ function render(root,state){
    Object.entries(detail?.profilsParOrigine||{}).filter(([code])=>code!==state.loc?.code_insee)
     .map(([code,p])=>({code,nom:code==='99999'?'Étranger':'Commune '+code,valeur:p.total}))
     .sort((a,b)=>b.valeur-a.valeur);
- const incoming=valid(data?.entrants)?data.entrants:
- detail?Object.entries(detail.repartition).filter(([k])=>['3','4','5','6','7','8','9'].includes(k)).reduce((s,[,v])=>s+v,0):null;
- const intra=valid(detail?.intra)?detail.intra:valid(data?.mobiliteIntra)?data.mobiliteIntra:null;
- const moved=valid(detail?.mobiles?.total)?detail.mobiles.total:valid(intra)&&valid(incoming)?intra+incoming:null;
- const total=valid(detail?.total)?detail.total:valid(data?.total)?data.total:null;
- const stable=valid(detail?.memeLogement)?detail.memeLogement:null;
+ const melodi=state.migrationsMelodi?.statut==='disponible'?state.migrationsMelodi:null;
+ const incoming=valid(detail?.mobiles?.total)&&valid(detail?.intra)?detail.mobiles.total-detail.intra:
+  valid(melodi?.entrants)?melodi.entrants:null;
+ const flowIncoming=valid(data?.entrants)?data.entrants:incoming;
+ const intra=valid(detail?.intra)?detail.intra:valid(melodi?.intra)?melodi.intra:null;
+ const moved=valid(detail?.mobiles?.total)?detail.mobiles.total:valid(melodi?.mobiles)?melodi.mobiles:null;
+ const total=valid(detail?.total)?detail.total:valid(melodi?.total)?melodi.total:null;
+ const stable=valid(detail?.memeLogement)?detail.memeLogement:valid(melodi?.memeLogement)?melodi.memeLogement:null;
  const intro=mk('div','mr-intro');
  add(intro,mk('span','mr-kicker','INSEE — Licence Ouverte 2.0 (page du jeu)'),mk('h1',null,'Migrations résidentielles'),
   mk('p',null,'Mobilité résidentielle sur un an — '+city+' · INSEE, recensement 2023'));
@@ -218,19 +220,19 @@ function render(root,state){
  side.append(sideTitle,mk('p','mr-muted','Arrivées venues d’un autre territoire à destination de '+city));
  const statrow=mk('div','mr-flow-stats');
  const shown=origins.slice(0,10).reduce((s,x)=>s+x.valeur,0);
- statrow.append(infoChip('Arrivées d’un autre territoire',incoming,'personnes'),
+ statrow.append(infoChip('Arrivées d’un autre territoire',flowIncoming,'personnes'),
  infoChip('Origines affichées',origins.length?Math.min(10,origins.length):null,'TOP 10'),
- infoChip('Flux représentés',origins.length?shown:null,percent(shown,incoming)));
+ infoChip('Flux représentés',origins.length?shown:null,percent(shown,flowIncoming)));
  side.append(statrow,mk('h3','mr-section-label','Principales provenances'));
- const rankRows=mk('div','mr-flux-bars');if(origins.length)for(const o of origins.slice(0,10))meter(rankRows,o.nom,o.valeur,incoming,Math.max(1,origins[0].valeur));
+ const rankRows=mk('div','mr-flux-bars');if(origins.length)for(const o of origins.slice(0,10))meter(rankRows,o.nom,o.valeur,flowIncoming,Math.max(1,origins[0].valeur));
  else for(let i=0;i<10;i++)meter(rankRows,'Commune d’origine',null,null,1);
  side.append(rankRows);
  const link=button('⊕  Voir les provenances suivantes','mr-see-more',()=>{const last=side.querySelector('.mr-more-origins');if(last){last.remove();return}
- const more=mk('div','mr-more-origins');for(const o of origins.slice(10))meter(more,o.nom,o.valeur,incoming,Math.max(1,origins[0].valeur));side.append(more)});
- side.append(link,mk('p','mr-flow-note','Les 10 origines affichées représentent '+num(origins.length?shown:null)+' personnes, soit '+percent(origins.length?shown:null,incoming)+' des entrants.'));
+ const more=mk('div','mr-more-origins');for(const o of origins.slice(10))meter(more,o.nom,o.valeur,flowIncoming,Math.max(1,origins[0].valeur));side.append(more)});
+ side.append(link,mk('p','mr-flow-note','Les 10 origines affichées représentent '+num(origins.length?shown:null)+' personnes, soit '+percent(origins.length?shown:null,flowIncoming)+' des entrants.'));
  lower.append(flowMap,side);root.append(lower);
  const foot=mk('div','mr-footer');
- foot.append(mk('p',null,'ⓘ Sources : INSEE, Recensement 2023. Mobilités et profils individuels issus du fichier MIGCOM en géographie 2025, pondérés par IPONDI ; flux entre communes issus de la base des flux en géographie 2026. Les deux géographies peuvent différer pour les communes modifiées. Les indicateurs affichent « — » lorsqu’aucune donnée vérifiée n’est disponible.'));
+ foot.append(mk('p',null,'ⓘ Sources : INSEE, Recensement 2023. Mobilité issue en priorité du fichier détail MIGCOM (exploitation complémentaire, géographie 2025, pondération IPONDI) ou, si celui-ci est indisponible, de l’API Melodi MIG1 (exploitation principale, géographie 2026). Flux entre communes provenant de la base complémentaire (géographie 2026). Les effectifs de ces deux exploitations ne doivent pas être additionnés ni confondus. « — » indique une donnée absente.'));
  const refs=mk('div');for(const [name,url] of [['Base de flux INSEE',INSEE],['Fichier détail INSEE',DETAILS],['Ville-Data (référence complémentaire)', 'https://ville-data.com/']]){
  const a=mk('a',null,name);a.href=url;a.target='_blank';a.rel='noopener noreferrer';refs.append(a)}
  foot.append(refs);root.append(foot);
