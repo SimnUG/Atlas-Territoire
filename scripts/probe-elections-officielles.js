@@ -4,7 +4,14 @@ const datasets=[
  'elections-municipales-2026-resultats-du-second-tour',
  'elections-municipales-2020-resultats',
  'elections-municipales-2014-resultats',
- 'elections-municipales-2008-resultats'
+ 'elections-municipales-2008-resultats',
+ 'municipales-2020-resultats-2nd-tour',
+ 'elections-municipales-2014-resultats-par-bureaux-de-vote',
+ 'elections-municipales-2014-resultats-1er-tour',
+ 'elections-municipales-2014-resultats-1er-to-0',
+ 'elections-municipales-2008-resultats-572150',
+ 'elections-municipales-2008-resultats-572152',
+ 'elections-municipales-2008-resultats-572154'
 ];
 (async()=>{
  for(const slug of datasets){
