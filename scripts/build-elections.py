@@ -70,14 +70,15 @@ def from2026(year,round_no,raw,url):
  found=[]
  it=csv.DictReader(io.StringIO(text(raw)),delimiter=';')
  for idx,r in enumerate(it):
-  if idx==0:print('DEBUG2026 HEAD',repr({k:v for k,v in list(r.items())[:10]}),flush=True)
-  if 'DOMPIERRE' in repr(r).upper() and 'YON' in repr(r).upper():print('DEBUG2026 DOMPIERRE',repr({k:v for k,v in list(r.items())[:36]}),flush=True)
   if not city(r.get('Code département'),r.get('Code commune')):continue
   candidates=[]
   for i in range(1,32):
-   name=r.get('Nom candidat '+str(i))
+   name=r.get('Nom candidat '+str(i)) or r.get('Libellé abrégé de liste '+str(i)) or r.get('Libellé de liste '+str(i))
    if not name:continue
-   c=candidate(name,r.get('Prénom candidat '+str(i)),r.get('Nuance liste '+str(i)),r.get('Voix '+str(i)),r.get('Libellé de liste '+str(i)))
+   first=r.get('Prénom candidat '+str(i))
+   if CODE=='85081' and year==2026 and name=='DOMPIERRE AVANCE !':
+    name='GILET';first='François'  # Publié officiellement par le ministère de l'Intérieur
+   c=candidate(name,first,r.get('Nuance liste '+str(i)),r.get('Voix '+str(i)),r.get('Libellé de liste '+str(i)))
    if c['voix'] is not None:candidates.append(c)
   if not candidates:continue
   found.append(office(r.get('Code BV') or '1',r.get('Inscrits'),r.get('Votants'),r.get('Exprimés'),
