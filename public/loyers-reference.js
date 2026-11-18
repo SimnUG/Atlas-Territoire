@@ -115,6 +115,11 @@
   }
   const refs=[2022,2023,2024,2025].map(y=>comparison(kind.id,y));
   p.append(chartSvg(values.map(v=>v.value),kind.color,refs));
+  const missing=values.filter(v=>!any(v.value)).map(v=>v.year);
+  if(missing.length){
+    const errors=sourceRow(kind.id)?.serie?.filter(x=>missing.includes(x.annee)).map(x=>x.erreur).filter(Boolean)||[];
+    p.append(el('p','rp-missing-years','Données indisponibles : '+missing.join(', ')+'. '+(errors.length?'Vérifier la disponibilité du fichier ANIL correspondant.':'')));
+  }
   return p;
  }
  function yieldCard(kind){
@@ -124,7 +129,10 @@
   const data=years.map(y=>current?.rentYield?.annees?.[y]?.[kind.id]||null);
   const found=data.map(r=>r?.rendement).filter(any);
   if(!found.length){
-   p.append(el('p','rp-missing',!current?.rentYield?'Vérification des prix DVF+ en cours…':'Aucune année ne réunit un loyer et un prix de vente au m² vérifiés (au moins 5 ventes du segment).'));
+   const reason=current?.rentYield?.statut==='indisponible'
+    ?'Source DVF+ Cerema inaccessible actuellement : aucun rendement calculé.'
+    :'Aucune année ne réunit un loyer et un prix de vente au m² vérifiés (au moins 5 ventes du segment).';
+   p.append(el('p','rp-missing',!current?.rentYield?'Vérification des prix DVF+ en cours…':reason));
    return p;
   }
   const last=[...data].reverse().find(x=>any(x?.rendement));
@@ -210,7 +218,11 @@
   foot.append(el('span',null,'ⓘ'));
   const text=el('p');
   text.append(document.createTextNode('Carte des loyers 2022 à 2025 — ANIL / DGALN (Ministère chargé du Logement). Estimations ANIL, à partir des données du Groupe SeLoger et de leboncoin. Loyers mensuels charges comprises, par m², pour des logements loués vides. '));
-  text.append(link('Données officielles ANIL',sourceURL));
+  text.append(link('ANIL 2025',sourceURL));
+  for(const year of [2022,2023,2024]){
+    text.append(document.createTextNode(' · '));
+    text.append(link('ANIL '+year,'https://www.data.gouv.fr/datasets/carte-des-loyers-indicateurs-de-loyers-dannonce-par-commune-en-'+year));
+  }
   text.append(document.createTextNode(' · Rendement : données DVF+ DGFiP / Cerema. '));
   text.append(link('Jeu de données DVF+',dvfURL));
   text.append(document.createTextNode(' · Licence Ouverte 2.0. Traitement : Atlas Territoires.'));
