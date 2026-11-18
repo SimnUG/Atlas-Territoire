@@ -24,10 +24,23 @@ jobs:
         with:
           node-version: '22'
       - run: npm install --omit=dev
-      - name: Télécharger et agréger INSEE RP2023
+      - name: Télécharger le fichier INSEE avec reprise en cas de coupure
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL="https://www.insee.fr/fr/statistiques/fichier/9004805/RP2023_migcom.zip"
+          for attempt in $(seq 1 20); do
+            echo "Téléchargement tentative $attempt"
+            curl --fail --location --connect-timeout 30 --max-time 240 --retry 2 --retry-all-errors --retry-delay 3 --continue-at - --output /tmp/RP2023_migcom.zip "$URL" || true
+            if unzip -tq /tmp/RP2023_migcom.zip >/dev/null 2>&1; then echo "Archive valide";break;fi
+            if [ "$attempt" -eq 20 ]; then echo "Archive INSEE impossible à récupérer intégralement";exit 1;fi
+            sleep 4
+          done
+      - name: Agréger les observations par commune
         run: node scripts/build-migrations-cache.js
         env:
           MIGRATION_COMMUNES: '85081'
+          MIGCOM_ZIP: '/tmp/RP2023_migcom.zip'
       - name: Publier uniquement les agrégats de mobilité
         run: |
           git config user.name "github-actions[bot]"
