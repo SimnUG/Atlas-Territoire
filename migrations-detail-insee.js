@@ -14,6 +14,13 @@ const yauzl=require('yauzl');
 const URL='https://www.insee.fr/fr/statistiques/fichier/9004805/RP2023_migcom.zip';
 const SOURCE={nom:'INSEE — RP2023, fichier détail MIGCOM',url:'https://www.insee.fr/fr/statistiques/9004805',millesime:2023,ponderation:'IPONDI',geographie:'2025'};
 const CACHE=new Map();
+const DATA_DIR=path.join(__dirname,'public','data');
+function precomputed(code){
+ const file=path.join(DATA_DIR,'migrations-'+code+'.json');
+ try{const obj=JSON.parse(fs.readFileSync(file,'utf8'));
+  return obj?.code_insee===code&&obj.statut==='disponible'&&obj.source?.millesime===2023?obj:null;
+ }catch(_){return null}
+}
 const GROUPS={
  csp:[['6','Ouvriers'],['4','Professions intermédiaires'],['5','Employés'],['12','Chômeurs'],['21','Retraités'],['3','Cadres et professions intellectuelles supérieures'],['2','Artisans, commerçants, chefs d’entreprise'],['1','Agriculteurs exploitants'],['autres','Autres personnes']],
  age:[['00','Moins de 15 ans'],['15','15 à 19 ans'],['20','20 à 24 ans'],['25','25 à 39 ans'],['40','40 à 54 ans'],['55','55 à 64 ans'],['65','65 à 79 ans'],['80','80 ans ou plus']],
@@ -82,8 +89,8 @@ async function compileZip(filename,code){
    const f=parseRow(line,columns);
    if(f.COMMUNE!==code||!validCode.test(f.COMMUNE))continue;
    const w=Number(f.IPONDI.replace(',','.'));
-   if(!(w>0)&&w!==0)continue;
-   if(!Number.isFinite(w))continue;
+   if(!Number.isFinite(w)||w<=0)continue;
+   
    if(!/^[0-9]$/.test(f.IRAN))continue; // exclure les personnes nées après date de référence
    kept++;addProfile(all,f,w);
    sum(movement,f.IRAN,w);
@@ -98,7 +105,7 @@ async function compileZip(filename,code){
   if(!kept)throw Error('Aucune observation pour la commune '+code);
   const origins={};
   const sorted=[...flows.entries()].sort((a,b)=>b[1].total-a[1].total);
-  for(const [key,value] of sorted.slice(0,120))origins[key]=output(value);
+  for(const [key,value] of sorted)origins[key]=output(value);
   return {statut:'disponible',source:SOURCE,code_insee:code,total:all.total,
     memeLogement:movement['1']||0,intra:movement['2']||0,
     horsOrdinaire:movement['0']||0,
@@ -109,6 +116,7 @@ async function compileZip(filename,code){
 }
 async function detail(code){
  if(!/^(?:\d{5}|2[AB]\d{3})$/i.test(code))throw Error('Commune invalide');
+ const saved=precomputed(code);if(saved)return saved;
  const hit=CACHE.get(code);
  if(hit&&hit.until>Date.now())return hit.value;
  const promise=(async()=>{
@@ -135,4 +143,4 @@ async function detail(code){
   return result;
  }catch(e){CACHE.delete(code);throw e}
 }
-module.exports={detail,GROUPS,SOURCE};
+module.exports={detail,GROUPS,SOURCE,precomputed};
