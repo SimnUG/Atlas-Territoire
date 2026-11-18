@@ -39,7 +39,7 @@
  }
  function ctr(value,items,extraClass=''){
   const wrap=elem('div','pc-segmented '+extraClass);
-  items.forEach(([v,label])=>{const b=elem('button',value===v?'selected':'',label);b.type='button';b.onclick=()=>{if(extraClass==='pc-displays')state.display=v;else if(extraClass==='pc-measures')state.measure=v;else if(extraClass==='pc-type-displays')state.tyDisplay=v;else if(extraClass==='pc-type-measures')state.tyMeasure=v;draw()};wrap.append(b)});
+  items.forEach(([v,label])=>{const b=elem('button',value===v?'selected':'',label);b.type='button';b.onclick=()=>{if(extraClass==='pc-displays')state.display=v;else if(extraClass==='pc-measures')state.measure=v;else if(extraClass==='pc-type-displays')state.tyDisplay=v;else if(extraClass==='pc-type-measures')state.tyMeasure=v;else if(extraClass==='pc-status-displays')state.statusDisplay=v;draw()};wrap.append(b)});
   return wrap;
  }
  function option(label,value){const opt=elem('option',null,label);opt.value=value;return opt}
