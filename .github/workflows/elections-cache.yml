@@ -1,0 +1,25 @@
+name: Pré-calcul résultats électoraux officiels
+on:
+  push:
+    branches: [main]
+    paths: ['scripts/build-elections.py','.github/workflows/elections-cache.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@v4
+      - run: python scripts/build-elections.py
+      - name: Publier les agrégats officiels
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/data/elections-85081.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Résultats officiels municipales Dompierre-sur-Yon"
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
