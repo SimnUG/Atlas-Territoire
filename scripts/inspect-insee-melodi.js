@@ -1,2 +1,3 @@
 const {migrations}=require('../migrations-melodi');
+console.log('Vérification millésime 2023, agrégat population de 1 an ou plus');
 migrations('85081').then(x=>{console.log(JSON.stringify(x,null,2));if(x.total>6000||x.total<4000){console.error('Contrôle population 1 an et plus hors plage plausible');process.exitCode=1}if(x.statut!=='disponible'||!x.total||!x.intra||!x.memeLogement)process.exitCode=1}).catch(e=>{console.error(e);process.exitCode=1});
