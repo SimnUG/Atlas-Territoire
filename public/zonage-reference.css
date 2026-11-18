@@ -1,0 +1,42 @@
+.app.atlas-zonage-active,.app.atlas-zonage-active .main{background:#fff}
+.app.atlas-zonage-active .content{max-width:none;padding:0 16px 52px}
+.app.atlas-zonage-active .headline,.app.atlas-zonage-active .demo-banner,.app.atlas-zonage-active .tabs-top,.app.atlas-zonage-active .footnote{display:none!important}
+.za-root{font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;color:#101c30;font-size:12px;padding-bottom:30px}
+.za-root *{box-sizing:border-box}
+.za-root .za-license{font-size:9px;color:#929baa;margin:19px 0 23px}
+.za-root .za-license a,.za-root .za-footer a{color:#dc0674;text-decoration:underline}
+.za-root h1{font-size:23px;line-height:1.25;letter-spacing:-.5px;margin:0 0 3px;color:#091726;font-weight:850}
+.za-root .za-intro{font-size:11px;color:#8994a7;margin:0 0 25px}
+.za-root .za-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:14px}
+.za-root .za-kpi{min-width:0;min-height:83px;background:#fff;border:1px solid #e5e7e9;border-radius:11px;box-shadow:0 2px 0 #00000024;padding:13px 14px 10px;display:flex;flex-direction:column;align-items:start}
+.za-root .za-label{font-size:9px;letter-spacing:1px;font-weight:850;color:#8590a0;margin-bottom:6px}
+.za-root .za-value{font-size:22px;line-height:1.08;letter-spacing:-.4px;color:#0d1729;font-weight:850;display:block}
+.za-root .za-value.green{color:#087c4e}
+.za-root .za-sub{font-size:9.5px;color:#8995a6;margin-top:5px}
+.za-root .za-panel{border:1px solid #e2e5e9;border-left:3px solid #078454;border-radius:11px;box-shadow:0 2px 0 #00000024;padding:15px 15px 10px;background:#fff;margin-bottom:14px}
+.za-root .za-panel-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px}
+.za-root .za-panel h2{font-size:13px;color:#0e1c31;line-height:1.25;font-weight:850;margin:0 0 4px}
+.za-root .za-muted{font-size:11px;line-height:1.3;color:#8d97aa;margin:0}
+.za-root .za-chip{background:#fbe5f0;color:#e1007e;border-radius:50px;font-weight:750;font-size:9px;padding:5px 9px;white-space:nowrap}
+.za-root .za-list{width:100%}
+.za-root .za-zone-row{min-height:51px;display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid #e4e6ea;color:#8a93a1}
+.za-root .za-zone-row:last-child{border-bottom:0}
+.za-root .za-zone-chip{background:#f3f4f6;border-radius:30px;min-width:32px;padding:6px 7px;line-height:1;text-align:center;font-size:10px;font-weight:800;color:#a0a6b0}
+.za-root .za-zone-desc{min-width:0;flex:1;display:flex;flex-direction:column;gap:4px}
+.za-root .za-zone-desc strong{font-size:11px;font-weight:600;color:#7f8898}
+.za-root .za-zone-desc small{font-size:9px;color:#aab2bf;line-height:1.3}
+.za-root .za-zone-end{display:flex;align-items:center;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.za-root .za-map-link{color:#9aa3b2;font-size:9.5px;text-decoration:none;font-weight:650;white-space:nowrap}
+.za-root .za-map-link:hover{text-decoration:underline;color:#5d6981}
+.za-root .za-zone-row.selected{color:#19283a}
+.za-root .za-zone-row.selected .za-zone-chip{background:#08794e;color:#fff}
+.za-root .za-zone-row.selected .za-zone-desc strong{color:#14233a;font-weight:850}
+.za-root .za-zone-row.selected .za-zone-desc small{color:#798599}
+.za-root .za-zone-row.selected .za-map-link{color:#526b65}
+.za-root .za-selected-tag{background:#e4f5ec;color:#087d4c;border-radius:20px;padding:5px 8px;font-weight:750;font-size:9.5px;white-space:nowrap}
+.za-root .za-warning{font-size:10px;color:#8c6e44;padding:10px 0 2px;margin:0}
+.za-root .za-footer{border:1px solid #e2e6ed;border-radius:11px;display:flex;align-items:flex-start;gap:9px;padding:10px 12px;color:#8490a4;font-size:9.5px;line-height:1.55}
+.za-root .za-footer p{margin:0}
+.za-root .za-icon{font-size:15px;line-height:1.05;color:#8794a8}
+@media(max-width:850px){.za-root .za-kpis{grid-template-columns:1fr 1fr}.za-root .za-kpi:last-child{grid-column:1 / -1}}
+@media(max-width:520px){.app.atlas-zonage-active .content{padding:0 11px 35px}.za-root .za-kpis{grid-template-columns:1fr}.za-root .za-kpi:last-child{grid-column:auto}.za-root .za-panel-head{flex-wrap:wrap}.za-root .za-zone-end{flex-direction:column;align-items:end;gap:5px}.za-root .za-zone-row{gap:7px}}
