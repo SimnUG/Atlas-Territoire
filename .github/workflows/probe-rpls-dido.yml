@@ -1,0 +1,15 @@
+name: Sonder fichier RPLS 2025 (SDES DiDo)
+on:
+  push:
+    paths:
+      - scripts/probe-rpls-dido.py
+      - .github/workflows/probe-rpls-dido.yml
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - run: python scripts/probe-rpls-dido.py
