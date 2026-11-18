@@ -18,6 +18,7 @@ const inseeMigrations = require('./migrations-insee');
 const inseeMigrationsDetail = require('./migrations-detail-insee');
 const inseeMigrationsMelodi = require('./migrations-melodi');
 const electionsPersona = require('./elections-persona-insee');
+const socialRpls = require('./social-rpls');
 
 const PORT = Number(process.env.PORT || 3000);
 const PUBLIC = path.join(__dirname, 'public');
@@ -81,6 +82,12 @@ http.createServer(async(req,res)=>{
     }catch(_){
       return send(res,200,{statut:'indisponible',code_insee:code,scrutins:[],raison:'Les données officielles de cette commune ne sont pas encore indexées'});
     }
+  }
+  if(url.pathname==='/api/parc-social-rpls'){
+    const code=(url.searchParams.get('code_insee')||'').trim();
+    if(!/^(?:[0-9]{5}|2[AB][0-9]{3})$/i.test(code))return send(res,400,{erreur:'Code INSEE invalide'});
+    try{return send(res,200,socialRpls.social(code))}
+    catch(e){return send(res,503,{statut:'indisponible',erreur:'Le fichier officiel SDES est momentanément inaccessible'})}
   }
   if(url.pathname==='/api/catalogue'){
     return send(res,200,catalog.catalogue(url.searchParams.get('categorie')||''));
