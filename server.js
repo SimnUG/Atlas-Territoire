@@ -5,6 +5,8 @@ const path = require('node:path');
 const official = require('./official-data');
 const catalog = require('./data-catalog');
 const rental = require('./rental-data');
+const rentalEpci = require('./loyers-epci');
+const rentalYield = require('./loyers-rendement');
 const housing = require('./housing-data');
 const territory = require('./territory-extra');
 const adminProfile = require('./administrative-profile');
@@ -228,6 +230,18 @@ http.createServer(async(req,res)=>{
     }catch(_){
       return send(res,200,{urbanisme:null,risques:null,sources_supplementaires:[]});
     }
+  }
+  if(url.pathname==='/api/loyers-epci'){
+    const code=(url.searchParams.get('code_insee')||'').trim();
+    if(!/^(44|85)\d{3}$/.test(code))return send(res,400,{erreur:'Commune hors du 44/85 ou code INSEE invalide'});
+    try{return send(res,200,await rentalEpci.compare(code,url.searchParams.get('historique')==='1'))}
+    catch(e){return send(res,503,{statut:'indisponible',raison:e.message})}
+  }
+  if(url.pathname==='/api/loyers-rendement'){
+    const code=(url.searchParams.get('code_insee')||'').trim();
+    if(!/^(44|85)\d{3}$/.test(code))return send(res,400,{erreur:'Commune hors du 44/85 ou code INSEE invalide'});
+    try{return send(res,200,await rentalYield.rendement(code))}
+    catch(e){return send(res,503,{statut:'indisponible',raison:e.message})}
   }
   if(url.pathname==='/api/loyers'||url.pathname==='/api/logements-detail'){
     const code=(url.searchParams.get('code_insee')||'').trim();
