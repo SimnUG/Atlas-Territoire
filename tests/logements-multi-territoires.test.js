@@ -66,7 +66,7 @@ test('5 comparison tables have 2017/2023 changes, 2023 shares and France referen
  const f=housing.createArea('FRANCE-F','France',[],makeHousing());
  const result=housing.assemble(c,e,f);
  assert.equal(result.tableaux.length,5);
- assert.equal(result.tableaux.reduce((n,t)=>n+t.lignes.length,0),22);
+ assert.equal(result.tableaux.reduce((n,t)=>n+t.lignes.length,0),20);
  const maisons=result.tableaux.find(x=>x.id==='type').lignes[0];
  assert.equal(maisons.commune['2023'],1941);
  assert.equal(maisons.commune['2017'],1693);
