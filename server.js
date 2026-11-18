@@ -20,6 +20,7 @@ const inseeMigrationsMelodi = require('./migrations-melodi');
 const electionsPersona = require('./elections-persona-insee');
 const socialRpls = require('./social-rpls');
 const socialRplsGeo = require('./social-rpls-geo');
+const fullHousingInsee = require('./logements-insee-complet');
 
 const PORT = Number(process.env.PORT || 3000);
 const PUBLIC = path.join(__dirname, 'public');
@@ -89,6 +90,18 @@ http.createServer(async(req,res)=>{
     if(!/^(?:[0-9]{5}|2[AB][0-9]{3})$/i.test(code))return send(res,400,{erreur:'Code INSEE invalide'});
     try{return send(res,200,await socialRplsGeo.get(code))}
     catch(e){return send(res,503,{statut:'indisponible',erreur:'Points géographiques RPLS temporairement indisponibles'})}
+  }
+  if(url.pathname==='/api/logements-insee-complet'){
+    const code=(url.searchParams.get('code_insee')||'').trim();
+    const epci=(url.searchParams.get('code_epci')||'').trim();
+    if(!/^(?:[0-9]{5}|2[AB][0-9]{3})$/i.test(code)||!/^[0-9]{9}$/.test(epci))
+      return send(res,400,{statut:'invalide',erreur:'Code commune ou EPCI invalide'});
+    try{return send(res,200,await fullHousingInsee.logement({
+      commune:code,epci,
+      nomCommune:(url.searchParams.get('nom_commune')||'').slice(0,100),
+      nomEpci:(url.searchParams.get('nom_epci')||'').slice(0,100)
+    }));}
+    catch(e){return send(res,503,{statut:'indisponible',erreur:'Statistiques INSEE indisponibles : '+e.message});}
   }
   if(url.pathname==='/api/parc-social-rpls'){
     const code=(url.searchParams.get('code_insee')||'').trim();
