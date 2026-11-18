@@ -17,6 +17,7 @@ const inseeRevenus = require('./revenus-insee');
 const inseeMigrations = require('./migrations-insee');
 const inseeMigrationsDetail = require('./migrations-detail-insee');
 const inseeMigrationsMelodi = require('./migrations-melodi');
+const electionsPersona = require('./elections-persona-insee');
 
 const PORT = Number(process.env.PORT || 3000);
 const PUBLIC = path.join(__dirname, 'public');
@@ -47,6 +48,12 @@ http.createServer(async(req,res)=>{
   if(!privateAccess.allow(req,res))return;
   const url = new URL(req.url,'http://localhost');
   if(req.method!=='GET')return send(res,405,{erreur:'Méthode non autorisée'});
+  if(url.pathname==='/api/elections-persona-insee'){
+    const code=(url.searchParams.get('code_insee')||'').trim();
+    if(!/^(?:[0-9]{5}|2[AB][0-9]{3})$/i.test(code))return send(res,400,{erreur:'Code INSEE invalide'});
+    try{return send(res,200,await electionsPersona.portrait(code))}
+    catch(e){return send(res,503,{statut:'indisponible',erreur:e.message})}
+  }
   if(url.pathname==='/api/elections-officielles'){
     const code=(url.searchParams.get('code_insee')||'').trim();
     if(!/^(?:[0-9]{5}|2[AB][0-9]{3})$/i.test(code))return send(res,400,{erreur:'Code INSEE invalide'});
