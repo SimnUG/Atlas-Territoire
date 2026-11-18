@@ -58,3 +58,12 @@
 .election-root .el-foot a{display:inline-block;margin:0 10px 6px 0;color:#cb0a78}
 @media(max-width:1100px){.election-root .el-bureau-columns{grid-template-columns:1fr}.election-root .el-line{grid-template-columns:100px 1fr 48px 55px}}
 @media(max-width:700px){.election-root .el-layout{grid-template-columns:1fr}.election-root .el-local-nav{position:static;min-height:0;border-right:0;display:flex;flex-wrap:wrap;border-bottom:1px solid #e1e5ed;padding:9px}.election-root .el-local-nav h4{display:none}.election-root .el-local-city{width:100%;padding:8px}.election-root .el-local-button{width:auto;font-size:10px;border-radius:9px}.election-root .el-election-content{padding:12px}.election-root .el-line{grid-template-columns:85px 1fr 40px 45px;gap:4px;font-size:10px}}
+
+.election-root .el-epci-map{background:#f7f8fb;border-radius:17px;overflow:hidden;min-height:360px;padding:15px}
+.election-root .el-epci-map svg{width:100%;height:auto;display:block;max-height:440px}
+.election-root .el-epci-map svg path{cursor:pointer;transition:opacity .15s}
+.election-root .el-epci-map svg path:hover,.election-root .el-epci-map svg path:focus{opacity:.65;outline:none;stroke:#263553;stroke-width:3px}
+.election-root .el-epci-legend{display:flex;gap:15px;flex-wrap:wrap;margin:10px 0}
+.election-root .el-epci-legend span{font-size:11px;display:inline-flex;gap:6px;align-items:center;color:#4f5d75}
+.election-root .el-epci-legend i{width:12px;height:12px;border-radius:50%;display:inline-block}
+.election-root .el-map-detail{background:#fff;border:1px solid #e1e4ee;border-radius:10px;padding:10px;font-size:11px;color:#344561}
