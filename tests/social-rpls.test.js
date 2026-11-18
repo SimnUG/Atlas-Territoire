@@ -55,6 +55,21 @@ test('Unknown towns must not receive Dompierre housing values',()=>{
  const result=rpls.social('99999');assert.equal(result.statut,'absent');
  assert.equal(result.total,undefined);
 });
+test('WGS84 coordinates from Lambert-93 are correct within a few metres',()=>{
+ const {lambert93}=require('../social-rpls-geo');
+ const {lat,lng}=lambert93(365550,6636050);
+ assert.ok(Math.abs(lat-46.7410092)<.00002);
+ assert.ok(Math.abs(lng+1.3826897)<.00002);
+});
+test('Source code supports on-demand RPLS map without guessing points',()=>{
+ const script=fs.readFileSync('social-rpls-geo.js','utf8');
+ assert.match(script,/DEPCOM/);
+ assert.match(script,/MAX_RECORDS/);
+ const server=fs.readFileSync('server.js','utf8');
+ assert.match(server,/\/api\/parc-social-rpls-points/);
+ const front=fs.readFileSync('public/mockup-live.js','utf8');
+ assert.match(front,/ensureSocialGeo/);
+});
 test('Frontend is activated without overwriting other Atlas tabs',()=>{
  const html=fs.readFileSync('public/dashboard.html','utf8');
  const live=fs.readFileSync('public/mockup-live.js','utf8');
