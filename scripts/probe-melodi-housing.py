@@ -35,3 +35,30 @@ for ds,g,t in [
  ('DS_RP_LOGEMENT_PRINC','FRANCE-F','2023')
 ]:
  inspect(ds,g.replace('GEO=',''),t)
+
+def dims(ds,geo,period='2023'):
+ q={'GEO':geo,'maxResult':10000}
+ if period:q['TIME_PERIOD']=period
+ rr=requests.get(BASE+ds,params=q,timeout=75)
+ rows=rr.json().get('observations',[])
+ print('TOTALS',ds,geo,period,'rows',len(rows),flush=True)
+ def dim(row,key):return row.get('dimensions',{}).get(key)
+ for row in rows:
+  dd=row['dimensions']
+  dims=['TDW','TSH','NOR','L_STAY','OCS','BUILD_END']
+  k=[(d,dd.get(d))for d in dims if dd.get(d) and dd.get(d)!='_T']
+  if dd.get('RP_MEASURE')!='DWELLINGS':continue
+  if dd.get('TDW')!='_T' and any(dd.get(i)!='_T' for i in ['BUILD_END','L_STAY','NOR','TSH']):continue
+  if dd.get('TSH')!='_T' and any(dd.get(i)!='_T' for i in ['BUILD_END','L_STAY','NOR','TDW']):continue
+  if dd.get('L_STAY')!='_T' and any(dd.get(i)!='_T' for i in ['BUILD_END','TSH','NOR','TDW']):continue
+  if dd.get('NOR')!='_T' and any(dd.get(i)!='_T' for i in ['BUILD_END','TSH','L_STAY','TDW']):continue
+  if dd.get('BUILD_END')!='_T' and any(dd.get(i)!='_T' for i in ['NOR','TSH','L_STAY','TDW']):continue
+  print('ROW',dd.get('TIME_PERIOD'),dd.get('OCS'),[(d,dd[d]) for d in dims if dd.get(d)!='_T'],
+   row.get('measures',{}).get('OBS_VALUE_NIVEAU',{}).get('value'),flush=True)
+for ds,geo,period in [
+ ('DS_RP_LOGEMENT_PRINC','COM-85081','2023'),
+ ('DS_RP_LOGEMENT_PRINC','COM-85081','2017'),
+ ('DS_RP_LOGEMENT_PRINC','FRANCE-F','2023'),
+ ('DS_RP_LOGEMENT_PRINC','EPCI-248500589','2023')
+]:
+ dims(ds,geo,period)
