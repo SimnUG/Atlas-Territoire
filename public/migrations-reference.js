@@ -26,16 +26,17 @@ function meter(parent,label,value,denom,max,color){
 }
 function profileGrid(parent,profileData){
  const grid=mk('div','mr-profiles');
- for(const title of ['Répartition par CSP de la personne de référence','Âge de la personne de référence du ménage','Statut d’occupation actuel du logement','Taille du ménage']){
-  const col=mk('div','mr-profile');
-  col.append(mk('h4',null,title));
-  const labels=title.startsWith('Répartition')?['Ouvriers','Professions intermédiaires','Employés','Chômeurs','Retraités','Cadres et prof. intellectuelles supérieures']:title.startsWith('Âge')?['25 à 39 ans','40 à 54 ans','55 à 64 ans']:title.startsWith('Statut')?['Propriétaire','Locataire du parc privé','Locataire du parc social']:['1 personne','2 personnes','3 personnes','4 personnes','5 personnes','6 personnes ou plus'];
-  for(const label of labels){
-   const table=title.startsWith('Répartition')?'csp':title.startsWith('Âge')?'age':title.startsWith('Statut')?'occupation':'menage';
-   const found=profileData?.distributions?.[table]?.find(x=>x.label===label);
-   const values=profileData?.distributions?.[table]||[];
-   meter(col,label,found?.valeur??null,profileData?.total??null,Math.max(1,...values.map(x=>x.valeur)));
-  }
+ for(const [title,table,emptyLabels] of [
+  ['Répartition par CSP de la personne de référence','csp',['Ouvriers','Professions intermédiaires','Employés']],
+  ['Âge de la personne de référence du ménage','age',['25 à 39 ans','40 à 54 ans']],
+  ['Statut d’occupation actuel du logement','occupation',['Propriétaire','Locataire du parc privé']],
+  ['Taille du ménage','menage',['1 personne','2 personnes','3 personnes']]
+ ]){
+  const col=mk('div','mr-profile');col.append(mk('h4',null,title));
+  const values=profileData?.distributions?.[table]||[];
+  const entries=values.length?values.map(x=>({label:x.label,valeur:x.valeur})):emptyLabels.map(label=>({label,valeur:null}));
+  const max=Math.max(1,...values.map(x=>x.valeur));
+  for(const item of entries)meter(col,item.label,item.valeur,profileData?.total??null,max);
   grid.append(col);
  }
  parent.append(grid);
