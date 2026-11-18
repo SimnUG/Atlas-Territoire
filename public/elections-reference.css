@@ -79,3 +79,14 @@
 .election-root .el-persona-card small{font-size:10px;color:#5c6b83}
 .election-root .el-persona-circle{width:68px;height:68px;margin:7px auto;display:grid;place-items:center;border-radius:50%;background:radial-gradient(circle at center,#fff 0 57%,transparent 60%),conic-gradient(#eedf00 var(--share),#edf0f2 0);font-size:13px;font-weight:850}
 @media(max-width:1000px){.election-root .el-persona-grid{grid-template-columns:1fr}}
+
+.election-root .atlas-point-map{position:relative;overflow:hidden;border-radius:18px;border:1px solid #e1e4ec;background:#f4f5f7;margin:6px 0 16px}
+.election-root .atlas-point-map-toolbar{background:#fff;display:flex;justify-content:space-between;gap:12px;padding:10px 13px;align-items:center;font-size:11px}
+.election-root .atlas-point-map-toolbar strong{color:#20334d}.election-root .atlas-point-map-toolbar small{color:#7c8595}
+.election-root .atlas-point-map-canvas{height:455px;width:100%;position:relative;z-index:1;background:#eef0f2}
+.election-root .atlas-point-map-disclaimer{background:#fff;font-size:10px;line-height:1.5;padding:10px 13px;color:#64748b;border-top:1px solid #e5e9f0}
+.election-root .atlas-map-overlays{position:absolute;top:55px;left:14px;display:flex;flex-direction:column;gap:7px;pointer-events:none;z-index:500}
+.election-root .atlas-map-point-pill{font-size:11px;border-left:4px solid #e887bf;background:#fff;font-weight:800;color:#253853;padding:9px 11px;box-shadow:0 2px 9px #21304b20;border-radius:5px}
+.election-root .atlas-map-point-label{font-size:10px;background:#ffffffed;color:#64738a;padding:5px 8px;border-radius:5px;width:max-content}
+.election-root .atlas-map-unavailable{padding:80px 20px;text-align:center;font-size:12px;color:#748099}
+.election-root .atlas-point-map .leaflet-container{font:inherit}
