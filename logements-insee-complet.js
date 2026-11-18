@@ -16,6 +16,7 @@ const VALID_COMMUNE=/^(?:[0-9]{5}|2[AB][0-9]{3})$/i;
 const VALID_EPCI=/^[0-9]{9}$/;
 const FULL_DIM=['NOR','TDW','TSH','L_STAY','BUILD_END','CARS','NRG_SRC','CARPARK','LIFT','NOC'];
 const DATA_CACHE=new Map();
+const MELODI_CACHE=new Map();
 let nationalPromise=null;
 const finite=n=>typeof n==='number'&&Number.isFinite(n);
 const round=(n,dp=1)=>finite(n)?Number(n.toFixed(dp)):null;
@@ -30,14 +31,22 @@ function observations(payload,dataset){
  return values;
 }
 async function melodi(dataset,geo,period=null){
- const url=new URL(DATA_ORIGIN+dataset);
- url.searchParams.set('GEO',geo);
- url.searchParams.set('maxResult','5000');
- if(period!==null)url.searchParams.set('TIME_PERIOD',String(period));
- const res=await fetch(url,{signal:AbortSignal.timeout(26000),
-  headers:{'Accept':'application/json','User-Agent':'Atlas-Territoires/1.0 (INSEE open data)'}});
- if(!res.ok)throw Error('INSEE '+dataset+' HTTP '+res.status);
- return observations(await res.json(),dataset);
+ const key=dataset+'|'+geo+'|'+(period||'all');
+ const prev=MELODI_CACHE.get(key);
+ if(prev)return prev;
+ const query=(async()=>{
+  const url=new URL(DATA_ORIGIN+dataset);
+  url.searchParams.set('GEO',geo);
+  url.searchParams.set('maxResult','5000');
+  if(period!==null)url.searchParams.set('TIME_PERIOD',String(period));
+  const res=await fetch(url,{signal:AbortSignal.timeout(26000),
+   headers:{'Accept':'application/json','User-Agent':'Atlas-Territoires/1.0 (INSEE open data)'}});
+  if(!res.ok)throw Error('INSEE '+dataset+' HTTP '+res.status);
+  return observations(await res.json(),dataset);
+ })();
+ MELODI_CACHE.set(key,query);
+ if(MELODI_CACHE.size>1800)MELODI_CACHE.delete(MELODI_CACHE.keys().next().value);
+ try{return await query}catch(e){MELODI_CACHE.delete(key);throw e}
 }
 function obsValue(row){
  const v=row?.measures?.OBS_VALUE_NIVEAU?.value;
