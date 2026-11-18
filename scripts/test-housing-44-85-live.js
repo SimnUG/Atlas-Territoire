@@ -5,7 +5,8 @@ async function main(){
   {commune:'85081',epci:'248500589',nomCommune:'Dompierre-sur-Yon',nomEpci:'CA La Roche-sur-Yon Agglomération'},
   {commune:'85191',epci:'248500589',nomCommune:'La Roche-sur-Yon',nomEpci:'CA La Roche-sur-Yon Agglomération'},
   {commune:'44109',epci:'244400404',nomCommune:'Nantes',nomEpci:'Nantes Métropole'},
-  {commune:'44194',epci:'244400404',nomCommune:'Sautron',nomEpci:'Nantes Métropole'}
+  {commune:'44194',epci:'244400404',nomCommune:'Sautron',nomEpci:'Nantes Métropole'},
+  {commune:'85113',epci:'DEP-85',nomCommune:"L'Île-d'Yeu",nomEpci:'Département de la Vendée'}
  ];
  for(const [i,arg] of profiles.entries()){
   const start=Date.now(),result=await h.logement(arg);
