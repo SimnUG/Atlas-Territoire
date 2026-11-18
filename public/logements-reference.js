@@ -188,7 +188,7 @@ function fallback(data,state){
 }
 function render(root,state){
  root.replaceChildren();root.classList.add('lg-root');
- const data=state.logementsReference||fallback(state.logementsReference,state);
+ const data=state.logementsReference;
  const top=elm('div','lg-top-actions');
  const lab=elm('span',null,'VUE');top.append(lab);
  const b1=button('▦ Matrice','lg-mode'+(comparisonMode==='matrice'?' active':''),()=>{comparisonMode='matrice';render(root,state)});
@@ -196,8 +196,14 @@ function render(root,state){
  top.append(b1,b2);root.append(top);
  if(!data){
   const msg=elm('section','lg-loading');
-  msg.append(elm('strong',null,'Récupération des données INSEE sur le logement…'),
-    elm('p',null,'Les graphiques seront affichés uniquement lorsque les résultats officiels seront disponibles.'));
+  if(state.logementsError){
+    msg.append(elm('strong',null,'Données INSEE momentanément indisponibles'),
+      elm('p',null,state.logementsError));
+    msg.append(button('Réessayer','lg-mode',()=>window.location.reload()));
+  }else{
+    msg.append(elm('strong',null,'Chargement du recensement INSEE 2023…'),
+      elm('p',null,'Récupération des séries 1968–2023, des indicateurs 2017 et 2023, puis des références nationales.'));
+  }
   root.append(msg);return true;
  }
  const hist=data.historique||{};
