@@ -52,7 +52,7 @@ function normalize(row,code){
  const lieu=String(first(row,'ADR_LIEUDIT_TER')||'').trim();
  const local=String(first(row,'ADR_LOCALITE_TER')||'').trim();
  const addr=([num,road].filter(Boolean).join(' ')||lieu||local).trim();
- const pcs=[1,2,3,4,5,'6P_PLUS'].map(z=>n(first(row,'NB_LGT_'+(typeof z==='number'?z+'P':z))));
+ const pcs=['NB_LGT_1P','NB_LGT_2P','NB_LGT_3P','NB_LGT_4P','NB_LGT_5P','NB_LGT_6P_PLUS'].map(key=>n(first(row,key)));
  const cad=[1,2,3].map(i=>[first(row,'SEC_CADASTRE'+i),first(row,'NUM_CADASTRE'+i)].filter(Boolean).join(' ')).filter(Boolean);
  return {
   id,code_insee:code,annee:Number(dateAut.slice(0,4)),date_autorisation:dateAut,
@@ -74,31 +74,41 @@ function extractArray(json){
 }
 async function retrieve(code){
  const items=[], seen=new Set();
- const pageSize=2000,MAXPAGES=30;
+ const pageSize=1000,MAXPAGES=300;
+ let pages=0,seenPages=new Set(),rawRows=0;
  for(let page=1;page<=MAXPAGES;page++){
   const u=new URL(API);
   u.searchParams.set(FIELD,'eq:'+code);
+  u.searchParams.set('TYPE_DAU','eq:PC');
   u.searchParams.set('page',String(page));
   u.searchParams.set('pageSize',String(pageSize));
   const resp=await fetch(u,{signal:AbortSignal.timeout(22000),headers:{Accept:'application/json'}});
   if(!resp.ok)throw Error('DiDo SDES : HTTP '+resp.status);
   const result=await resp.json(),rows=extractArray(result);
   if(!rows)throw Error('Réponse DiDo non reconnue');
+  pages=page;
+  if(rows.length===0)break;
+  rawRows+=rows.length;
+  const signature=JSON.stringify([rows.length,first(rows[0],'NUM_DAU'),first(rows.at(-1),'NUM_DAU')]);
+  if(seenPages.has(signature))throw Error('La pagination DiDo renvoie une page en double : inventaire incomplet');
+  seenPages.add(signature);
+  if(!rows.some(r=>String(first(r,'COMM')||'').trim().padStart(5,'0')===code))
+   throw Error('La requête DiDo n’a pas filtré les permis par code INSEE : résultats rejetés');
   for(const row of rows){
    const obj=normalize(row,code);
    if(obj&&!seen.has(obj.id)){seen.add(obj.id);items.push(obj)}
   }
-  if(rows.length<pageSize){
-   // Si pageSize est ignoré et qu'un total est annoncé, continuer jusqu'au total.
-   const total=n(result?.total??result?.pagination?.total??result?.meta?.total);
-   if(total!==null&&page*rows.length<total&&rows.length>0)continue;
-   break;
-  }
+  // Pages limitées côté serveur : avancer jusqu'à la dernière page ou au total confirmé.
+  const total=n(result?.total??result?.pagination?.total??result?.meta?.total??result?.meta?.pagination?.total);
+  const pageCount=n(result?.totalPages??result?.pagination?.totalPages??result?.meta?.total_pages);
+  if(total!==null&&rawRows>=total)break;
+  if(pageCount!==null&&page>=pageCount)break;
   if(page===MAXPAGES)throw Error('Pagination des dossiers Sitadel incomplète');
  }
  items.sort((a,b)=>b.date_autorisation.localeCompare(a.date_autorisation)||a.id.localeCompare(b.id));
  return {statut:'disponible',code_insee:code,dossiers:items,
-  tous_dossiers:true,source:{nom:'Sitadel — SDES, Ministère de la Transition écologique',
+  tous_dossiers:true,pages_consultees:pages,lignes_source:rawRows,
+  source:{nom:'Sitadel — SDES, Ministère de la Transition écologique',
    url:SOURCE,api:API,date_recue:new Date().toISOString().slice(0,10),
    licence:'Licence Ouverte 2.0',note:'Données administratives de PC, non équivalentes aux estimations corrigées DR++'}};
 }
