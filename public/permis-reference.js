@@ -11,7 +11,7 @@
  const elem=(tag,cls,t)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(t!==undefined&&t!==null)n.textContent=String(t);return n};
  const append=(p,...nodes)=>(p.append(...nodes.filter(Boolean)),p);
  const link=(txt,url,cls)=>{const a=elem('a',cls,txt);a.href=url;a.target='_blank';a.rel='noopener noreferrer';return a};
- const state={period:'all',type:'apartments',size:5,measure:'logements',display:'nombre',tyMeasure:'logements',tyDisplay:'nombre',selected:null};
+ const state={period:'all',type:'apartments',size:5,measure:'logements',display:'nombre',statusDisplay:'part',tyMeasure:'logements',tyDisplay:'nombre',selected:null};
  let map=null,markers=null,currentMapWrap=null,rootRef=null,sourceState=null,geo=new Map(),geoRequested=new Set(),leafletPromise=null,drawToken=0;
  function entryNum(r){return state.type==='apartments'?r.col:state.type==='houses'?r.ind:r.nombre}
  function filterRows(rows){
@@ -77,7 +77,7 @@
    [10,'Taille : 10 logements et +'],[20,'Taille : 20 logements et +']
   ],state.size,v=>state.size=Number(v),'pink'));
   const reset=elem('button','pc-reset','⟲  Réinitialiser');
-  reset.onclick=()=>{Object.assign(state,{period:'all',type:'apartments',size:5,measure:'logements',display:'nombre',tyMeasure:'logements',tyDisplay:'nombre',selected:null});draw()};
+  reset.onclick=()=>{Object.assign(state,{period:'all',type:'apartments',size:5,measure:'logements',display:'nombre',statusDisplay:'part',tyMeasure:'logements',tyDisplay:'nombre',selected:null});draw()};
   bar.append(options,reset);return bar;
  }
  function kpi(label,value,foot,pink=false){
@@ -104,6 +104,9 @@
  }
  function statusCard(rows,city){
   const p=card('Situation actuelle des logements');
+  const control=elem('div','pc-status-control');
+  control.append(ctr(state.statusDisplay,[['nombre','Nombre'],['part','Part (%)']],'pc-status-displays'));
+  p.append(control);
   p.append(elem('p','pc-mini-sub','Dernier événement connu dans Sit@del, tous millésimes de la période confondus.'));
   p.append(elem('strong','pc-label','Commune — '+city));
   const counts={'Autorisé':0,'Commencé':0,'Terminé':0};
@@ -112,7 +115,8 @@
   const track=elem('div','pc-statusbar');
   for(const status of ['Autorisé','Commencé','Terminé']){
    const amount=counts[status];
-   const s=elem('div','pc-status-section',sum&&amount/sum>0.09?Math.round(amount/sum*100)+' %':'');
+   const label=state.statusDisplay==='nombre'?f(amount):Math.round((sum?amount/sum:0)*100)+' %';
+   const s=elem('div','pc-status-section',sum&&amount/sum>0.09?label:'');
    s.style.background=colors[status];s.style.width=(sum?amount/sum*100:0)+'%';
    s.title=status+' : '+f(amount)+' logements';track.append(s);
   }
