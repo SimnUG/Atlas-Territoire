@@ -13,7 +13,7 @@ const DATASET_SERIES='DS_RP_SERIE_HISTORIQUE';
 const DATASET_HOUSING='DS_RP_LOGEMENT_PRINC';
 const HISTORY_YEARS=[1968,1975,1982,1990,1999,2007,2012,2017,2023];
 const VALID_COMMUNE=/^(?:[0-9]{5}|2[AB][0-9]{3})$/i;
-const VALID_EPCI=/^[0-9]{9}$/;
+const VALID_EPCI=/^(?:[0-9]{9}|DEP-(?:44|85))$/;
 const FULL_DIM=['NOR','TDW','TSH','L_STAY','BUILD_END','CARS','NRG_SRC','CARPARK','LIFT','NOC'];
 const DATA_CACHE=new Map();
 const fs=require('node:fs');
@@ -131,7 +131,7 @@ function source(code,epci){
   libelle:'Recensement de la population 2023, géographie au 01/01/2026',
   annee:2023,
   url_commune:'https://www.insee.fr/fr/statistiques/9001791?geo=COM-'+code,
-  url_epci:epci?'https://www.insee.fr/fr/statistiques/9001791?geo=EPCI-'+epci:null,
+  url_epci:epci?'https://www.insee.fr/fr/statistiques/9001791?geo='+(epci.startsWith('DEP-')?epci:'EPCI-'+epci):null,
   url_france:'https://www.insee.fr/fr/statistiques/9001791?geo=FRANCE-F',
   url_millesime_2017:'https://www.insee.fr/fr/statistiques/8997194',
   jeux:[
@@ -219,8 +219,8 @@ async function loadRemote({commune,epci,nomCommune,nomEpci}){
  const inputs=await Promise.all([
   melodi(DATASET_SERIES,'COM-'+commune),
   melodi(DATASET_HOUSING,'COM-'+commune),
-  melodi(DATASET_SERIES,'EPCI-'+epci),
-  melodi(DATASET_HOUSING,'EPCI-'+epci),
+  melodi(DATASET_SERIES,epci.startsWith('DEP-')?epci:'EPCI-'+epci),
+  melodi(DATASET_HOUSING,epci.startsWith('DEP-')?epci:'EPCI-'+epci),
   getFrance()
  ]);
  const c=createArea(commune,nomCommune,inputs[0],inputs[1]);
