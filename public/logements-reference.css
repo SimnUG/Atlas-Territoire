@@ -69,6 +69,7 @@
 .lg-root .lg-compare-fill{height:100%;border-radius:14px}
 .lg-root .lg-compare-fill.epci{background:#397ba5}
 .lg-root .lg-compare-fill.commune{background:#25366f}
+.lg-root .lg-chart-unavailable{height:245px;display:grid;place-items:center;padding:20px;text-align:center;color:#8b97aa;font-size:12px;background:repeating-linear-gradient(0deg,#fff,#fff 44px,#eef1f5 45px);border:1px solid #ecedf2;border-radius:8px;margin-top:9px}
 .lg-root .lg-loading{border:1px solid #e5e8ef;padding:30px;border-radius:10px;background:#fff;color:#253953}
 .lg-root .lg-loading p{color:#8490a2}
 .lg-root .lg-notes{background:#fff;border:1px solid #e2e5ec;border-radius:9px;padding:14px 16px;margin:22px 0 15px;font-size:10px;color:#818da0;line-height:1.5}
